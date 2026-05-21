@@ -50,7 +50,7 @@ export const QuotesView: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -188,7 +188,7 @@ export const TransfersView: React.FC = () => {
             )}
 
             {activeTab === 'aeropuerto' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                             <tr><th className="px-6 py-3">Nombre</th><th className="px-6 py-3">Zona</th><th className="px-6 py-3 text-right">Precio</th><th className="px-6 py-3 text-center">Pax Máx</th><th className="px-6 py-3 text-center">Pax Valijas</th><th className="px-6 py-3 text-center">Consultar</th><th className="px-6 py-3 text-center">Activo</th><th className="px-6 py-3 text-right">Acciones</th></tr>
@@ -213,7 +213,7 @@ export const TransfersView: React.FC = () => {
             )}
 
             {activeTab === 'tours' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                             <tr><th className="px-6 py-3">Nombre</th><th className="px-6 py-3">Tipo</th><th className="px-6 py-3">Región</th><th className="px-6 py-3 text-center">Duración</th><th className="px-6 py-3 text-right">Precio</th><th className="px-6 py-3 text-right">Hora Extra</th><th className="px-6 py-3 text-center">Consultar</th><th className="px-6 py-3 text-center">Activo</th><th className="px-6 py-3 text-right">Acciones</th></tr>
@@ -330,7 +330,7 @@ export const ClientsView: React.FC = () => {
                 <span className="ml-auto text-sm text-gray-400 self-center">{filteredClients.length} clientes</span>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -495,7 +495,7 @@ export const UsersView: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -795,7 +795,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
             )}
 
             {/* Content Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1039,7 +1039,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
             )}
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1319,7 +1319,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
             )}
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1574,7 +1574,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
             )}
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1778,7 +1778,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
             )}
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -2027,7 +2027,7 @@ export const RoutesView: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
