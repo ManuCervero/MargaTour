@@ -221,10 +221,6 @@ const App: React.FC = () => {
             <SidebarItem view={ViewState.EXPERIENCES} icon={Star} label="Experiencias" />
           </SidebarSection>
 
-          <SidebarSection title="Sistema">
-            <SidebarItem view={ViewState.USERS} icon={UserCog} label="Usuarios del Sistema" />
-            <SidebarItem view={ViewState.CONFIG} icon={Settings} label="Configuración" />
-          </SidebarSection>
         </div>
 
         <div className="p-4 border-t border-gray-100">
