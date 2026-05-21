@@ -245,7 +245,7 @@ const App: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 flex flex-col h-screen relative bg-gray-50/50 min-w-0">
+      <main className="flex-1 md:ml-64 flex flex-col h-screen overflow-x-hidden relative bg-gray-50/50 min-w-0">
         {/* Header */}
         <header className="h-14 md:h-16 bg-white/90 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10 sticky top-0 gap-3">
 
@@ -292,7 +292,7 @@ const App: React.FC = () => {
         </header>
 
         {/* View Content */}
-        <div className="flex-1 min-h-0 min-w-0 relative pb-16 md:pb-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-x-hidden relative pb-16 md:pb-0">
           {/* Background Texture */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
             style={{

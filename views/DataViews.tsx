@@ -985,7 +985,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg w-fit mb-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
                 <button
                     onClick={() => setActiveFilter(!activeFilter)}
                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
@@ -1297,7 +1297,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg w-fit mb-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
                 <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
                 <button onClick={() => setWifiFilter(!wifiFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${wifiFilter ? 'bg-white text-cyan-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Wifi size={12} />WiFi</button>
                 <button onClick={() => setPoolFilter(!poolFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${poolFilter ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Waves size={12} />Pileta</button>
@@ -1557,7 +1557,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg w-fit mb-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
                 <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
                 <button onClick={() => setAccessibleFilter(!accessibleFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Accessibility size={12} />Accesible</button>
                 <button onClick={() => setPetFriendlyFilter(!petFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dog size={12} />Pet Friendly</button>
@@ -1761,7 +1761,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg w-fit mb-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
                 <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
                 <button onClick={() => setAccessibleFilter(!accessibleFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Accessibility size={12} />Accesible</button>
                 <button onClick={() => setPetFriendlyFilter(!petFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dog size={12} />Pet Friendly</button>
