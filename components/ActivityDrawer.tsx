@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 import { X, Phone, Save, Dog, Baby, Accessibility, Loader2, MapPin, User, Building2, Pencil, DollarSign, FileText, StickyNote, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -64,8 +64,7 @@ export const ActivityDrawer: React.FC<ActivityDrawerProps> = ({ activity, onClos
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('activities')
+        const { error } = await api.from('activities')
             .update({
                 name: form.name,
                 region: form.region,

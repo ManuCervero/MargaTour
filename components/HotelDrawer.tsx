@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 import { X, Phone, Mail, Save, Star, Dog, Accessibility, Wifi, Waves, Dumbbell, Sparkles, Utensils, Car, DollarSign, Loader2 } from 'lucide-react';
 
@@ -43,8 +43,7 @@ export const HotelDrawer: React.FC<HotelDrawerProps> = ({ hotel, onClose, onSave
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('hotels')
+        const { error } = await api.from('hotels')
             .update({
                 region: form.region,
                 stars: Number(form.stars),

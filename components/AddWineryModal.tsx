@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Wine } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 
 interface AddWineryModalProps {
@@ -33,7 +33,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
         if (!formData.name.trim()) return;
 
         setLoading(true);
-        const { error } = await supabase.from('wineries').insert([formData]);
+        const { error } = await api.from('wineries').insert([formData]);
         setLoading(false);
 
         if (!error) {

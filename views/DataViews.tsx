@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 import { Quote, Transfer, SystemUser, Client, ViewState, CatalogItem, Winery, Route } from '../types';
 import { Search, Plus, FileText, Check, X, MapPin, Shield, Star, Mail, Phone, Globe, ArrowRight, ArrowRightLeft, RefreshCw, Info, Wine, Bed, Utensils, Compass, Filter, Dog, Baby, Accessibility, Eye, Wifi, Waves, Dumbbell, Sparkles, Car, Clock, DollarSign } from 'lucide-react';
@@ -21,7 +21,7 @@ export const QuotesView: React.FC = () => {
     const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
 
     const fetchQuotes = () => {
-        supabase.from('quotes').select('*').then(({ data, error }) => {
+        api.from('quotes').select('*').then(({ data, error }) => {
             if (!error && data) setQuotes(data as any);
         });
     };
@@ -117,13 +117,13 @@ export const TransfersView: React.FC = () => {
     const TOUR_REGIONS = ['Ciudad', 'Primera Zona (Luján + Maipú)', 'Valle de Uco', 'Alta Montaña', 'Valle Sur', 'Valle Este'];
 
     const fetchAirportTransfers = () => {
-        supabase.from('airport_transfers').select('*').then(({ data, error }) => {
+        api.from('airport_transfers').select('*').then(({ data, error }) => {
             if (!error && data) setAirportTransfers(data);
         });
     };
 
     const fetchTours = () => {
-        supabase.from('tours').select('*').then(({ data, error }) => {
+        api.from('tours').select('*').then(({ data, error }) => {
             if (!error && data) setTours(data);
         });
     };
@@ -267,7 +267,7 @@ export const ClientsView: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
 
     const fetchClients = () => {
-        supabase.from('clients').select('*').then(({ data, error }) => {
+        api.from('clients').select('*').then(({ data, error }) => {
             if (!error && data) setClients(data as any);
         });
     };
@@ -480,7 +480,7 @@ export const UsersView: React.FC = () => {
     const [users, setUsers] = useState<SystemUser[]>([]);
 
     useEffect(() => {
-        supabase.from('profiles').select('*').then(({ data, error }) => {
+        api.from('profiles').select('*').then(({ data, error }) => {
             if (!error && data) setUsers(data as any);
         });
     }, []);
@@ -564,19 +564,19 @@ export const RegionsView: React.FC<RegionsViewProps> = ({ onNavigate }) => {
             });
 
             // Fetch wineries
-            const { data: wineries } = await supabase.from('wineries').select('region');
+            const { data: wineries } = await api.from('wineries').select('region');
             wineries?.forEach((w: any) => { if (counts[w.region]) counts[w.region].wineries++; });
 
             // Fetch hotels
-            const { data: hotels } = await supabase.from('hotels').select('region');
+            const { data: hotels } = await api.from('hotels').select('region');
             hotels?.forEach((h: any) => { if (counts[h.region]) counts[h.region].hotels++; });
 
             // Fetch restaurants
-            const { data: restaurants } = await supabase.from('restaurants').select('region');
+            const { data: restaurants } = await api.from('restaurants').select('region');
             restaurants?.forEach((r: any) => { if (counts[r.region]) counts[r.region].restaurants++; });
 
             // Fetch activities
-            const { data: activities } = await supabase.from('activities').select('region');
+            const { data: activities } = await api.from('activities').select('region');
             activities?.forEach((a: any) => { if (counts[a.region]) counts[a.region].activities++; });
 
             setRegionsData(REGION_OPTIONS.map(name => ({
@@ -874,19 +874,19 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [wineries, setWineries] = useState<Winery[]>([]);
 
     const fetchWineries = () => {
-        supabase.from('wineries').select('*').then(({ data, error }) => {
+        api.from('wineries').select('*').then(({ data, error }) => {
             if (!error && data) {
                 const mapped = data.map((p: any) => ({
                     id: p.id,
                     name: p.name,
                     region: p.region,
                     department: p.department,
-                    hasRestaurant: p.has_restaurant,
-                    isAccessible: p.is_accessible,
-                    isPetFriendly: p.is_pet_friendly,
-                    isKidFriendly: p.is_kid_friendly,
-                    isRecommended: p.is_recommended,
-                    isActive: p.is_active,
+                    hasRestaurant: !!p.has_restaurant,
+                    isAccessible: !!p.is_accessible,
+                    isPetFriendly: !!p.is_pet_friendly,
+                    isKidFriendly: !!p.is_kid_friendly,
+                    isRecommended: !!p.is_recommended,
+                    isActive: !!p.is_active,
                     phone: p.phone,
                     email: p.email,
                     address: p.address,
@@ -1187,7 +1187,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [hotels, setHotels] = useState<Hotel[]>([]);
 
     const fetchHotels = () => {
-        supabase.from('hotels').select('*').then(({ data, error }) => {
+        api.from('hotels').select('*').then(({ data, error }) => {
             if (!error && data) {
                 const mapped = data.map((p: any) => ({
                     id: p.id,
@@ -1195,15 +1195,15 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     region: p.region,
                     stars: p.stars,
                     pricePerNight: p.price_per_night,
-                    isAccessible: p.is_accessible,
-                    isPetFriendly: p.is_pet_friendly,
-                    hasWifi: p.has_wifi,
-                    hasPool: p.has_pool,
-                    hasGym: p.has_gym,
-                    hasSpa: p.has_spa,
-                    hasRestaurant: p.has_restaurant,
-                    hasParking: p.has_parking,
-                    isActive: p.is_active,
+                    isAccessible: !!p.is_accessible,
+                    isPetFriendly: !!p.is_pet_friendly,
+                    hasWifi: !!p.has_wifi,
+                    hasPool: !!p.has_pool,
+                    hasGym: !!p.has_gym,
+                    hasSpa: !!p.has_spa,
+                    hasRestaurant: !!p.has_restaurant,
+                    hasParking: !!p.has_parking,
+                    isActive: !!p.is_active,
                     phone: p.phone,
                     email: p.email,
                     description: p.description,
@@ -1458,7 +1458,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
     const fetchRestaurants = () => {
-        supabase.from('restaurants').select('*').then(({ data, error }) => {
+        api.from('restaurants').select('*').then(({ data, error }) => {
             if (!error && data) {
                 const mapped = data.map((p: any) => ({
                     id: p.id,
@@ -1467,10 +1467,10 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     schedule: p.schedule,
                     priceMin: p.price_min ? Number(p.price_min) : null,
                     priceMax: p.price_max ? Number(p.price_max) : null,
-                    isAccessible: p.is_accessible,
-                    isPetFriendly: p.is_pet_friendly,
-                    isKidFriendly: p.is_kid_friendly,
-                    isActive: p.is_active,
+                    isAccessible: !!p.is_accessible,
+                    isPetFriendly: !!p.is_pet_friendly,
+                    isKidFriendly: !!p.is_kid_friendly,
+                    isActive: !!p.is_active,
                     phone: p.phone,
                 }));
                 setRestaurants(mapped);
@@ -1677,7 +1677,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [showAddModal, setShowAddModal] = useState(false);
 
     const fetchActivities = () => {
-        supabase.from('activities').select('*').then(({ data, error }) => {
+        api.from('activities').select('*').then(({ data, error }) => {
             if (!error && data) {
                 const mapped = data.map((p: any) => ({
                     id: p.id,
@@ -1688,10 +1688,10 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     address: p.address,
                     price: p.price || null,
                     provider: p.provider,
-                    isAccessible: p.is_accessible,
-                    isPetFriendly: p.is_pet_friendly,
-                    isKidFriendly: p.is_kid_friendly,
-                    isActive: p.is_active,
+                    isAccessible: !!p.is_accessible,
+                    isPetFriendly: !!p.is_pet_friendly,
+                    isKidFriendly: !!p.is_kid_friendly,
+                    isActive: !!p.is_active,
                     description: p.description,
                     notes: p.notes,
                 }));
@@ -1875,12 +1875,12 @@ export const RoutesView: React.FC = () => {
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     useEffect(() => {
-        supabase.from('routes').select('*').order('origin').then(({ data, error }) => {
+        api.from('routes').select('*').order('origin').then(({ data, error }) => {
             if (!error && data) setRoutes(data);
         });
 
         // Load existing settings if they exist
-        supabase.from('settings').select('*').eq('id', 1).single().then(({ data, error }) => {
+        api.from('settings').select('*').eq('id', 1).single().then(({ data, error }) => {
             if (!error && data) {
                 if (data.costo_km) setCostoKm(data.costo_km.toString());
                 if (data.precio_full_day) setPrecioFullDay(data.precio_full_day.toString());
@@ -1893,7 +1893,7 @@ export const RoutesView: React.FC = () => {
 
     const handleSaveRates = async () => {
         setIsSaving(true);
-        const { error } = await supabase.from('settings').upsert({
+        const { error } = await api.from('settings').upsert({
             id: 1,
             costo_km: Number(costoKm),
             precio_full_day: Number(precioFullDay),
@@ -2111,7 +2111,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [showAddModal, setShowAddModal] = useState(false);
 
     const fetchExperiences = () => {
-        supabase.from('experiences').select('*').then(({ data, error }) => {
+        api.from('experiences').select('*').then(({ data, error }) => {
             if (!error && data) {
                 setExperiences(data.map((e: any) => ({
                     id: e.id,
@@ -2126,12 +2126,12 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     description: e.description || '',
                     image_url: e.image_url || '',
                     departure_time: e.departure_time || '',
-                    is_accessible: e.is_accessible || false,
+                    is_accessible: !!e.is_accessible,
                     url_producto: e.url_producto || '',
                     notes: e.notes || '',
                     provider: e.provider || '',
                     phone: e.phone || '',
-                    is_active: e.is_active,
+                    is_active: !!e.is_active,
                 })));
             }
         });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 
 interface AddExperienceModalProps {
@@ -26,7 +26,7 @@ export const AddExperienceModal: React.FC<AddExperienceModalProps> = ({ isOpen, 
         e.preventDefault();
         if (!form.name.trim()) return;
         setLoading(true);
-        const { error } = await supabase.from('experiences').insert([{
+        const { error } = await api.from('experiences').insert([{
             name: form.name.trim(),
             region: form.region,
             category: form.category || null,

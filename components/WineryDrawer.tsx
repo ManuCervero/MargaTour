@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Winery } from '../types';
 import { REGION_OPTIONS } from '../constants';
 import { X, MapPin, Globe, Phone, Mail, Save, Star, Baby, Dog, Accessibility, Utensils, Loader2 } from 'lucide-react';
@@ -24,8 +24,7 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('wineries')
+        const { error } = await api.from('wineries')
             .update({
                 region: form.region,
                 department: form.department,

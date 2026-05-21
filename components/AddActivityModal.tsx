@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Compass, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 
 interface AddActivityModalProps {
@@ -36,7 +36,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
         if (!formData.name.trim()) return;
 
         setLoading(true);
-        const { error } = await supabase.from('activities').insert([{
+        const { error } = await api.from('activities').insert([{
             name: formData.name.trim(),
             region: formData.region,
             provider: formData.provider || null,

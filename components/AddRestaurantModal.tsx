@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Utensils } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 
 interface AddRestaurantModalProps {
@@ -34,7 +34,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
             price_min: formData.price_min ? Number(formData.price_min) : null,
             price_max: formData.price_max ? Number(formData.price_max) : null,
         };
-        const { error } = await supabase.from('restaurants').insert([payload]);
+        const { error } = await api.from('restaurants').insert([payload]);
         setLoading(false);
 
         if (!error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 import {
     X, Save, Loader2, MapPin, Pencil, DollarSign, FileText, StickyNote,
@@ -76,8 +76,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('experiences')
+        const { error } = await api.from('experiences')
             .update({
                 name: form.name,
                 region: form.region,

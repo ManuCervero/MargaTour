@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 import { X, Phone, Save, Clock, DollarSign, Dog, Baby, Accessibility, Loader2 } from 'lucide-react';
 
@@ -37,8 +37,7 @@ export const RestaurantDrawer: React.FC<RestaurantDrawerProps> = ({ restaurant, 
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('restaurants')
+        const { error } = await api.from('restaurants')
             .update({
                 region: form.region,
                 schedule: form.schedule,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 interface AddClientModalProps {
     isOpen: boolean;
@@ -37,7 +37,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
 
         setLoading(true);
         // Supabase will automatically generate ID and created_at
-        const { error } = await supabase.from('clients').insert([{
+        const { error } = await api.from('clients').insert([{
             name: formData.name,
             email: formData.email,
             phone: formData.phone,

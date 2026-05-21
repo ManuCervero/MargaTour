@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api, setToken, setStoredUser } from '../lib/api';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
 interface LoginPageProps {
@@ -18,18 +18,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setError('');
         setLoading(true);
 
-        const { error: authError } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-        });
-
-        setLoading(false);
-
-        if (authError) {
-            setError('Email o contraseña incorrectos.');
-        } else {
-            onLogin();
-        }
+        try {
+      const result = await api.auth.login(email.trim(), password);
+      setToken(result.token);
+      setStoredUser(result.user);
+      onLogin();
+    } catch {
+      setError('Usuario o contraseña incorrectos.');
+    } finally {
+      setLoading(false);
+    }
     };
 
     return (
@@ -60,18 +58,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                         <p className="text-sm text-gray-500 mb-6">Ingresá con tu cuenta para continuar</p>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Email */}
+                            {/* Usuario */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Email
+                                    Usuario
                                 </label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     required
                                     autoFocus
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    placeholder="manu@margatour.com.ar"
+                                    placeholder="admin"
                                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm transition-all bg-gray-50 focus:bg-white"
                                 />
                             </div>

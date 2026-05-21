@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Bed } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { REGION_OPTIONS } from '../constants';
 
 interface AddHotelModalProps {
@@ -39,7 +39,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
             ...formData,
             price_per_night: formData.price_per_night ? Number(formData.price_per_night) : null,
         };
-        const { error } = await supabase.from('hotels').insert([payload]);
+        const { error } = await api.from('hotels').insert([payload]);
         setLoading(false);
 
         if (!error) {

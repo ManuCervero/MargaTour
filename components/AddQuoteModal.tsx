@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Plus, Trash2, GripVertical, MapPin, Wine, Bed, Utensils, Compass, Star, ChevronDown } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 interface ServiceItem {
     id: string;
@@ -60,10 +60,10 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
         // Fetch catalog items for autocomplete
         const fetchCatalog = async () => {
             const [wineries, hotels, restaurants, activities] = await Promise.all([
-                supabase.from('wineries').select('name').eq('is_active', true),
-                supabase.from('hotels').select('name').eq('is_active', true),
-                supabase.from('restaurants').select('name').eq('is_active', true),
-                supabase.from('activities').select('name').eq('is_active', true),
+                api.from('wineries').select('name').eq('is_active', true),
+                api.from('hotels').select('name').eq('is_active', true),
+                api.from('restaurants').select('name').eq('is_active', true),
+                api.from('activities').select('name').eq('is_active', true),
             ]);
             setCatalogData({
                 bodega: (wineries.data || []).map((w: any) => w.name),
@@ -110,7 +110,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
 
         setLoading(true);
         try {
-            const { error } = await supabase.from('quotes').insert([{
+            const { error } = await api.from('quotes').insert([{
                 leadName: form.leadName,
                 type: form.type,
                 origin: form.origin || null,

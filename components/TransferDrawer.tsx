@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { X, Save, MapPin, DollarSign, Clock, Users, Luggage, AlertCircle, Loader2 } from 'lucide-react';
 
 interface AirportTransferDrawerProps {
@@ -22,8 +22,7 @@ export const AirportTransferDrawer: React.FC<AirportTransferDrawerProps> = ({ tr
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('airport_transfers')
+        const { error } = await api.from('airport_transfers')
             .update({
                 zone: form.zone,
                 price: form.price ? Number(form.price) : null,
@@ -169,8 +168,7 @@ export const TourDrawer: React.FC<TourDrawerProps> = ({ tour, onClose, onSave })
 
     const handleSave = async () => {
         setSaving(true);
-        const { error } = await supabase
-            .from('tours')
+        const { error } = await api.from('tours')
             .update({
                 name: form.name,
                 tour_type: form.tour_type,
