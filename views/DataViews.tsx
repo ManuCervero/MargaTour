@@ -296,8 +296,8 @@ export const ClientsView: React.FC = () => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Cartera de Clientes</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
@@ -309,7 +309,7 @@ export const ClientsView: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 flex-shrink-0">
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                         <Plus size={18} />
                         Nuevo Cliente
                     </button>
@@ -728,8 +728,8 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
@@ -740,21 +740,21 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                         />
                     </div>
                     {/* Redundant Dropdown per requirements */}
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                             <Filter size={14} />
                         </div>
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGIONS_LIST.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-                    <button className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 flex-shrink-0">
+                    <button className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                         <Plus size={18} />
                         Nuevo
                     </button>
@@ -926,9 +926,9 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
             {/* Header - matching CatalogView style */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Bodegas</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     {/* Search */}
-                    <div className="relative flex-1 min-w-0">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
@@ -940,14 +940,14 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
 
                     {/* Region Dropdown */}
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                             <Filter size={14} />
                         </div>
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -957,7 +957,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
 
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors flex-shrink-0"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
                     >
                         <Plus size={18} />
                         Nueva Bodega
@@ -1241,8 +1241,8 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Hoteles</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
@@ -1252,14 +1252,14 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                             className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
                         />
                     </div>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                             <Filter size={14} />
                         </div>
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1269,7 +1269,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
 
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors flex-shrink-0"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
                     >
                         <Plus size={18} />
                         Nuevo Hotel
@@ -1501,8 +1501,8 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Restaurantes</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
@@ -1512,14 +1512,14 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                             className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
                         />
                     </div>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                             <Filter size={14} />
                         </div>
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1529,7 +1529,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
 
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors flex-shrink-0"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
                     >
                         <Plus size={18} />
                         Nuevo Restaurante
@@ -1720,8 +1720,8 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Actividades</h2>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
@@ -1731,21 +1731,21 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                             className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
                         />
                     </div>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                             <Filter size={14} />
                         </div>
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-                    <button onClick={() => setShowAddModal(true)} className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors flex-shrink-0">
+                    <button onClick={() => setShowAddModal(true)} className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
                         <Plus size={18} />
                         Nueva Actividad
                     </button>
@@ -2155,19 +2155,19 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
     return (
         <div className="h-full flex flex-col overflow-hidden">
             {/* Page Header */}
-            <div className="px-8 py-5 border-b border-gray-100 bg-white flex items-center justify-between shrink-0">
+            <div className="px-4 sm:px-8 py-5 border-b border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
                 <div>
                     <h2 className="text-2xl font-extrabold text-gray-800">Experiencias</h2>
                     <p className="text-sm text-gray-400 mt-0.5">{filtered.length} experiencias en catálogo</p>
                 </div>
                 <button onClick={() => setShowAddModal(true)}
-                    className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
+                    className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
                     <Plus size={18} /> Nueva Experiencia
                 </button>
             </div>
 
             {/* Filters */}
-            <div className="px-8 py-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-3 shrink-0">
+            <div className="px-4 sm:px-8 py-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-3 shrink-0">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px] max-w-xs">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
