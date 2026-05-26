@@ -249,6 +249,11 @@ const App: React.FC = () => {
         {/* Header */}
         <header className="h-14 md:h-16 bg-white/90 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10 sticky top-0 gap-3">
 
+          {/* Logo mobile */}
+          <div className="md:hidden flex items-center gap-2 flex-shrink-0">
+            <div className="w-7 h-7 bg-marga-yellow rounded-lg flex items-center justify-center text-base shadow-sm rotate-3">🐶</div>
+          </div>
+
           {/* Search */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <div className="relative flex-1 min-w-0">
