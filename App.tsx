@@ -5,6 +5,7 @@ import { api, clearToken, getStoredUser, setStoredUser, setToken } from './lib/a
 import { KanbanView } from './views/KanbanView';
 import { LeadDrawer } from './components/LeadDrawer';
 import { LoginPage } from './components/LoginPage';
+import { GlobalSearch } from './components/GlobalSearch';
 import { QuotesView, TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, ExperiencesView, RoutesView } from './views/DataViews';
 
 const App: React.FC = () => {
@@ -256,27 +257,7 @@ const App: React.FC = () => {
 
           {/* Search */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet/20 focus:border-marga-violet transition-all text-sm"
-              />
-            </div>
-
-            {/* Region Dropdown — hidden on small mobile */}
-            <div className="relative hidden sm:block flex-shrink-0">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={14} />
-              <select className="appearance-none pl-9 pr-7 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer shadow-sm">
-                <option>Todas</option>
-                <option>Gran Mendoza</option>
-                <option>Valle de Uco</option>
-                <option>Sur (San Rafael)</option>
-                <option>Alta Montaña</option>
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
-            </div>
+            <GlobalSearch onNavigate={handleViewChange} />
           </div>
 
           {/* Bell */}
