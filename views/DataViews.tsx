@@ -862,12 +862,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
 export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<string>(filter || 'Todas');
-    const [activeFilter, setActiveFilter] = useState(true);
-    const [recommendedFilter, setRecommendedFilter] = useState(false);
-    const [restaurantFilter, setRestaurantFilter] = useState(false);
-    const [accessibleFilter, setAccessibleFilter] = useState(false);
-    const [petFriendlyFilter, setPetFriendlyFilter] = useState(false);
-    const [kidFriendlyFilter, setKidFriendlyFilter] = useState(false);
+    const [caracteristicaFilter, setCaracteristicaFilter] = useState('Todas');
     const [selectedWinery, setSelectedWinery] = useState<Winery | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
@@ -911,132 +906,72 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const filteredData = wineries.filter(w => {
         const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRegion = selectedRegion === 'Todas' || w.region === selectedRegion;
-        const matchesActive = !activeFilter || w.isActive;
-        const matchesRecommended = !recommendedFilter || w.isRecommended;
-        const matchesRestaurant = !restaurantFilter || w.hasRestaurant;
-        const matchesAccessible = !accessibleFilter || w.isAccessible;
-        const matchesPetFriendly = !petFriendlyFilter || w.isPetFriendly;
-        const matchesKidFriendly = !kidFriendlyFilter || w.isKidFriendly;
-
-        return matchesSearch && matchesRegion && matchesActive && matchesRecommended && matchesRestaurant && matchesAccessible && matchesPetFriendly && matchesKidFriendly;
+        const matchesCarac =
+            caracteristicaFilter === 'Todas' ||
+            (caracteristicaFilter === 'Activas' && w.isActive) ||
+            (caracteristicaFilter === 'Recomendadas' && w.isRecommended) ||
+            (caracteristicaFilter === 'Con Restaurante' && w.hasRestaurant) ||
+            (caracteristicaFilter === 'Accesible' && w.isAccessible) ||
+            (caracteristicaFilter === 'Pet Friendly' && w.isPetFriendly) ||
+            (caracteristicaFilter === 'Kid Friendly' && w.isKidFriendly);
+        return matchesSearch && matchesRegion && matchesCarac;
     });
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
-            {/* Header - matching CatalogView style */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Bodegas</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    {/* Search */}
-                    <div className="relative w-full sm:flex-1 sm:min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Buscar bodega..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
-                        />
-                    </div>
-
-                    {/* Region Dropdown */}
-                    <div className="relative w-full sm:w-auto">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                            <Filter size={14} />
-                        </div>
+            {/* Header */}
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Bodegas</h2>
+                <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Buscar bodega..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
                         >
-                            <option value="Todas">Todas las regiones</option>
+                            <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-
+                    <div className="relative flex-1">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={caracteristicaFilter}
+                            onChange={(e) => setCaracteristicaFilter(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Tipo</option>
+                            <option value="Activas">Solo Activas</option>
+                            <option value="Recomendadas">Recomendadas</option>
+                            <option value="Con Restaurante">Con Restaurante</option>
+                            <option value="Accesible">Accesible</option>
+                            <option value="Pet Friendly">Pet Friendly</option>
+                            <option value="Kid Friendly">Kid Friendly</option>
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        title="Nueva Bodega"
                     >
                         <Plus size={18} />
-                        Nueva Bodega
+                        <span className="hidden sm:inline font-bold">Nueva Bodega</span>
                     </button>
                 </div>
             </div>
-
-            {/* Quick Chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                    onClick={() => setSelectedRegion('Todas')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                    Todas
-                </button>
-                {REGION_OPTIONS.map(r => (
-                    <button
-                        key={r}
-                        onClick={() => setSelectedRegion(r)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                    >
-                        {r}
-                    </button>
-                ))}
-            </div>
-
-            {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
-                <button
-                    onClick={() => setActiveFilter(!activeFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Solo Activas
-                </button>
-                <button
-                    onClick={() => setRecommendedFilter(!recommendedFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${recommendedFilter ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Recomendadas
-                </button>
-                <button
-                    onClick={() => setRestaurantFilter(!restaurantFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${restaurantFilter ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Restaurante
-                </button>
-                <button
-                    onClick={() => setAccessibleFilter(!accessibleFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Accesible
-                </button>
-                <button
-                    onClick={() => setPetFriendlyFilter(!petFriendlyFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Pet Friendly
-                </button>
-                <button
-                    onClick={() => setKidFriendlyFilter(!kidFriendlyFilter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${kidFriendlyFilter ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Kid Friendly
-                </button>
-            </div>
-
-            {/* Active Filter Pill */}
-            {selectedRegion !== 'Todas' && (
-                <div className="mb-6 inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-violet/20">
-                    <MapPin size={14} />
-                    <span>Filtrando por: {selectedRegion}</span>
-                    <button
-                        onClick={() => setSelectedRegion('Todas')}
-                        className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"
-                    >
-                        <X size={14} />
-                    </button>
-                </div>
-            )}
 
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
@@ -1172,15 +1107,7 @@ interface Hotel {
 export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<string>(filter || 'Todas');
-    const [activeFilter, setActiveFilter] = useState(true);
-    const [wifiFilter, setWifiFilter] = useState(false);
-    const [poolFilter, setPoolFilter] = useState(false);
-    const [gymFilter, setGymFilter] = useState(false);
-    const [spaFilter, setSpaFilter] = useState(false);
-    const [restaurantFilter, setRestaurantFilter] = useState(false);
-    const [parkingFilter, setParkingFilter] = useState(false);
-    const [accessibleFilter, setAccessibleFilter] = useState(false);
-    const [petFriendlyFilter, setPetFriendlyFilter] = useState(false);
+    const [caracteristicaFilter, setCaracteristicaFilter] = useState('Todas');
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
 
@@ -1224,99 +1151,78 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const filteredData = hotels.filter(h => {
         const matchesSearch = h.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRegion = selectedRegion === 'Todas' || h.region === selectedRegion;
-        const matchesActive = !activeFilter || h.isActive;
-        const matchesWifi = !wifiFilter || h.hasWifi;
-        const matchesPool = !poolFilter || h.hasPool;
-        const matchesGym = !gymFilter || h.hasGym;
-        const matchesSpa = !spaFilter || h.hasSpa;
-        const matchesRestaurant = !restaurantFilter || h.hasRestaurant;
-        const matchesParking = !parkingFilter || h.hasParking;
-        const matchesAccessible = !accessibleFilter || h.isAccessible;
-        const matchesPetFriendly = !petFriendlyFilter || h.isPetFriendly;
-        return matchesSearch && matchesRegion && matchesActive && matchesWifi && matchesPool && matchesGym && matchesSpa && matchesRestaurant && matchesParking && matchesAccessible && matchesPetFriendly;
+        const matchesCarac =
+            caracteristicaFilter === 'Todas' ||
+            (caracteristicaFilter === 'Activos' && h.isActive) ||
+            (caracteristicaFilter === 'Wifi' && h.hasWifi) ||
+            (caracteristicaFilter === 'Pileta' && h.hasPool) ||
+            (caracteristicaFilter === 'Gimnasio' && h.hasGym) ||
+            (caracteristicaFilter === 'Spa' && h.hasSpa) ||
+            (caracteristicaFilter === 'Restaurante' && h.hasRestaurant) ||
+            (caracteristicaFilter === 'Estacionamiento' && h.hasParking) ||
+            (caracteristicaFilter === 'Accesible' && h.isAccessible) ||
+            (caracteristicaFilter === 'Pet Friendly' && h.isPetFriendly);
+        return matchesSearch && matchesRegion && matchesCarac;
     });
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Hoteles</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <div className="relative w-full sm:flex-1 sm:min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Buscar hotel..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
-                        />
-                    </div>
-                    <div className="relative w-full sm:w-auto">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                            <Filter size={14} />
-                        </div>
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Hoteles</h2>
+                <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Buscar hotel..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
                         >
-                            <option value="Todas">Todas las regiones</option>
+                            <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-
+                    <div className="relative flex-1">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={caracteristicaFilter}
+                            onChange={(e) => setCaracteristicaFilter(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Tipo</option>
+                            <option value="Activos">Solo Activos</option>
+                            <option value="Wifi">Wifi</option>
+                            <option value="Pileta">Pileta</option>
+                            <option value="Gimnasio">Gimnasio</option>
+                            <option value="Spa">Spa</option>
+                            <option value="Restaurante">Restaurante</option>
+                            <option value="Estacionamiento">Estacionamiento</option>
+                            <option value="Accesible">Accesible</option>
+                            <option value="Pet Friendly">Pet Friendly</option>
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        title="Nuevo Hotel"
                     >
                         <Plus size={18} />
-                        Nuevo Hotel
+                        <span className="hidden sm:inline font-bold">Nuevo Hotel</span>
                     </button>
                 </div>
             </div>
-
-            {/* Quick Chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                    onClick={() => setSelectedRegion('Todas')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                    Todas
-                </button>
-                {REGION_OPTIONS.map(r => (
-                    <button
-                        key={r}
-                        onClick={() => setSelectedRegion(r)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                    >
-                        {r}
-                    </button>
-                ))}
-            </div>
-
-            {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
-                <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
-                <button onClick={() => setWifiFilter(!wifiFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${wifiFilter ? 'bg-white text-cyan-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Wifi size={12} />WiFi</button>
-                <button onClick={() => setPoolFilter(!poolFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${poolFilter ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Waves size={12} />Pileta</button>
-                <button onClick={() => setGymFilter(!gymFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${gymFilter ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dumbbell size={12} />Gimnasio</button>
-                <button onClick={() => setSpaFilter(!spaFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${spaFilter ? 'bg-white text-pink-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Sparkles size={12} />Spa</button>
-                <button onClick={() => setRestaurantFilter(!restaurantFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${restaurantFilter ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Utensils size={12} />Restaurante</button>
-                <button onClick={() => setParkingFilter(!parkingFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${parkingFilter ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Car size={12} />Parking</button>
-                <button onClick={() => setAccessibleFilter(!accessibleFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Accessibility size={12} />Accesible</button>
-                <button onClick={() => setPetFriendlyFilter(!petFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dog size={12} />Pet Friendly</button>
-            </div>
-
-            {/* Active Filter Pill */}
-            {selectedRegion !== 'Todas' && (
-                <div className="mb-6 inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-violet/20">
-                    <MapPin size={14} />
-                    <span>Filtrando por: {selectedRegion}</span>
-                    <button onClick={() => setSelectedRegion('Todas')} className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"><X size={14} /></button>
-                </div>
-            )}
 
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
@@ -1448,10 +1354,7 @@ const formatPrice = (min: number | null, max: number | null): string => {
 export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<string>(filter || 'Todas');
-    const [activeFilter, setActiveFilter] = useState(true);
-    const [accessibleFilter, setAccessibleFilter] = useState(false);
-    const [petFriendlyFilter, setPetFriendlyFilter] = useState(false);
-    const [kidFriendlyFilter, setKidFriendlyFilter] = useState(false);
+    const [caracteristicaFilter, setCaracteristicaFilter] = useState('Todas');
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
 
@@ -1489,89 +1392,68 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
     const filteredData = restaurants.filter(r => {
         const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRegion = selectedRegion === 'Todas' || r.region === selectedRegion;
-        const matchesActive = !activeFilter || r.isActive;
-        const matchesAccessible = !accessibleFilter || r.isAccessible;
-        const matchesPetFriendly = !petFriendlyFilter || r.isPetFriendly;
-        const matchesKidFriendly = !kidFriendlyFilter || r.isKidFriendly;
-        return matchesSearch && matchesRegion && matchesActive && matchesAccessible && matchesPetFriendly && matchesKidFriendly;
+        const matchesCarac =
+            caracteristicaFilter === 'Todas' ||
+            (caracteristicaFilter === 'Activos' && r.isActive) ||
+            (caracteristicaFilter === 'Accesible' && r.isAccessible) ||
+            (caracteristicaFilter === 'Pet Friendly' && r.isPetFriendly) ||
+            (caracteristicaFilter === 'Kid Friendly' && r.isKidFriendly);
+        return matchesSearch && matchesRegion && matchesCarac;
     });
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Restaurantes</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <div className="relative w-full sm:flex-1 sm:min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Buscar restaurante..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
-                        />
-                    </div>
-                    <div className="relative w-full sm:w-auto">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                            <Filter size={14} />
-                        </div>
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Restaurantes</h2>
+                <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Buscar restaurante..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
                         >
-                            <option value="Todas">Todas las regiones</option>
+                            <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-
+                    <div className="relative flex-1">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={caracteristicaFilter}
+                            onChange={(e) => setCaracteristicaFilter(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Tipo</option>
+                            <option value="Activos">Solo Activos</option>
+                            <option value="Accesible">Accesible</option>
+                            <option value="Pet Friendly">Pet Friendly</option>
+                            <option value="Kid Friendly">Kid Friendly</option>
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        title="Nuevo Restaurante"
                     >
                         <Plus size={18} />
-                        Nuevo Restaurante
+                        <span className="hidden sm:inline font-bold">Nuevo Restaurante</span>
                     </button>
                 </div>
             </div>
-
-            {/* Quick Chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                    onClick={() => setSelectedRegion('Todas')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                    Todas
-                </button>
-                {REGION_OPTIONS.map(r => (
-                    <button
-                        key={r}
-                        onClick={() => setSelectedRegion(r)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                    >
-                        {r}
-                    </button>
-                ))}
-            </div>
-
-            {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
-                <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
-                <button onClick={() => setAccessibleFilter(!accessibleFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Accessibility size={12} />Accesible</button>
-                <button onClick={() => setPetFriendlyFilter(!petFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dog size={12} />Pet Friendly</button>
-                <button onClick={() => setKidFriendlyFilter(!kidFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${kidFriendlyFilter ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Baby size={12} />Kid Friendly</button>
-            </div>
-
-            {/* Active Filter Pill */}
-            {selectedRegion !== 'Todas' && (
-                <div className="mb-6 inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-violet/20">
-                    <MapPin size={14} />
-                    <span>Filtrando por: {selectedRegion}</span>
-                    <button onClick={() => setSelectedRegion('Todas')} className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"><X size={14} /></button>
-                </div>
-            )}
 
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
@@ -1669,10 +1551,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
     const [activities, setActivities] = useState<ActivityType[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<string>(filter || 'Todas');
-    const [accessibleFilter, setAccessibleFilter] = useState(false);
-    const [petFriendlyFilter, setPetFriendlyFilter] = useState(false);
-    const [kidFriendlyFilter, setKidFriendlyFilter] = useState(false);
-    const [activeFilter, setActiveFilter] = useState(true);
+    const [caracteristicaFilter, setCaracteristicaFilter] = useState('Todas');
     const [selectedActivity, setSelectedActivity] = useState<ActivityType | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
@@ -1708,74 +1587,68 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
             (a.provider || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (a.contact || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRegion = selectedRegion === 'Todas' || a.region === selectedRegion;
-        const matchesActive = !activeFilter || a.isActive;
-        const matchesAccessible = !accessibleFilter || a.isAccessible;
-        const matchesPetFriendly = !petFriendlyFilter || a.isPetFriendly;
-        const matchesKidFriendly = !kidFriendlyFilter || a.isKidFriendly;
-        return matchesSearch && matchesRegion && matchesActive && matchesAccessible && matchesPetFriendly && matchesKidFriendly;
+        const matchesCarac =
+            caracteristicaFilter === 'Todas' ||
+            (caracteristicaFilter === 'Activos' && a.isActive) ||
+            (caracteristicaFilter === 'Accesible' && a.isAccessible) ||
+            (caracteristicaFilter === 'Pet Friendly' && a.isPetFriendly) ||
+            (caracteristicaFilter === 'Kid Friendly' && a.isKidFriendly);
+        return matchesSearch && matchesRegion && matchesCarac;
     });
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Actividades</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <div className="relative w-full sm:flex-1 sm:min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Buscar actividad, proveedor..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
-                        />
-                    </div>
-                    <div className="relative w-full sm:w-auto">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                            <Filter size={14} />
-                        </div>
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Actividades</h2>
+                <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Buscar actividad, proveedor..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
                         >
-                            <option value="Todas">Todas las regiones</option>
+                            <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-                    <button onClick={() => setShowAddModal(true)} className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                    <div className="relative flex-1">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={caracteristicaFilter}
+                            onChange={(e) => setCaracteristicaFilter(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Tipo</option>
+                            <option value="Activos">Solo Activos</option>
+                            <option value="Accesible">Accesible</option>
+                            <option value="Pet Friendly">Pet Friendly</option>
+                            <option value="Kid Friendly">Kid Friendly</option>
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        title="Nueva Actividad"
+                    >
                         <Plus size={18} />
-                        Nueva Actividad
+                        <span className="hidden sm:inline font-bold">Nueva Actividad</span>
                     </button>
                 </div>
             </div>
-
-            {/* Quick Chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                <button onClick={() => setSelectedRegion('Todas')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Todas</button>
-                {REGION_OPTIONS.map(r => (
-                    <button key={r} onClick={() => setSelectedRegion(r)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{r}</button>
-                ))}
-            </div>
-
-            {/* Toggle Filters */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg mb-4 flex-wrap">
-                <button onClick={() => setActiveFilter(!activeFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeFilter ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Solo Activos</button>
-                <button onClick={() => setAccessibleFilter(!accessibleFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${accessibleFilter ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Accessibility size={12} />Accesible</button>
-                <button onClick={() => setPetFriendlyFilter(!petFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${petFriendlyFilter ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Dog size={12} />Pet Friendly</button>
-                <button onClick={() => setKidFriendlyFilter(!kidFriendlyFilter)} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${kidFriendlyFilter ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Baby size={12} />Apto Chicos</button>
-            </div>
-
-            {/* Active Filter Pill */}
-            {selectedRegion !== 'Todas' && (
-                <div className="mb-6 inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-violet/20">
-                    <MapPin size={14} />
-                    <span>Filtrando por: {selectedRegion}</span>
-                    <button onClick={() => setSelectedRegion('Todas')} className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"><X size={14} /></button>
-                </div>
-            )}
 
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
