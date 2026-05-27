@@ -1775,12 +1775,10 @@ export const RoutesView: React.FC = () => {
             ganancia: Number(ganancia)
         });
         setIsSaving(false);
-        if (!error) {
-            setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 3000);
-        } else {
+        if (error) {
             console.error('Error saving settings:', error);
-            // Even if table doesn't exist yet, show success for UX demo or alert
+            alert('Error al guardar la configuración. Revisá la consola.');
+        } else {
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         }
