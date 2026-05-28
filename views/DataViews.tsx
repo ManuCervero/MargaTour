@@ -983,8 +983,8 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
                             <th className="px-6 py-3">Atributos</th>
-                            <th className="px-6 py-3 text-right">Precio Menú</th>
-                            <th className="px-6 py-3 text-right">Precio Degust.</th>
+                            <th className="px-6 py-3 text-right">Menú p/p</th>
+                            <th className="px-6 py-3 text-right">Degust. p/p</th>
                             <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
@@ -1015,14 +1015,14 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {w.menuPrice != null ? (
-                                        <span className="text-sm font-semibold text-gray-700">${w.menuPrice}</span>
+                                        <span className="text-sm font-bold text-gray-800">${w.menuPrice}</span>
                                     ) : (
                                         <span className="text-gray-300 text-xs">-</span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {w.degustationPrice != null ? (
-                                        <span className="text-sm font-semibold text-gray-700">${w.degustationPrice}</span>
+                                        <span className="text-sm font-bold text-gray-800">${w.degustationPrice}</span>
                                     ) : (
                                         <span className="text-gray-300 text-xs">-</span>
                                     )}
@@ -1238,7 +1238,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
                             <th className="px-6 py-3">Atributos</th>
-                            <th className="px-6 py-3 text-right">USD/Noche</th>
+                            <th className="px-6 py-3 text-right">USD/Hab.</th>
                             <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3 text-center">Estrellas</th>
                             <th className="px-6 py-3 text-center">Activo</th>
@@ -1469,7 +1469,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
                             <th className="px-6 py-3">Atributos</th>
-                            <th className="px-6 py-3 text-right">Precio/Persona</th>
+                            <th className="px-6 py-3 text-right">USD p/p</th>
                             <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3">Horarios</th>
                             <th className="px-6 py-3 text-center">Activo</th>
@@ -1664,7 +1664,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                             <th className="px-6 py-3">Actividad</th>
                             <th className="px-6 py-3">Región</th>
                             <th className="px-6 py-3">Atributos</th>
-                            <th className="px-6 py-3 text-right">Precio</th>
+                            <th className="px-6 py-3 text-right">USD p/p</th>
                             <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
@@ -1692,8 +1692,8 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         {!a.isAccessible && !a.isPetFriendly && !a.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-right text-sm text-gray-700 font-medium">
-                                    {a.price || '—'}
+                                <td className="px-6 py-4 text-right">
+                                    <span className="text-sm font-bold text-gray-800">{a.price || '—'}</span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col gap-1">
