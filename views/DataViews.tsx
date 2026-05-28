@@ -888,6 +888,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     email: p.email,
                     address: p.address,
                     website: p.website,
+                    description: p.description,
                     notes: p.notes,
                 }));
                 setWineries(mapped);
@@ -1108,6 +1109,7 @@ interface Hotel {
     phone: string;
     email: string;
     description: string;
+    notes: string;
 }
 
 export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
@@ -1140,6 +1142,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     phone: p.phone,
                     email: p.email,
                     description: p.description,
+                    notes: p.notes,
                 }));
                 setHotels(mapped);
             }
@@ -1346,6 +1349,9 @@ interface Restaurant {
     isKidFriendly: boolean;
     isActive: boolean;
     phone: string;
+    email: string;
+    description: string;
+    notes: string;
 }
 
 const formatPrice = (min: number | null, max: number | null): string => {
@@ -1381,6 +1387,9 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     isKidFriendly: !!p.is_kid_friendly,
                     isActive: !!p.is_active,
                     phone: p.phone,
+                    email: p.email,
+                    description: p.description,
+                    notes: p.notes,
                 }));
                 setRestaurants(mapped);
             }

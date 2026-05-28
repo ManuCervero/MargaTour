@@ -16,6 +16,8 @@ interface Restaurant {
     isActive: boolean;
     phone: string;
     email?: string;
+    description?: string;
+    notes?: string;
 }
 
 interface RestaurantDrawerProps {
@@ -49,6 +51,8 @@ export const RestaurantDrawer: React.FC<RestaurantDrawerProps> = ({ restaurant, 
                 is_active: form.isActive,
                 phone: form.phone,
                 email: form.email,
+                description: form.description,
+                notes: form.notes,
             })
             .eq('id', form.id);
 
@@ -133,6 +137,14 @@ export const RestaurantDrawer: React.FC<RestaurantDrawerProps> = ({ restaurant, 
                                     <Clock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" value={form.schedule || ''} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="Lun-Sáb 12:00-15:00 / 20:00-00:00" className="w-full pl-9 pr-3 py-2 text-sm border-gray-300 rounded-lg border focus:ring-2 focus:ring-marga-violet focus:outline-none" />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                                <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Descripción del restaurante..." />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Notas Internas</label>
+                                <textarea value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Tips, condiciones especiales, etc." />
                             </div>
                         </div>
                     </section>

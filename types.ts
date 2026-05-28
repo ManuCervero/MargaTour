@@ -166,6 +166,7 @@ export interface Winery {
   email?: string;
   address?: string;
   website?: string;
+  description?: string;
   notes?: string;
   requiresReservation?: boolean;
 }

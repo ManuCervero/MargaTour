@@ -31,6 +31,7 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                 department: form.department,
                 address: form.address,
                 website: form.website,
+                description: form.description,
                 notes: form.notes,
                 phone: form.phone,
                 email: form.email,
@@ -154,8 +155,12 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                                 </div>
                             </div>
                             <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                                <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Descripción de la bodega..."></textarea>
+                            </div>
+                            <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Notas Internas</label>
-                                <textarea value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Detalles de reserva, tips, etc."></textarea>
+                                <textarea value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Detalles de reserva, tips, etc."></textarea>
                             </div>
                         </div>
                     </section>

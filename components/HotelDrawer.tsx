@@ -21,6 +21,7 @@ interface Hotel {
     phone: string;
     email: string;
     description: string;
+    notes?: string;
 }
 
 interface HotelDrawerProps {
@@ -59,6 +60,7 @@ export const HotelDrawer: React.FC<HotelDrawerProps> = ({ hotel, onClose, onSave
                 phone: form.phone,
                 email: form.email,
                 description: form.description,
+                notes: form.notes,
             })
             .eq('id', form.id);
 
@@ -151,8 +153,12 @@ export const HotelDrawer: React.FC<HotelDrawerProps> = ({ hotel, onClose, onSave
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Descripción / Notas</label>
-                                <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Detalles del hotel, ubicación, etc." />
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                                <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Descripción del hotel, ubicación, etc." />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Notas Internas</label>
+                                <textarea value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full text-sm border-gray-300 rounded-lg p-2 border focus:ring-2 focus:ring-marga-violet focus:outline-none" placeholder="Tips, condiciones especiales, etc." />
                             </div>
                         </div>
                     </section>
