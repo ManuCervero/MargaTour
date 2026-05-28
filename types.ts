@@ -155,11 +155,13 @@ export interface Winery {
   region: RegionName | string;
   department?: string;
   hasRestaurant: boolean;
+  hasDegustation: boolean;
   isAccessible: boolean;
   isPetFriendly: boolean;
   isKidFriendly: boolean;
-  isRecommended: boolean;
   isActive: boolean;
+  menuPrice?: number;
+  degustationPrice?: number;
   phone?: string;
   email?: string;
   address?: string;

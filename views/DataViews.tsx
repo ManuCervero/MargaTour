@@ -877,11 +877,13 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     region: p.region,
                     department: p.department,
                     hasRestaurant: !!p.has_restaurant,
+                    hasDegustation: !!p.has_degustation,
                     isAccessible: !!p.is_accessible,
                     isPetFriendly: !!p.is_pet_friendly,
                     isKidFriendly: !!p.is_kid_friendly,
-                    isRecommended: !!p.is_recommended,
                     isActive: !!p.is_active,
+                    menuPrice: p.menu_price,
+                    degustationPrice: p.degustation_price,
                     phone: p.phone,
                     email: p.email,
                     address: p.address,
@@ -909,8 +911,8 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
         const matchesCarac =
             caracteristicaFilter === 'Todas' ||
             (caracteristicaFilter === 'Activas' && w.isActive) ||
-            (caracteristicaFilter === 'Recomendadas' && w.isRecommended) ||
             (caracteristicaFilter === 'Con Restaurante' && w.hasRestaurant) ||
+            (caracteristicaFilter === 'Con Degustación' && w.hasDegustation) ||
             (caracteristicaFilter === 'Accesible' && w.isAccessible) ||
             (caracteristicaFilter === 'Pet Friendly' && w.isPetFriendly) ||
             (caracteristicaFilter === 'Kid Friendly' && w.isKidFriendly);
@@ -954,8 +956,8 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         >
                             <option value="Todas">Tipo</option>
                             <option value="Activas">Solo Activas</option>
-                            <option value="Recomendadas">Recomendadas</option>
                             <option value="Con Restaurante">Con Restaurante</option>
+                            <option value="Con Degustación">Con Degustación</option>
                             <option value="Accesible">Accesible</option>
                             <option value="Pet Friendly">Pet Friendly</option>
                             <option value="Kid Friendly">Kid Friendly</option>
@@ -980,10 +982,10 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <tr>
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
-                            <th className="px-6 py-3 text-center">Restaurante</th>
                             <th className="px-6 py-3">Atributos</th>
+                            <th className="px-6 py-3 text-right">Precio Menú</th>
+                            <th className="px-6 py-3 text-right">Precio Degust.</th>
                             <th className="px-6 py-3">Contacto</th>
-                            <th className="px-6 py-3 text-center">Recomendado</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
@@ -1001,22 +1003,29 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         {w.region}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-center">
-                                    {w.hasRestaurant ? (
-                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600" title="Sí">
-                                            <Utensils size={12} />
-                                        </span>
-                                    ) : (
-                                        <span className="text-gray-300">-</span>
-                                    )}
-                                </td>
                                 <td className="px-6 py-4">
                                     <div className="flex gap-1">
+                                        {w.hasRestaurant && <div className="p-1 rounded bg-orange-50 text-orange-600" title="Restaurante"><Utensils size={12} /></div>}
+                                        {w.hasDegustation && <div className="p-1 rounded bg-purple-50 text-purple-600" title="Degustación"><Wine size={12} /></div>}
                                         {w.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
                                         {w.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
                                         {w.isKidFriendly && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Kid Friendly"><Baby size={12} /></div>}
-                                        {!w.isAccessible && !w.isPetFriendly && !w.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
+                                        {!w.hasRestaurant && !w.hasDegustation && !w.isAccessible && !w.isPetFriendly && !w.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
                                     </div>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    {w.menuPrice != null ? (
+                                        <span className="text-sm font-semibold text-gray-700">${w.menuPrice}</span>
+                                    ) : (
+                                        <span className="text-gray-300 text-xs">-</span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    {w.degustationPrice != null ? (
+                                        <span className="text-sm font-semibold text-gray-700">${w.degustationPrice}</span>
+                                    ) : (
+                                        <span className="text-gray-300 text-xs">-</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col gap-1">
@@ -1034,9 +1043,6 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         )}
                                         {!w.phone && !w.email && <span className="text-gray-300 text-xs">-</span>}
                                     </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    {w.isRecommended ? <Star size={16} className="text-yellow-400 fill-yellow-400 mx-auto" /> : <Star size={16} className="text-gray-200 mx-auto" />}
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${w.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -1793,7 +1799,7 @@ export const RoutesView: React.FC = () => {
 
         if (aIsCircular && !bIsCircular) return -1;
         if (!aIsCircular && bIsCircular) return 1;
-        return 0; // Maintain existing 'order by origin' from Supabase for the rest
+        return 0;
     });
 
     return (

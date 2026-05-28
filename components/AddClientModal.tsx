@@ -36,7 +36,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
         if (!formData.name.trim()) return;
 
         setLoading(true);
-        // Supabase will automatically generate ID and created_at
+        // ID and created_at are generated automatically by the API
         const { error } = await api.from('clients').insert([{
             name: formData.name,
             email: formData.email,

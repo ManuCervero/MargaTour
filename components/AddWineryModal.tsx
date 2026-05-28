@@ -20,11 +20,13 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
         email: '',
         website: '',
         notes: '',
+        menu_price: '' as number | '',
+        degustation_price: '' as number | '',
         has_restaurant: false,
+        has_degustation: false,
         is_accessible: false,
         is_pet_friendly: false,
         is_kid_friendly: false,
-        is_recommended: false,
         is_active: true,
     });
 
@@ -33,7 +35,12 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
         if (!formData.name.trim()) return;
 
         setLoading(true);
-        const { error } = await api.from('wineries').insert([formData]);
+        const payload = {
+            ...formData,
+            menu_price: formData.menu_price === '' ? null : formData.menu_price,
+            degustation_price: formData.degustation_price === '' ? null : formData.degustation_price,
+        };
+        const { error } = await api.from('wineries').insert([payload]);
         setLoading(false);
 
         if (!error) {
@@ -49,11 +56,13 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                 email: '',
                 website: '',
                 notes: '',
+                menu_price: '',
+                degustation_price: '',
                 has_restaurant: false,
+                has_degustation: false,
                 is_accessible: false,
                 is_pet_friendly: false,
                 is_kid_friendly: false,
-                is_recommended: false,
                 is_active: true,
             });
         } else {
@@ -174,6 +183,40 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                             />
                         </div>
 
+                        {/* Menu Price */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Precio Menú (USD)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={formData.menu_price}
+                                    onChange={(e) => setFormData({ ...formData, menu_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                                    className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Degustation Price */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Precio Degustación (USD)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={formData.degustation_price}
+                                    onChange={(e) => setFormData({ ...formData, degustation_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                                    className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+
                         {/* Notes */}
                         <div className="col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-1">Notas</label>
@@ -182,7 +225,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 rows={3}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                                placeholder="Información adicional, precios, horarios..."
+                                placeholder="Información adicional, horarios..."
                             />
                         </div>
 
@@ -229,11 +272,11 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                                     <input
                                         type="checkbox"
-                                        checked={formData.is_recommended}
-                                        onChange={(e) => setFormData({ ...formData, is_recommended: e.target.checked })}
+                                        checked={formData.has_degustation}
+                                        onChange={(e) => setFormData({ ...formData, has_degustation: e.target.checked })}
                                         className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                                     />
-                                    <span className="text-sm text-gray-700">Recomendada</span>
+                                    <span className="text-sm text-gray-700">Degustación</span>
                                 </label>
                                 <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                                     <input

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Winery } from '../types';
 import { REGION_OPTIONS } from '../constants';
-import { X, MapPin, Globe, Phone, Mail, Save, Star, Baby, Dog, Accessibility, Utensils, Loader2 } from 'lucide-react';
+import { X, MapPin, Globe, Phone, Mail, Save, Baby, Dog, Accessibility, Utensils, Wine, DollarSign, Loader2 } from 'lucide-react';
 
 interface WineryDrawerProps {
     winery: Winery | null;
@@ -34,9 +34,11 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                 notes: form.notes,
                 phone: form.phone,
                 email: form.email,
+                menu_price: form.menuPrice ?? null,
+                degustation_price: form.degustationPrice ?? null,
                 is_active: form.isActive,
-                is_recommended: form.isRecommended,
                 has_restaurant: form.hasRestaurant,
+                has_degustation: form.hasDegustation,
                 is_accessible: form.isAccessible,
                 is_pet_friendly: form.isPetFriendly,
                 is_kid_friendly: form.isKidFriendly,
@@ -89,20 +91,34 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-6 flex-wrap">
                         <label className="flex items-center gap-2 cursor-pointer" onClick={() => toggle('isActive')}>
                             <div className={`w-10 h-5 rounded-full p-0.5 transition-colors ${form.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
                                 <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${form.isActive ? 'translate-x-5' : 'translate-x-0'}`}></div>
                             </div>
                             <span className="text-sm font-medium text-gray-600">Activo</span>
                         </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer group" onClick={() => toggle('isRecommended')}>
-                            <button className={`p-1.5 rounded-full transition-colors ${form.isRecommended ? 'bg-yellow-100 text-yellow-500' : 'bg-gray-100 text-gray-400 group-hover:text-yellow-400'}`}>
-                                <Star size={18} fill={form.isRecommended ? "currentColor" : "none"} />
-                            </button>
-                            <span className="text-sm font-medium text-gray-600">Recomendado</span>
-                        </label>
+                        <div className="flex items-center gap-2">
+                            <DollarSign size={15} className="text-gray-400" />
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.menuPrice ?? ''}
+                                onChange={(e) => setForm({ ...form, menuPrice: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
+                                placeholder="Precio menú"
+                                className="w-28 text-sm border-gray-300 rounded-lg px-2 py-1 border focus:ring-2 focus:ring-marga-violet focus:outline-none"
+                            />
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.degustationPrice ?? ''}
+                                onChange={(e) => setForm({ ...form, degustationPrice: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
+                                placeholder="Precio degust."
+                                className="w-28 text-sm border-gray-300 rounded-lg px-2 py-1 border focus:ring-2 focus:ring-marga-violet focus:outline-none"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -178,6 +194,18 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                                 </div>
                                 <div onClick={() => toggle('hasRestaurant')} className={`w-10 h-5 rounded-full p-0.5 cursor-pointer transition-colors ${form.hasRestaurant ? 'bg-marga-violet' : 'bg-gray-300'}`}>
                                     <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${form.hasRestaurant ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                                        <Wine size={16} />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-700">Degustación</span>
+                                </div>
+                                <div onClick={() => toggle('hasDegustation')} className={`w-10 h-5 rounded-full p-0.5 cursor-pointer transition-colors ${form.hasDegustation ? 'bg-marga-violet' : 'bg-gray-300'}`}>
+                                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${form.hasDegustation ? 'translate-x-5' : 'translate-x-0'}`}></div>
                                 </div>
                             </div>
 
