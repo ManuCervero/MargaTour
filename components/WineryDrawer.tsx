@@ -26,6 +26,7 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
         setSaving(true);
         const { error } = await api.from('wineries')
             .update({
+                name: form.name,
                 region: form.region,
                 department: form.department,
                 address: form.address,
@@ -66,7 +67,12 @@ export const WineryDrawer: React.FC<WineryDrawerProps> = ({ winery, onClose, onS
                 <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col gap-4">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-xl font-extrabold text-gray-800 leading-tight">{winery.name}</h2>
+                            <input
+                                type="text"
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                className="text-xl font-extrabold text-gray-800 leading-tight bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-marga-violet focus:outline-none w-full"
+                            />
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="bg-marga-violet text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wide">
                                     {form.region}
