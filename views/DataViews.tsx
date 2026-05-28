@@ -1237,10 +1237,10 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <tr>
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
-                            <th className="px-6 py-3 text-center">Estrellas</th>
+                            <th className="px-6 py-3">Atributos</th>
                             <th className="px-6 py-3 text-right">USD/Noche</th>
-                            <th className="px-6 py-3">Servicios</th>
                             <th className="px-6 py-3">Contacto</th>
+                            <th className="px-6 py-3 text-center">Estrellas</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
@@ -1255,16 +1255,6 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                 <td className="px-6 py-4">
                                     <span className="inline-flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded text-xs font-medium text-gray-600">{h.region}</span>
                                 </td>
-                                <td className="px-6 py-4 text-center">
-                                    <div className="flex items-center justify-center gap-0.5">
-                                        {[1, 2, 3, 4, 5].map(s => (
-                                            <Star key={s} size={12} className={s <= h.stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'} />
-                                        ))}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right font-mono font-bold text-gray-800">
-                                    {h.pricePerNight ? `$${h.pricePerNight.toLocaleString()}` : '—'}
-                                </td>
                                 <td className="px-6 py-4">
                                     <div className="flex gap-1 flex-wrap">
                                         {h.hasWifi && <div className="p-1 rounded bg-cyan-50 text-cyan-600" title="WiFi"><Wifi size={12} /></div>}
@@ -1277,6 +1267,9 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         {h.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
                                         {!h.hasWifi && !h.hasPool && !h.hasGym && !h.hasSpa && !h.hasRestaurant && !h.hasParking && !h.isAccessible && !h.isPetFriendly && <span className="text-gray-300 text-xs">—</span>}
                                     </div>
+                                </td>
+                                <td className="px-6 py-4 text-right font-mono font-bold text-gray-800">
+                                    {h.pricePerNight ? `$${h.pricePerNight.toLocaleString()}` : '—'}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col gap-1">
@@ -1293,6 +1286,13 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                             </div>
                                         )}
                                         {!h.phone && !h.email && <span className="text-gray-300 text-xs">-</span>}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <div className="flex items-center justify-center gap-0.5">
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <Star key={s} size={12} className={s <= h.stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'} />
+                                        ))}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
@@ -1468,10 +1468,10 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <tr>
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Región</th>
-                            <th className="px-6 py-3">Horarios</th>
-                            <th className="px-6 py-3 text-right">Precio/Persona</th>
                             <th className="px-6 py-3">Atributos</th>
+                            <th className="px-6 py-3 text-right">Precio/Persona</th>
                             <th className="px-6 py-3">Contacto</th>
+                            <th className="px-6 py-3">Horarios</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
@@ -1486,23 +1486,17 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     <span className="inline-flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded text-xs font-medium text-gray-600">{r.region}</span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <div className="flex items-start gap-1.5 text-xs text-gray-600 max-w-[200px]">
-                                        <Clock size={12} className="text-gray-400 mt-0.5 shrink-0" />
-                                        <span>{r.schedule || '—'}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <span className="inline-flex items-center gap-1 font-mono font-bold text-gray-800">
-                                        {formatPrice(r.priceMin, r.priceMax)}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
                                     <div className="flex gap-1">
                                         {r.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
                                         {r.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
                                         {r.isKidFriendly && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Kid Friendly"><Baby size={12} /></div>}
                                         {!r.isAccessible && !r.isPetFriendly && !r.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
                                     </div>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <span className="inline-flex items-center gap-1 font-mono font-bold text-gray-800">
+                                        {formatPrice(r.priceMin, r.priceMax)}
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4">
                                     {r.phone ? (
@@ -1513,6 +1507,12 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     ) : (
                                         <span className="text-gray-300 text-xs">-</span>
                                     )}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-start gap-1.5 text-xs text-gray-600 max-w-[200px]">
+                                        <Clock size={12} className="text-gray-400 mt-0.5 shrink-0" />
+                                        <span>{r.schedule || '—'}</span>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${r.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -1663,9 +1663,9 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <tr>
                             <th className="px-6 py-3">Actividad</th>
                             <th className="px-6 py-3">Región</th>
-                            <th className="px-6 py-3">Contacto</th>
-                            <th className="px-6 py-3 text-right">Precio</th>
                             <th className="px-6 py-3">Atributos</th>
+                            <th className="px-6 py-3 text-right">Precio</th>
+                            <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3 text-center">Activo</th>
                             <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
@@ -1685,6 +1685,17 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
+                                    <div className="flex gap-1">
+                                        {a.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
+                                        {a.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
+                                        {a.isKidFriendly && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Apto chicos"><Baby size={12} /></div>}
+                                        {!a.isAccessible && !a.isPetFriendly && !a.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 text-right text-sm text-gray-700 font-medium">
+                                    {a.price || '—'}
+                                </td>
+                                <td className="px-6 py-4">
                                     <div className="flex flex-col gap-1">
                                         {a.contact && <span className="text-xs text-gray-700 font-medium">{a.contact}</span>}
                                         {a.phone && (
@@ -1694,17 +1705,6 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                             </div>
                                         )}
                                         {!a.contact && !a.phone && <span className="text-gray-300 text-xs">—</span>}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right text-sm text-gray-700 font-medium">
-                                    {a.price || '—'}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex gap-1">
-                                        {a.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
-                                        {a.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
-                                        {a.isKidFriendly && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Apto chicos"><Baby size={12} /></div>}
-                                        {!a.isAccessible && !a.isPetFriendly && !a.isKidFriendly && <span className="text-gray-300 text-xs">—</span>}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
