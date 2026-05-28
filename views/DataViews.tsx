@@ -2016,8 +2016,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
 
     useEffect(() => { fetchExperiences(); }, []);
 
-    const categories = ['Todas', ...Array.from(new Set(experiences.map(e => e.category).filter(Boolean)))];
-    const regions = ['Todas', ...REGION_OPTIONS];
+    const categories = Array.from(new Set(experiences.map(e => e.category).filter(Boolean)));
 
     const filtered = experiences.filter(e => {
         const matchSearch = !searchTerm ||
@@ -2030,136 +2029,146 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
     });
 
     return (
-        <div className="h-full flex flex-col overflow-hidden">
-            {/* Page Header */}
-            <div className="px-4 sm:px-8 py-5 border-b border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
-                <div>
-                    <h2 className="text-2xl font-extrabold text-gray-800">Experiencias</h2>
-                    <p className="text-sm text-gray-400 mt-0.5">{filtered.length} experiencias en catálogo</p>
+        <div className="p-4 sm:p-6 h-full overflow-y-auto">
+            {/* Header */}
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Experiencias</h2>
+                <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Buscar experiencia..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                    />
                 </div>
-                <button onClick={() => setShowAddModal(true)}
-                    className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
-                    <Plus size={18} /> Nueva Experiencia
-                </button>
-            </div>
-
-            {/* Filters */}
-            <div className="px-4 sm:px-8 py-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-3 shrink-0">
-                {/* Search */}
-                <div className="relative flex-1 min-w-[200px] max-w-xs">
-                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input type="text" placeholder="Buscar experiencia..." value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet/30" />
-                </div>
-
-                {/* Region filter */}
-                <div className="flex gap-1.5 flex-wrap">
-                    {regions.map(r => (
-                        <button key={r} onClick={() => setSelectedRegion(r)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                                selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}>{r}</button>
-                    ))}
-                </div>
-
-                {/* Category filter */}
-                <div className="flex gap-1.5 flex-wrap">
-                    {categories.map((c: string) => {
-                        const col = CATEGORY_COLORS[c];
-                        const active = selectedCategory === c;
-                        return (
-                            <button key={c} onClick={() => setSelectedCategory(c)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                                    active ? (col ? `${col.bg} ${col.text}` : 'bg-gray-700 text-white') : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}>{c}</button>
-                        );
-                    })}
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={selectedRegion}
+                            onChange={(e) => setSelectedRegion(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Región</option>
+                            {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
+                    <div className="relative flex-1">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                        >
+                            <option value="Todas">Categoría</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <ChevronDownIcon />
+                    </div>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        title="Nueva Experiencia"
+                    >
+                        <Plus size={18} />
+                        <span className="hidden sm:inline font-bold">Nueva Experiencia</span>
+                    </button>
                 </div>
             </div>
 
             {/* Table */}
-            <div className="flex-1 overflow-auto">
-                <table className="min-w-full">
-                    <thead className="sticky top-0 bg-gray-50 z-10">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Experiencia</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Región</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Categoría</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Duración</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Precio</th>
-                            <th className="px-6 py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+                            <th className="px-6 py-3">Experiencia</th>
+                            <th className="px-6 py-3">Región</th>
+                            <th className="px-6 py-3">Atributos</th>
+                            <th className="px-6 py-3 text-right">USD p/p</th>
+                            <th className="px-6 py-3">Contacto</th>
+                            <th className="px-6 py-3">Categoría</th>
+                            <th className="px-6 py-3">Duración</th>
+                            <th className="px-6 py-3 text-center">Activo</th>
+                            <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-50">
-                        {filtered.length === 0 ? (
-                            <tr><td colSpan={6} className="px-6 py-16 text-center text-gray-400 text-sm">No se encontraron experiencias</td></tr>
-                        ) : filtered.map(exp => {
+                    <tbody className="divide-y divide-gray-100">
+                        {filtered.map((exp) => {
                             const col = CATEGORY_COLORS[exp.category] || { bg: 'bg-gray-100', text: 'text-gray-600' };
                             return (
-                                <tr key={exp.id}
-                                    onClick={() => setSelectedExperience(exp)}
-                                    className="hover:bg-gray-50 cursor-pointer transition-colors group">
-                                    {/* Experiencia */}
+                                <tr key={exp.id} className="hover:bg-gray-50 transition-colors group">
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            {exp.image_url ? (
-                                                <img src={exp.image_url} alt={exp.name}
-                                                    className="w-12 h-10 rounded-lg object-cover shrink-0 group-hover:scale-105 transition-transform" />
-                                            ) : (
-                                                <div className="w-12 h-10 rounded-lg bg-marga-violet/10 flex items-center justify-center shrink-0">
-                                                    <Star size={16} className="text-marga-violet" />
-                                                </div>
-                                            )}
-                                            <div>
-                                                <p className="font-bold text-gray-800 text-sm leading-tight">{exp.name}</p>
-                                                {exp.highlight && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{exp.highlight}</p>}
-                                            </div>
+                                        <button onClick={() => setSelectedExperience(exp)} className="font-bold text-gray-800 hover:text-marga-violet text-left">
+                                            {exp.name}
+                                        </button>
+                                        {exp.highlight && <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">{exp.highlight}</p>}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="inline-flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded text-xs font-medium text-gray-600">
+                                            {exp.region || '—'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex gap-1">
+                                            {exp.is_accessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
+                                            {!exp.is_accessible && <span className="text-gray-300 text-xs">—</span>}
                                         </div>
                                     </td>
-                                    {/* Región */}
-                                    <td className="px-6 py-4">
-                                        {exp.region && (
-                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-marga-violet bg-marga-violet/10 px-2 py-0.5 rounded-full">
-                                                <MapPin size={10} />{exp.region}
-                                            </span>
-                                        )}
+                                    <td className="px-6 py-4 text-right">
+                                        <span className="text-sm font-bold text-gray-800">{exp.price || '—'}</span>
                                     </td>
-                                    {/* Categoría */}
                                     <td className="px-6 py-4">
-                                        {exp.category && (
+                                        <div className="flex flex-col gap-1">
+                                            {exp.contact && <span className="text-xs text-gray-700 font-medium">{exp.contact}</span>}
+                                            {exp.phone && (
+                                                <div className="flex items-center text-xs text-gray-500 gap-1.5">
+                                                    <Phone size={12} />
+                                                    <span className="truncate max-w-[120px]">{exp.phone}</span>
+                                                </div>
+                                            )}
+                                            {!exp.contact && !exp.phone && <span className="text-gray-300 text-xs">—</span>}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {exp.category ? (
                                             <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full ${col.bg} ${col.text}`}>
                                                 {exp.category}
                                             </span>
-                                        )}
+                                        ) : <span className="text-gray-300 text-xs">—</span>}
                                     </td>
-                                    {/* Duración */}
                                     <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-600">
-                                            {exp.duration && <span className="flex items-center gap-1"><Clock size={12} className="text-gray-400" />{exp.duration}</span>}
-                                            {exp.departure_time && <span className="text-xs text-gray-400 mt-0.5 block">Salida: {exp.departure_time}</span>}
+                                        <div className="text-xs text-gray-600">
+                                            {exp.duration && <span className="flex items-center gap-1"><Clock size={11} className="text-gray-400" />{exp.duration}</span>}
+                                            {exp.departure_time && <span className="text-gray-400 mt-0.5 block">Salida: {exp.departure_time}</span>}
+                                            {!exp.duration && !exp.departure_time && <span className="text-gray-300">—</span>}
                                         </div>
                                     </td>
-                                    {/* Precio */}
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm font-bold text-gray-800">{exp.price || '—'}</span>
-                                    </td>
-                                    {/* Estado */}
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${
-                                            exp.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                                        }`}>
-                                            {exp.is_active ? 'Activa' : 'Inactiva'}
-                                        </span>
-                                        {exp.is_accessible && (
-                                            <span className="ml-1 inline-flex items-center text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                                                <Accessibility size={10} />
-                                            </span>
-                                        )}
+                                        <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${exp.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                            <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${exp.is_active ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => setSelectedExperience(exp)}
+                                            className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"
+                                        >
+                                            <Eye size={14} /> Ver
+                                        </button>
                                     </td>
                                 </tr>
                             );
                         })}
+                        {filtered.length === 0 && (
+                            <tr>
+                                <td colSpan={9} className="px-6 py-12 text-center text-gray-400 text-sm">
+                                    No se encontraron experiencias con los filtros seleccionados.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
