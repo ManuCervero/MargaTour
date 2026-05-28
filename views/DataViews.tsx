@@ -1717,7 +1717,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         onClick={() => setSelectedActivity(a)}
                                         className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"
                                     >
-                                        <Eye size={14} /> Ver / Editar
+                                        <Eye size={14} /> Ver
                                     </button>
                                 </td>
                             </tr>
