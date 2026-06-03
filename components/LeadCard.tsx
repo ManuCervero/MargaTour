@@ -20,14 +20,14 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
       case LeadPriority.HIGH: return 'bg-red-100 text-red-700 border-red-200';
       case LeadPriority.MEDIUM: return 'bg-orange-100 text-orange-700 border-orange-200';
       case LeadPriority.LOW: return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-600';
+      default: return 'bg-marga-creamDark text-marga-dark/60';
     }
   };
 
   const getTypeColor = (t: ServiceType) => {
       switch(t) {
           case ServiceType.TRANSFER: return 'text-blue-600 bg-blue-50';
-          case ServiceType.RUTA: return 'text-purple-600 bg-purple-50';
+          case ServiceType.RUTA: return 'text-marga-wine bg-marga-cream';
           case ServiceType.SERVICIO: return 'text-teal-600 bg-teal-50';
           default: return 'text-gray-600 bg-gray-50';
       }
@@ -42,7 +42,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
   // Border logic: Orange if blocked, else standard
   const cardBorderClass = isBlockingState 
     ? 'border-orange-300 ring-2 ring-orange-100 shadow-md' 
-    : 'border-gray-100';
+    : 'border-marga-creamDark';
 
   return (
     <div 
@@ -52,7 +52,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
         {/* Accent Bar on Left based on Type */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${
             lead.type === ServiceType.TRANSFER ? 'bg-blue-400' : 
-            lead.type === ServiceType.RUTA ? 'bg-purple-400' : 'bg-gray-300'
+            lead.type === ServiceType.RUTA ? 'bg-marga-rose' : 'bg-marga-creamDark'
         }`}></div>
 
       <div className="pl-2">
@@ -67,8 +67,8 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
                 {!isBlockingState && (
                     <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border font-bold ${
                         lead.isBotActive 
-                        ? 'bg-marga-violet text-white border-marga-violet' 
-                        : 'bg-marga-yellow text-marga-text border-marga-yellow'
+                        ? 'bg-marga-wine text-white border-marga-wine' 
+                        : 'bg-marga-wine text-marga-cream border-marga-yellow'
                     }`}>
                         Modo: {lead.isBotActive ? 'AUTO' : 'HUMANO'}
                     </span>
@@ -132,7 +132,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
         </div>
 
         {/* Message Preview */}
-        <div className="bg-gray-50 p-2 rounded-lg mb-3 border border-gray-100">
+        <div className="bg-gray-50 p-2 rounded-lg mb-3 border border-marga-creamDark">
             <div className="flex items-start gap-1">
                 <MessageSquare size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
@@ -149,14 +149,14 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
                 <div className="space-y-2 mt-2">
                     <button 
                         onClick={(e) => { e.stopPropagation(); onConfirmBot(lead.id); }}
-                        className="w-full py-2.5 bg-marga-violet hover:bg-violet-700 text-white rounded-lg shadow-md flex items-center justify-center gap-2 transition-all border border-transparent active:scale-95 group/bot"
+                        className="w-full py-2.5 bg-marga-wine hover:bg-marga-wineLight text-white rounded-lg shadow-md flex items-center justify-center gap-2 transition-all border border-transparent active:scale-95 group/bot"
                     >
                         <Bot size={16} />
                         <span className="text-xs font-bold uppercase tracking-wide">Responder con BOT</span>
                     </button>
                     <button 
                          onClick={(e) => { e.stopPropagation(); onConfirmHuman(lead.id); }}
-                        className="w-full py-2.5 bg-marga-yellow hover:bg-yellow-500 text-gray-900 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all border border-yellow-300 active:scale-95"
+                        className="w-full py-2.5 bg-marga-wine hover:bg-marga-wineLight text-marga-cream rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all border border-marga-wine/30 active:scale-95"
                     >
                         <User size={16} />
                         <span className="text-xs font-bold uppercase tracking-wide">Responder HUMANO</span>
@@ -168,7 +168,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
                     {showHandoffActions && onHandoff && (
                         <button 
                             onClick={(e) => { e.stopPropagation(); onHandoff(lead.id); }}
-                            className="w-full py-2 bg-marga-violet hover:bg-violet-700 text-white rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors group/btn mb-3"
+                            className="w-full py-2 bg-marga-wine hover:bg-marga-wineLight text-white rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors group/btn mb-3"
                         >
                             <span className="text-xs font-bold">Pasar a Humano</span>
                             <ArrowRightCircle size={14} className="group-hover/btn:translate-x-0.5 transition-transform"/>
@@ -180,7 +180,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onToggleBot, 
                         {showHandoffActions && onMarkCold ? (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onMarkCold(lead.id); }}
-                                className="text-[10px] text-gray-400 hover:text-gray-600 hover:bg-gray-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"
+                                className="text-[10px] text-gray-400 hover:text-marga-wine hover:bg-marga-creamDark px-2 py-1 rounded flex items-center gap-1 transition-colors"
                             >
                                 <Snowflake size={12} />
                                 Marcar frío

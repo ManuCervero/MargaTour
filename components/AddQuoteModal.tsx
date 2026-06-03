@@ -20,7 +20,7 @@ interface AddQuoteModalProps {
 }
 
 const SERVICE_CATEGORIES = [
-    { value: 'bodega' as const, label: 'Bodega', icon: Wine, color: 'bg-purple-100 text-purple-600' },
+    { value: 'bodega' as const, label: 'Bodega', icon: Wine, color: 'bg-marga-wine/10 text-marga-wine' },
     { value: 'restaurante' as const, label: 'Restaurante', icon: Utensils, color: 'bg-orange-100 text-orange-600' },
     { value: 'hotel' as const, label: 'Hotel', icon: Bed, color: 'bg-blue-100 text-blue-600' },
     { value: 'actividad' as const, label: 'Actividad', icon: Compass, color: 'bg-green-100 text-green-600' },
@@ -154,7 +154,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-2xl sticky top-0 z-10">
+                <div className="flex items-center justify-between p-6 border-b border-marga-creamDark bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-2xl sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
                             <FileText size={20} className="text-emerald-600" />
@@ -164,7 +164,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                             <p className="text-xs text-gray-500">Crear una nueva cotización con servicios</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200/50 rounded-full transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark/50 rounded-full transition-colors">
                         <X size={20} className="text-gray-500" />
                     </button>
                 </div>
@@ -179,7 +179,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                             required
                             value={form.leadName}
                             onChange={(e) => setForm({ ...form, leadName: e.target.value })}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                            className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                             placeholder="Nombre del cliente"
                         />
                     </div>
@@ -191,7 +191,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                             <select
                                 value={form.type}
                                 onChange={(e) => setForm({ ...form, type: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm bg-white"
+                                className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm bg-white"
                             >
                                 <option value="Transfer">Transfer</option>
                                 <option value="Tour">Tour</option>
@@ -204,7 +204,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                             <select
                                 value={form.status}
                                 onChange={(e) => setForm({ ...form, status: e.target.value as any })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm bg-white"
+                                className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm bg-white"
                             >
                                 <option value="Enviada">Enviada</option>
                                 <option value="Aprobada">Aprobada</option>
@@ -217,7 +217,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                     {/* ═══ RECORRIDO: Origen → Paradas → Destino ═══ */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-3">Recorrido</label>
-                        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-0">
+                        <div className="border border-marga-creamDark rounded-xl p-4 bg-gray-50/50 space-y-0">
                             {/* Origen */}
                             <div className="flex items-center gap-3">
                                 <div className="flex flex-col items-center">
@@ -229,7 +229,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                         type="text"
                                         value={form.origin}
                                         onChange={(e) => setForm({ ...form, origin: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                                        className="w-full px-3 py-2 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                                         placeholder="Origen (ej: Aeropuerto)"
                                     />
                                 </div>
@@ -247,7 +247,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                             type="text"
                                             value={stop.name}
                                             onChange={(e) => updateStop(stop.id, e.target.value)}
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent focus:outline-none text-sm"
+                                            className="flex-1 px-3 py-2 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent focus:outline-none text-sm"
                                             placeholder={`Parada ${idx + 1}`}
                                         />
                                         <button
@@ -287,7 +287,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                         type="text"
                                         value={form.destination}
                                         onChange={(e) => setForm({ ...form, destination: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent focus:outline-none text-sm"
+                                        className="w-full px-3 py-2 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent focus:outline-none text-sm"
                                         placeholder="Destino (ej: Hotel Hilton)"
                                     />
                                 </div>
@@ -308,7 +308,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                     const suggestions = catalogData[service.category] || [];
 
                                     return (
-                                        <div key={service.id} className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg group hover:border-gray-300 transition-colors">
+                                        <div key={service.id} className="flex items-center gap-2 p-2 bg-white border border-marga-creamDark rounded-lg group hover:border-marga-creamDark transition-colors">
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${catInfo.color}`}>
                                                 <Icon size={16} />
                                             </div>
@@ -318,7 +318,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                                     type="text"
                                                     value={service.name}
                                                     onChange={(e) => updateService(service.id, e.target.value)}
-                                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                                                    className="w-full px-2 py-1.5 border border-marga-creamDark rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                                                     placeholder={`Nombre de ${catInfo.label.toLowerCase()}...`}
                                                     list={`suggestions-${service.id}`}
                                                 />
@@ -352,7 +352,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                         key={cat.value}
                                         type="button"
                                         onClick={() => addService(cat.value)}
-                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-colors`}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-marga-creamDark text-xs font-semibold text-gray-500 hover:border-gray-400 hover:bg-marga-cream transition-colors`}
                                     >
                                         <Icon size={14} />
                                         + {cat.label}
@@ -371,7 +371,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                 min={1}
                                 value={form.pax}
                                 onChange={(e) => setForm({ ...form, pax: parseInt(e.target.value) || 1 })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                                className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                             />
                         </div>
                         <div>
@@ -381,7 +381,7 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                 min={0}
                                 value={form.price}
                                 onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                                className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                             />
                         </div>
                         <div>
@@ -390,24 +390,24 @@ export const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, o
                                 type="date"
                                 value={form.date}
                                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
+                                className="w-full px-3 py-2.5 border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none text-sm"
                             />
                         </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                            className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-marga-creamDark transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !form.leadName.trim()}
-                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-yellow text-marga-text shadow-sm hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-wine text-marga-cream shadow-sm hover:bg-marga-wineLight transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {loading ? 'Guardando...' : 'Crear Cotización'}
                         </button>

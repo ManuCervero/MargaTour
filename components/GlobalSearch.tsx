@@ -25,11 +25,11 @@ const ENTITY_CONFIG: Array<{
   iconColor: string;
   subtitleKey?: string;
 }> = [
-  { table: 'wineries',     label: 'Bodega',      view: ViewState.WINERIES,     icon: Wine,    iconColor: 'text-purple-500', subtitleKey: 'region' },
+  { table: 'wineries',     label: 'Bodega',      view: ViewState.WINERIES,     icon: Wine,    iconColor: 'text-marga-wine', subtitleKey: 'region' },
   { table: 'hotels',       label: 'Hotel',        view: ViewState.HOTELS,       icon: Bed,     iconColor: 'text-blue-500',   subtitleKey: 'region' },
   { table: 'restaurants',  label: 'Restaurante',  view: ViewState.RESTAURANTS,  icon: Utensils,iconColor: 'text-orange-500', subtitleKey: 'region' },
   { table: 'activities',   label: 'Actividad',    view: ViewState.ACTIVITIES,   icon: Compass, iconColor: 'text-green-500',  subtitleKey: 'region' },
-  { table: 'experiences',  label: 'Experiencia',  view: ViewState.EXPERIENCES,  icon: Star,    iconColor: 'text-yellow-500', subtitleKey: 'region' },
+  { table: 'experiences',  label: 'Experiencia',  view: ViewState.EXPERIENCES,  icon: Star,    iconColor: 'text-marga-olive', subtitleKey: 'region' },
   { table: 'clients',      label: 'Cliente',      view: ViewState.CLIENTS,      icon: Users,   iconColor: 'text-teal-500',   subtitleKey: 'email' },
   { table: 'transfers',    label: 'Transfer',     view: ViewState.TRANSFERS,    icon: Truck,   iconColor: 'text-gray-500',   subtitleKey: 'type' },
 ];
@@ -123,22 +123,22 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder="Buscar bodega, hotel, restaurante..."
-        className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet/20 focus:border-marga-violet transition-all text-sm"
+        className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine/20 focus:border-marga-wine transition-all text-sm"
       />
       {query && (
         <button
           onClick={handleClear}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-marga-wine transition-colors"
         >
           <X size={14} />
         </button>
       )}
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-marga-creamDark z-50 overflow-hidden max-h-80 overflow-y-auto">
           {loading && (
             <div className="flex items-center justify-center py-6 gap-2 text-sm text-gray-400">
-              <div className="w-4 h-4 border-2 border-gray-200 border-t-marga-violet rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-marga-creamDark border-t-marga-wine rounded-full animate-spin" />
               Buscando...
             </div>
           )}
@@ -158,7 +158,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
                     <button
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => handleSelect(result)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-marga-cream transition-colors text-left"
                     >
                       <div className={`flex-shrink-0 w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center ${result.iconColor}`}>
                         <Icon size={14} />

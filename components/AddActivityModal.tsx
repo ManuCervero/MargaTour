@@ -72,17 +72,17 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-white shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-marga-cream/60 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-marga-violet/10 flex items-center justify-center">
-                            <Compass size={20} className="text-marga-violet" />
+                        <div className="w-10 h-10 rounded-xl bg-marga-wine/10 flex items-center justify-center">
+                            <Compass size={20} className="text-marga-wine" />
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-800">Nueva Actividad</h2>
                             <p className="text-xs text-gray-500">Agregar al catálogo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -98,7 +98,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="text" required autoFocus
                                 value={formData.name}
                                 onChange={(e) => set('name', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Rafting Potrerillos intermedio"
                             />
                         </div>
@@ -109,7 +109,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                             <select
                                 value={formData.region}
                                 onChange={(e) => set('region', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                             >
                                 {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
@@ -122,7 +122,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="text"
                                 value={formData.provider}
                                 onChange={(e) => set('provider', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Xnoccio Rafting"
                             />
                         </div>
@@ -134,7 +134,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="text"
                                 value={formData.contact}
                                 onChange={(e) => set('contact', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Jessica Beranegui"
                             />
                         </div>
@@ -146,7 +146,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => set('phone', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: 2614188601"
                             />
                         </div>
@@ -160,7 +160,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="text"
                                 value={formData.price}
                                 onChange={(e) => set('price', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: $34.000 / USD 85 / consultar"
                             />
                         </div>
@@ -172,7 +172,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 type="text"
                                 value={formData.address}
                                 onChange={(e) => set('address', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Ruta 7 Km 52, Potrerillos"
                             />
                         </div>
@@ -184,7 +184,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 rows={2}
                                 value={formData.description}
                                 onChange={(e) => set('description', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent resize-none"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent resize-none"
                                 placeholder="Descripción breve de la actividad..."
                             />
                         </div>
@@ -196,7 +196,7 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                 rows={2}
                                 value={formData.notes}
                                 onChange={(e) => set('notes', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent resize-none"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent resize-none"
                                 placeholder="Notas adicionales para uso interno..."
                             />
                         </div>
@@ -211,12 +211,12 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                                     { field: 'is_kid_friendly', label: 'Apto chicos' },
                                     { field: 'is_active', label: 'Activo' },
                                 ].map(({ field, label }) => (
-                                    <label key={field} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <label key={field} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={(formData as any)[field]}
                                             onChange={(e) => set(field, e.target.checked)}
-                                            className="w-4 h-4 text-marga-violet rounded focus:ring-marga-violet accent-marga-violet"
+                                            className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine accent-marga-wine"
                                         />
                                         <span className="text-sm text-gray-700">{label}</span>
                                     </label>
@@ -226,18 +226,18 @@ export const AddActivityModal: React.FC<AddActivityModalProps> = ({ isOpen, onCl
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !formData.name.trim()}
-                            className="px-6 py-2 bg-marga-yellow hover:bg-yellow-400 text-marga-text rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                            className="px-6 py-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
                         >
                             {loading ? <><Loader2 size={16} className="animate-spin" /> Guardando...</> : 'Guardar Actividad'}
                         </button>

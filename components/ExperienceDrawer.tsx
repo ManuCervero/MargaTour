@@ -48,7 +48,7 @@ const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value?: string |
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Enológica': 'bg-purple-100 text-purple-700',
+    'Enológica': 'bg-marga-wine/10 text-marga-wine',
     'Aventura': 'bg-orange-100 text-orange-700',
     'Trekking': 'bg-green-100 text-green-700',
     'Cabalgata': 'bg-amber-100 text-amber-700',
@@ -114,7 +114,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
 
     const catColor = CATEGORY_COLORS[form.category] || 'bg-gray-100 text-gray-700';
 
-    const inputCls = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-marga-violet focus:outline-none";
+    const inputCls = "w-full px-3 py-2 text-sm border border-marga-creamDark rounded-lg focus:ring-2 focus:ring-marga-wine focus:outline-none";
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -136,10 +136,10 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                         )}
 
                         {/* Header */}
-                        <div className={`p-5 border-b border-gray-100 ${!form.image_url ? 'bg-gradient-to-br from-gray-50 to-white' : ''} shrink-0`}>
+                        <div className={`p-5 border-b border-marga-creamDark ${!form.image_url ? 'bg-gradient-to-br from-gray-50 to-white' : ''} shrink-0`}>
                             {!form.image_url && (
                                 <div className="flex justify-end mb-2">
-                                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-full transition-colors">
+                                    <button onClick={onClose} className="text-gray-400 hover:text-marga-wine p-1 hover:bg-marga-creamDark rounded-full transition-colors">
                                         <X size={20} />
                                     </button>
                                 </div>
@@ -147,7 +147,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                             <h2 className="text-lg font-extrabold text-gray-900 leading-tight mb-2">{form.name}</h2>
                             <div className="flex flex-wrap gap-2">
                                 {form.region && (
-                                    <span className="inline-flex items-center gap-1 bg-marga-violet/10 text-marga-violet text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <span className="inline-flex items-center gap-1 bg-marga-wine/10 text-marga-wine text-xs font-bold px-2.5 py-1 rounded-full">
                                         <MapPin size={10} /> {form.region}
                                     </span>
                                 )}
@@ -174,8 +174,8 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                             {/* Precio + duración */}
                             <div className="grid grid-cols-2 gap-3">
                                 {form.price && (
-                                    <div className="bg-marga-violet/5 border border-marga-violet/20 rounded-xl px-4 py-3 flex items-center gap-2">
-                                        <DollarSign size={16} className="text-marga-violet shrink-0" />
+                                    <div className="bg-marga-wine/5 border border-marga-wine/20 rounded-xl px-4 py-3 flex items-center gap-2">
+                                        <DollarSign size={16} className="text-marga-wine shrink-0" />
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Precio</p>
                                             <p className="text-sm font-extrabold text-gray-800">{form.price}</p>
@@ -206,7 +206,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                             {/* Descripción */}
                             {form.description && (
                                 <section>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pb-1 border-b border-gray-100">Descripción</h3>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pb-1 border-b border-marga-creamDark">Descripción</h3>
                                     <p className="text-sm text-gray-700 leading-relaxed">{form.description}</p>
                                 </section>
                             )}
@@ -214,7 +214,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                             {/* Incluye */}
                             {form.includes && (
                                 <section>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pb-1 border-b border-gray-100">Qué incluye</h3>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pb-1 border-b border-marga-creamDark">Qué incluye</h3>
                                     <ul className="space-y-1.5">
                                         {form.includes.split('/').map((item, i) => (
                                             <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -235,7 +235,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                                         <div className="mt-0.5 text-gray-400 shrink-0"><ExternalLink size={15} /></div>
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Ver en web</p>
-                                            <a href={form.url_producto} target="_blank" rel="noopener noreferrer" className="text-sm text-marga-violet font-medium hover:underline">
+                                            <a href={form.url_producto} target="_blank" rel="noopener noreferrer" className="text-sm text-marga-wine font-medium hover:underline">
                                                 {form.url_producto}
                                             </a>
                                         </div>
@@ -245,12 +245,12 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                         </div>
 
                         {/* Footer */}
-                        <div className="p-4 border-t border-gray-100 bg-white flex justify-between items-center shrink-0">
-                            <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                        <div className="p-4 border-t border-marga-creamDark bg-white flex justify-between items-center shrink-0">
+                            <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:bg-marga-creamDark transition-colors">
                                 Cerrar
                             </button>
                             <button onClick={() => setMode('edit')}
-                                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-yellow text-marga-text shadow-sm hover:bg-yellow-400 transition-colors flex items-center gap-2">
+                                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-wine text-marga-cream shadow-sm hover:bg-marga-wineLight transition-colors flex items-center gap-2">
                                 <Pencil size={15} /> Editar
                             </button>
                         </div>
@@ -258,19 +258,19 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                 ) : (
                     /* ──── EDIT MODE ──── */
                     <>
-                        <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col gap-3 shrink-0">
+                        <div className="p-5 border-b border-marga-creamDark bg-gray-50 flex flex-col gap-3 shrink-0">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-xs font-bold text-marga-violet uppercase tracking-wider mb-0.5">Editando</p>
+                                    <p className="text-xs font-bold text-marga-wine uppercase tracking-wider mb-0.5">Editando</p>
                                     <h2 className="text-lg font-extrabold text-gray-800 leading-tight">{form.name}</h2>
                                 </div>
-                                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-full transition-colors">
+                                <button onClick={onClose} className="text-gray-400 hover:text-marga-wine p-1 hover:bg-marga-creamDark rounded-full transition-colors">
                                     <X size={20} />
                                 </button>
                             </div>
                             {/* Active toggle */}
                             <label className="flex items-center gap-2 cursor-pointer w-fit" onClick={() => set('is_active', !form.is_active)}>
-                                <div className={`w-10 h-5 rounded-full p-0.5 transition-colors ${form.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                <div className={`w-10 h-5 rounded-full p-0.5 transition-colors ${form.is_active ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                     <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
                                 </div>
                                 <span className="text-sm font-medium text-gray-600">Activa</span>
@@ -281,7 +281,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
 
                             {/* Info principal */}
                             <section>
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Información Principal</h3>
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-marga-creamDark pb-2">Información Principal</h3>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div>
                                         <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
@@ -326,7 +326,7 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
 
                             {/* Contenido */}
                             <section>
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Contenido</h3>
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-marga-creamDark pb-2">Contenido</h3>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div>
                                         <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
@@ -359,8 +359,8 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
 
                             {/* Accesibilidad */}
                             <section>
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Características</h3>
-                                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b border-marga-creamDark pb-2">Características</h3>
+                                <div className="flex items-center justify-between p-3 rounded-lg border border-marga-creamDark hover:bg-marga-cream transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                                             <Accessibility size={16} />
@@ -368,19 +368,19 @@ export const ExperienceDrawer: React.FC<ExperienceDrawerProps> = ({ experience, 
                                         <span className="text-sm font-medium text-gray-700">Accesible (movilidad reducida)</span>
                                     </div>
                                     <div onClick={() => set('is_accessible', !form.is_accessible)}
-                                        className={`w-10 h-5 rounded-full p-0.5 cursor-pointer transition-colors ${form.is_accessible ? 'bg-marga-violet' : 'bg-gray-300'}`}>
+                                        className={`w-10 h-5 rounded-full p-0.5 cursor-pointer transition-colors ${form.is_accessible ? 'bg-marga-wine' : 'bg-marga-creamDark'}`}>
                                         <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${form.is_accessible ? 'translate-x-5' : 'translate-x-0'}`} />
                                     </div>
                                 </div>
                             </section>
                         </div>
 
-                        <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
-                            <button onClick={handleCancel} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                        <div className="p-4 border-t border-marga-creamDark bg-white flex justify-end gap-3 shrink-0">
+                            <button onClick={handleCancel} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-marga-creamDark transition-colors">
                                 Cancelar
                             </button>
                             <button onClick={handleSave} disabled={saving}
-                                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-yellow text-marga-text shadow-sm hover:bg-yellow-400 transition-colors flex items-center gap-2 disabled:opacity-50">
+                                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-marga-wine text-marga-cream shadow-sm hover:bg-marga-wineLight transition-colors flex items-center gap-2 disabled:opacity-50">
                                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                                 {saving ? 'Guardando...' : 'Guardar Cambios'}
                             </button>

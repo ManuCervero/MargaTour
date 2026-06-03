@@ -78,7 +78,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-gradient-to-r from-blue-50 to-white">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
                             <Bed size={20} className="text-blue-600" />
@@ -88,7 +88,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                             <p className="text-xs text-gray-500">Agregar al catálogo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -104,7 +104,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Ej: Park Hyatt Mendoza"
                             />
                         </div>
@@ -115,7 +115,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                             <select
                                 value={formData.region}
                                 onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                                 {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
@@ -127,7 +127,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                             <select
                                 value={formData.stars}
                                 onChange={(e) => setFormData({ ...formData, stars: Number(e.target.value) })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                                 {[1, 2, 3, 4, 5].map(s => <option key={s} value={s}>{s} ⭐</option>)}
                             </select>
@@ -140,7 +140,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                                 type="number"
                                 value={formData.price_per_night}
                                 onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Ej: 150"
                                 min="0"
                             />
@@ -153,7 +153,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Ej: 2614671021"
                             />
                         </div>
@@ -165,7 +165,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="reservas@hotel.com"
                             />
                         </div>
@@ -177,7 +177,7 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                 placeholder="Información adicional, ubicación, servicios..."
                             />
                         </div>
@@ -186,39 +186,39 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                         <div className="col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Servicios</label>
                             <div className="grid grid-cols-3 gap-3">
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_wifi} onChange={(e) => setFormData({ ...formData, has_wifi: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">WiFi</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_pool} onChange={(e) => setFormData({ ...formData, has_pool: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Piscina</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_gym} onChange={(e) => setFormData({ ...formData, has_gym: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Gimnasio</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_spa} onChange={(e) => setFormData({ ...formData, has_spa: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Spa</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_restaurant} onChange={(e) => setFormData({ ...formData, has_restaurant: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Restaurante</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.has_parking} onChange={(e) => setFormData({ ...formData, has_parking: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Estacionamiento</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_accessible} onChange={(e) => setFormData({ ...formData, is_accessible: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Accesible</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_pet_friendly} onChange={(e) => setFormData({ ...formData, is_pet_friendly: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Pet Friendly</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                     <span className="text-sm text-gray-700">Activo</span>
                                 </label>
@@ -227,11 +227,11 @@ export const AddHotelModal: React.FC<AddHotelModalProps> = ({ isOpen, onClose, o
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>

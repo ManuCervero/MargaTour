@@ -33,8 +33,8 @@ export const QuotesView: React.FC = () => {
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Cotizaciones</h2>
-                <button onClick={() => setShowNewQuoteModal(true)} className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Cotizaciones</h2>
+                <button onClick={() => setShowNewQuoteModal(true)} className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
                     <Plus size={18} />
                     Nueva Cotización
                 </button>
@@ -43,14 +43,14 @@ export const QuotesView: React.FC = () => {
             {/* Filters */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                 {['Todas', 'Enviada', 'Aprobada', 'Cancelada', 'Sin respuesta'].map((status, idx) => (
-                    <button key={status} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${idx === 0 ? 'bg-marga-violet text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>
+                    <button key={status} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${idx === 0 ? 'bg-marga-wine text-white' : 'bg-white text-gray-600 hover:bg-marga-creamDark border border-marga-creamDark'}`}>
                         {status}
                     </button>
                 ))}
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -66,11 +66,11 @@ export const QuotesView: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {quotes.map((q) => (
-                            <tr key={q.id} className="hover:bg-gray-50 transition-colors cursor-pointer">
+                            <tr key={q.id} className="hover:bg-marga-cream transition-colors cursor-pointer">
                                 <td className="px-6 py-4 font-mono text-gray-500">{q.id}</td>
                                 <td className="px-6 py-4 font-bold text-gray-800">{q.leadName}</td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-md text-xs font-semibold ${q.type === 'Transfer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                    <span className={`px-2 py-1 rounded-md text-xs font-semibold ${q.type === 'Transfer' ? 'bg-blue-100 text-blue-700' : 'bg-marga-wine/10 text-marga-wine'}`}>
                                         {q.type}
                                     </span>
                                 </td>
@@ -80,7 +80,7 @@ export const QuotesView: React.FC = () => {
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${q.status === 'Aprobada' ? 'bg-green-100 text-green-700' :
                                         q.status === 'Enviada' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-gray-100 text-gray-600'
+                                            'bg-marga-creamDark text-marga-dark/60'
                                         }`}>
                                         {q.status}
                                     </span>
@@ -152,58 +152,58 @@ export const TransfersView: React.FC = () => {
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Transfers</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Transfers</h2>
                 <p className="text-sm text-gray-500 mt-1">Tarifario fijo. Si no está listado → consultar representante.</p>
             </div>
 
             <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-                <button onClick={() => { setActiveTab('aeropuerto'); setSelectedZone('Todas'); }} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'aeropuerto' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Aeropuerto</button>
-                <button onClick={() => { setActiveTab('tours'); setSelectedZone('Todas'); }} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'tours' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Tours</button>
+                <button onClick={() => { setActiveTab('aeropuerto'); setSelectedZone('Todas'); }} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'aeropuerto' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-marga-wine'}`}>Aeropuerto</button>
+                <button onClick={() => { setActiveTab('tours'); setSelectedZone('Todas'); }} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'tours' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-marga-wine'}`}>Tours</button>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
                 <div className="flex flex-wrap items-center gap-2 flex-1">
                     <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input type="text" placeholder="Buscar transfer..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full" />
+                        <input type="text" placeholder="Buscar transfer..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full" />
                     </div>
                     <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"><Filter size={14} /></div>
-                        <select value={selectedZone} onChange={(e) => setSelectedZone(e.target.value)} className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer">
+                        <select value={selectedZone} onChange={(e) => setSelectedZone(e.target.value)} className="appearance-none pl-9 pr-8 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer">
                             <option value="Todas">Todas las {activeTab === 'aeropuerto' ? 'zonas' : 'regiones'}</option>
                             {zones.map(z => <option key={z} value={z}>{z}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-                    <button onClick={() => setActiveOnly(!activeOnly)} className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${activeOnly ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>Solo activos</button>
+                    <button onClick={() => setActiveOnly(!activeOnly)} className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${activeOnly ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-marga-creamDark'}`}>Solo activos</button>
                 </div>
-                <button onClick={() => setShowNewModal(true)} className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors w-full sm:w-auto justify-center"><Plus size={18} />+ Nuevo</button>
+                <button onClick={() => setShowNewModal(true)} className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors w-full sm:w-auto justify-center"><Plus size={18} />+ Nuevo</button>
             </div>
 
             {(selectedZone !== 'Todas' || activeOnly) && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedZone !== 'Todas' && (<div className="inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1 rounded-full text-xs font-bold border border-marga-violet/20"><MapPin size={12} /><span>{activeTab === 'aeropuerto' ? 'Zona' : 'Región'}: {selectedZone}</span><button onClick={() => setSelectedZone('Todas')} className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"><X size={12} /></button></div>)}
+                    {selectedZone !== 'Todas' && (<div className="inline-flex items-center gap-2 bg-marga-wine/10 text-marga-wine px-3 py-1 rounded-full text-xs font-bold border border-marga-wine/20"><MapPin size={12} /><span>{activeTab === 'aeropuerto' ? 'Zona' : 'Región'}: {selectedZone}</span><button onClick={() => setSelectedZone('Todas')} className="ml-1 hover:bg-marga-wine/20 rounded-full p-0.5"><X size={12} /></button></div>)}
                     {activeOnly && (<div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200"><Check size={12} /><span>Solo activos</span><button onClick={() => setActiveOnly(false)} className="ml-1 hover:bg-green-200 rounded-full p-0.5"><X size={12} /></button></div>)}
                 </div>
             )}
 
             {activeTab === 'aeropuerto' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                             <tr><th className="px-6 py-3">Nombre</th><th className="px-6 py-3">Zona</th><th className="px-6 py-3 text-right">Precio</th><th className="px-6 py-3 text-center">Pax Máx</th><th className="px-6 py-3 text-center">Pax Valijas</th><th className="px-6 py-3 text-center">Consultar</th><th className="px-6 py-3 text-center">Activo</th><th className="px-6 py-3 text-right">Acciones</th></tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredAirport.map((t) => (
-                                <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={t.id} className="hover:bg-marga-cream transition-colors">
                                     <td className="px-6 py-4 font-bold text-gray-800">Aeropuerto ↔ {t.zone}</td>
                                     <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-semibold">{t.zone}</span></td>
                                     <td className="px-6 py-4 text-right font-mono font-bold text-gray-800">{t.price ? `$${t.price.toLocaleString()}` : '—'}</td>
-                                    <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-medium">19</span></td>
-                                    <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-medium">15</span></td>
+                                    <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded bg-marga-creamDark text-marga-dark/60 text-xs font-medium">19</span></td>
+                                    <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded bg-marga-creamDark text-marga-dark/60 text-xs font-medium">15</span></td>
                                     <td className="px-6 py-4 text-center">{t.needs_consultation ? <span className="px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-bold">A CONSULTAR</span> : <span className="text-gray-300">—</span>}</td>
-                                    <td className="px-6 py-4 text-center"><div className={`w-10 h-5 rounded-full p-0.5 mx-auto transition-colors ${t.is_active ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${t.is_active ? 'translate-x-5' : 'translate-x-0'}`}></div></div></td>
-                                    <td className="px-6 py-4 text-right"><button onClick={() => setSelectedTransfer(t)} className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"><Eye size={14} /> Ver</button></td>
+                                    <td className="px-6 py-4 text-center"><div className={`w-10 h-5 rounded-full p-0.5 mx-auto transition-colors ${t.is_active ? 'bg-green-500' : 'bg-marga-creamDark'}`}><div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${t.is_active ? 'translate-x-5' : 'translate-x-0'}`}></div></div></td>
+                                    <td className="px-6 py-4 text-right"><button onClick={() => setSelectedTransfer(t)} className="text-gray-400 hover:text-marga-wine font-medium text-xs flex items-center justify-end gap-1 ml-auto"><Eye size={14} /> Ver</button></td>
                                 </tr>
                             ))}
                             {filteredAirport.length === 0 && (<tr><td colSpan={8} className="px-6 py-12 text-center text-gray-400 text-sm">No hay transfers de aeropuerto.</td></tr>)}
@@ -213,23 +213,23 @@ export const TransfersView: React.FC = () => {
             )}
 
             {activeTab === 'tours' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                             <tr><th className="px-6 py-3">Nombre</th><th className="px-6 py-3">Tipo</th><th className="px-6 py-3">Región</th><th className="px-6 py-3 text-center">Duración</th><th className="px-6 py-3 text-right">Precio</th><th className="px-6 py-3 text-right">Hora Extra</th><th className="px-6 py-3 text-center">Consultar</th><th className="px-6 py-3 text-center">Activo</th><th className="px-6 py-3 text-right">Acciones</th></tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredTours.map((t) => (
-                                <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={t.id} className="hover:bg-marga-cream transition-colors">
                                     <td className="px-6 py-4 font-bold text-gray-800">{t.name}</td>
-                                    <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-purple-100 text-purple-700 text-xs font-semibold">{t.tour_type || '—'}</span></td>
-                                    <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-semibold">{t.region || '—'}</span></td>
+                                    <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-marga-wine/10 text-marga-wine text-xs font-semibold">{t.tour_type || '—'}</span></td>
+                                    <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-marga-creamDark text-marga-dark/60 text-xs font-semibold">{t.region || '—'}</span></td>
                                     <td className="px-6 py-4 text-center text-gray-600">{t.duration_hours ? `${t.duration_hours}h` : '—'}</td>
                                     <td className="px-6 py-4 text-right font-mono font-bold text-gray-800">{t.price ? `$${t.price.toLocaleString()}` : '—'}</td>
                                     <td className="px-6 py-4 text-right font-mono text-gray-500 text-xs">{t.extra_hour_price ? `$${t.extra_hour_price.toLocaleString()}/h` : '—'}</td>
                                     <td className="px-6 py-4 text-center">{t.needs_consultation ? <span className="px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-bold">A CONSULTAR</span> : <span className="text-gray-300">—</span>}</td>
-                                    <td className="px-6 py-4 text-center"><div className={`w-10 h-5 rounded-full p-0.5 mx-auto transition-colors ${t.is_active ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${t.is_active ? 'translate-x-5' : 'translate-x-0'}`}></div></div></td>
-                                    <td className="px-6 py-4 text-right"><button onClick={() => setSelectedTour(t)} className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"><Eye size={14} /> Ver</button></td>
+                                    <td className="px-6 py-4 text-center"><div className={`w-10 h-5 rounded-full p-0.5 mx-auto transition-colors ${t.is_active ? 'bg-green-500' : 'bg-marga-creamDark'}`}><div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${t.is_active ? 'translate-x-5' : 'translate-x-0'}`}></div></div></td>
+                                    <td className="px-6 py-4 text-right"><button onClick={() => setSelectedTour(t)} className="text-gray-400 hover:text-marga-wine font-medium text-xs flex items-center justify-end gap-1 ml-auto"><Eye size={14} /> Ver</button></td>
                                 </tr>
                             ))}
                             {filteredTours.length === 0 && (<tr><td colSpan={9} className="px-6 py-12 text-center text-gray-400 text-sm">No hay tours.</td></tr>)}
@@ -245,9 +245,9 @@ export const TransfersView: React.FC = () => {
                         <h3 className="text-lg font-bold text-gray-800 mb-4">¿Qué tipo de transfer deseas crear?</h3>
                         <div className="flex flex-col gap-3">
                             <button onClick={() => { setActiveTab('aeropuerto'); setShowNewModal(false); }} className="w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition-colors flex items-center gap-3"><ArrowRightLeft size={20} />Crear Transfer Aeropuerto</button>
-                            <button onClick={() => { setActiveTab('tours'); setShowNewModal(false); }} className="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg transition-colors flex items-center gap-3"><Compass size={20} />Crear Tour</button>
+                            <button onClick={() => { setActiveTab('tours'); setShowNewModal(false); }} className="w-full py-3 px-4 bg-marga-cream hover:bg-marga-wine/10 text-marga-wine font-bold rounded-lg transition-colors flex items-center gap-3"><Compass size={20} />Crear Tour</button>
                         </div>
-                        <button onClick={() => setShowNewModal(false)} className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Cancelar</button>
+                        <button onClick={() => setShowNewModal(false)} className="mt-4 w-full py-2 text-gray-500 hover:text-marga-wine font-medium text-sm">Cancelar</button>
                     </div>
                 </div>
             )}
@@ -295,7 +295,7 @@ export const ClientsView: React.FC = () => {
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Cartera de Clientes</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Cartera de Clientes</h2>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -304,12 +304,12 @@ export const ClientsView: React.FC = () => {
                             placeholder="Nombre, email, DNI..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-yellow focus:border-transparent text-sm w-full"
+                            className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-yellow focus:border-transparent text-sm w-full"
                         />
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                         <Plus size={18} />
                         Nuevo Cliente
                     </button>
@@ -322,7 +322,7 @@ export const ClientsView: React.FC = () => {
                     <button
                         key={f}
                         onClick={() => setActiveFilter(f)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeFilter === f ? 'bg-gray-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeFilter === f ? 'bg-marga-wine text-marga-cream' : 'bg-white text-gray-600 hover:bg-marga-creamDark border border-marga-creamDark'}`}
                     >
                         {f}
                     </button>
@@ -330,7 +330,7 @@ export const ClientsView: React.FC = () => {
                 <span className="ml-auto text-sm text-gray-400 self-center">{filteredClients.length} clientes</span>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -347,16 +347,16 @@ export const ClientsView: React.FC = () => {
                         {filteredClients.map((c) => (
                             <React.Fragment key={c.id}>
                                 <tr
-                                    className="hover:bg-gray-50 transition-colors cursor-pointer group"
+                                    className="hover:bg-marga-cream transition-colors cursor-pointer group"
                                     onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-marga-violetLight/50 text-marga-violet flex items-center justify-center font-bold">
+                                            <div className="w-10 h-10 rounded-full bg-marga-wineLight/50 text-marga-wine flex items-center justify-center font-bold">
                                                 {c.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-gray-800 group-hover:text-marga-violet transition-colors">{c.name}</p>
+                                                <p className="font-bold text-gray-800 group-hover:text-marga-wine transition-colors">{c.name}</p>
                                                 <p className="text-xs text-gray-400">{c.birthdate || '-'}</p>
                                             </div>
                                         </div>
@@ -488,14 +488,14 @@ export const UsersView: React.FC = () => {
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Usuarios del Sistema</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Usuarios del Sistema</h2>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input type="text" placeholder="Buscar usuario..." className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-yellow focus:border-transparent text-sm" />
+                    <input type="text" placeholder="Buscar usuario..." className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-yellow focus:border-transparent text-sm" />
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -508,7 +508,7 @@ export const UsersView: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {users.map((u) => (
-                            <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={u.id} className="hover:bg-marga-cream transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs uppercase">
@@ -521,7 +521,7 @@ export const UsersView: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-semibold flex w-fit items-center gap-1 ${u.role === 'Admin' ? 'bg-purple-100 text-purple-700' :
+                                    <span className={`px-2 py-1 rounded text-xs font-semibold flex w-fit items-center gap-1 ${u.role === 'Admin' ? 'bg-marga-wine/10 text-marga-wine' :
                                         u.role === 'Conductor' ? 'bg-blue-100 text-blue-700' :
                                             'bg-orange-100 text-orange-700'
                                         }`}>
@@ -537,7 +537,7 @@ export const UsersView: React.FC = () => {
                                 </td>
                                 <td className="px-6 py-4 text-right text-gray-500 font-mono text-xs">{u.lastLogin}</td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className="text-gray-400 hover:text-marga-violet font-medium text-xs">Editar</button>
+                                    <button className="text-gray-400 hover:text-marga-wine font-medium text-xs">Editar</button>
                                 </td>
                             </tr>
                         ))}
@@ -593,7 +593,7 @@ export const RegionsView: React.FC<RegionsViewProps> = ({ onNavigate }) => {
             <div className="mb-6">
                 <div className="flex justify-between items-start">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Regiones</h2>
+                        <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Regiones</h2>
                         <p className="text-sm text-gray-500 mt-1 max-w-2xl">
                             Base de organización del catálogo. Usá regiones para filtrar bodegas, hoteles, restaurantes y actividades.
                         </p>
@@ -605,9 +605,9 @@ export const RegionsView: React.FC<RegionsViewProps> = ({ onNavigate }) => {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div className="relative w-96">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input type="text" placeholder="Buscar región..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm" />
+                    <input type="text" placeholder="Buscar región..." className="w-full pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm" />
                 </div>
-                <button className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
+                <button className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
                     <Plus size={18} />
                     Nueva Región
                 </button>
@@ -616,18 +616,18 @@ export const RegionsView: React.FC<RegionsViewProps> = ({ onNavigate }) => {
             {/* Regions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {regionsData.map((region) => (
-                    <div key={region.name} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all group overflow-hidden flex flex-col">
+                    <div key={region.name} className="bg-white rounded-xl shadow-sm border border-marga-creamDark hover:shadow-md transition-all group overflow-hidden flex flex-col">
                         <div className="p-5 flex-1">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-lg font-bold text-gray-800">{region.name}</h3>
-                                <div className="p-2 bg-gray-50 rounded-lg text-gray-400 group-hover:bg-marga-violet/10 group-hover:text-marga-violet transition-colors">
+                                <div className="p-2 bg-gray-50 rounded-lg text-gray-400 group-hover:bg-marga-wine/10 group-hover:text-marga-wine transition-colors">
                                     <MapPin size={20} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                    <div className="w-8 h-8 rounded-full bg-marga-wine/10 flex items-center justify-center text-marga-wine">
                                         <Wine size={14} />
                                     </div>
                                     <div>
@@ -666,10 +666,10 @@ export const RegionsView: React.FC<RegionsViewProps> = ({ onNavigate }) => {
                         </div>
 
                         {/* Actions Footer */}
-                        <div className="bg-gray-50 border-t border-gray-100 p-2 flex justify-between gap-1">
+                        <div className="bg-gray-50 border-t border-marga-creamDark p-2 flex justify-between gap-1">
                             <button
                                 onClick={() => onNavigate(ViewState.WINERIES, region.name)}
-                                className="flex-1 py-1.5 rounded hover:bg-white hover:shadow-sm text-xs text-gray-500 hover:text-purple-600 font-medium transition-all flex justify-center items-center gap-1" title="Ver Bodegas"
+                                className="flex-1 py-1.5 rounded hover:bg-white hover:shadow-sm text-xs text-gray-500 hover:text-marga-wine font-medium transition-all flex justify-center items-center gap-1" title="Ver Bodegas"
                             >
                                 <Wine size={14} />
                             </button>
@@ -727,7 +727,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">{title}</h2>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -736,7 +736,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                             placeholder={`Buscar ${itemLabel.toLowerCase()}...`}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                            className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                         />
                     </div>
                     {/* Redundant Dropdown per requirements */}
@@ -747,14 +747,14 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full sm:w-auto"
+                            className="appearance-none pl-9 pr-8 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full sm:w-auto"
                         >
                             <option value="Todas">Todas las regiones</option>
                             {REGIONS_LIST.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <ChevronDownIcon />
                     </div>
-                    <button className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                    <button className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                         <Plus size={18} />
                         Nuevo
                     </button>
@@ -765,7 +765,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
             <div className="flex flex-wrap gap-2 mb-4">
                 <button
                     onClick={() => setSelectedRegion('Todas')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === 'Todas' ? 'bg-marga-wine text-marga-cream' : 'bg-marga-creamDark text-marga-dark/60 hover:bg-marga-creamDark'}`}
                 >
                     Todas
                 </button>
@@ -773,7 +773,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                     <button
                         key={r}
                         onClick={() => setSelectedRegion(r)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-violet text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${selectedRegion === r ? 'bg-marga-wine text-white' : 'bg-marga-creamDark text-marga-dark/60 hover:bg-marga-creamDark'}`}
                     >
                         {r}
                     </button>
@@ -782,12 +782,12 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
 
             {/* Active Filter Pill */}
             {selectedRegion !== 'Todas' && (
-                <div className="mb-6 inline-flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-violet/20">
+                <div className="mb-6 inline-flex items-center gap-2 bg-marga-wine/10 text-marga-wine px-3 py-1.5 rounded-md text-sm font-semibold border border-marga-wine/20">
                     <MapPin size={14} />
                     <span>Filtrando por: {selectedRegion}</span>
                     <button
                         onClick={() => setSelectedRegion('Todas')}
-                        className="ml-1 hover:bg-marga-violet/20 rounded-full p-0.5"
+                        className="ml-1 hover:bg-marga-wine/20 rounded-full p-0.5"
                     >
                         <X size={14} />
                     </button>
@@ -795,7 +795,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
             )}
 
             {/* Content Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -809,7 +809,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredData.map((item) => (
-                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={item.id} className="hover:bg-marga-cream transition-colors">
                                 <td className="px-6 py-4 font-bold text-gray-800">
                                     {item.name}
                                     {item.details && <p className="text-xs text-gray-400 font-normal mt-0.5">{item.details}</p>}
@@ -821,7 +821,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="text-gray-700 font-medium text-xs border border-gray-200 px-2 py-1 rounded bg-white">
+                                    <span className="text-gray-700 font-medium text-xs border border-marga-creamDark px-2 py-1 rounded bg-white">
                                         {item.category || '-'}
                                     </span>
                                 </td>
@@ -840,7 +840,7 @@ const CatalogView: React.FC<CatalogViewProps> = ({ title, itemLabel, data, initi
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className="text-gray-400 hover:text-marga-violet font-medium text-xs">Editar</button>
+                                    <button className="text-gray-400 hover:text-marga-wine font-medium text-xs">Editar</button>
                                 </td>
                             </tr>
                         ))}
@@ -924,7 +924,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">Bodegas</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase mb-3">Bodegas</h2>
                 <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -932,7 +932,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         placeholder="Buscar bodega..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -941,7 +941,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -953,7 +953,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={caracteristicaFilter}
                             onChange={(e) => setCaracteristicaFilter(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Tipo</option>
                             <option value="Activas">Solo Activas</option>
@@ -967,7 +967,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                         title="Nueva Bodega"
                     >
                         <Plus size={18} />
@@ -977,7 +977,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -993,9 +993,9 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredData.map((w) => (
-                            <tr key={w.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr key={w.id} className="hover:bg-marga-cream transition-colors group">
                                 <td className="px-6 py-4">
-                                    <button onClick={() => setSelectedWinery(w)} className="font-bold text-gray-800 hover:text-marga-violet text-left">
+                                    <button onClick={() => setSelectedWinery(w)} className="font-bold text-gray-800 hover:text-marga-wine text-left">
                                         {w.name}
                                     </button>
                                 </td>
@@ -1007,7 +1007,7 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                 <td className="px-6 py-4">
                                     <div className="flex gap-1">
                                         {w.hasRestaurant && <div className="p-1 rounded bg-orange-50 text-orange-600" title="Restaurante"><Utensils size={12} /></div>}
-                                        {w.hasDegustation && <div className="p-1 rounded bg-purple-50 text-purple-600" title="Degustación"><Wine size={12} /></div>}
+                                        {w.hasDegustation && <div className="p-1 rounded bg-marga-cream text-marga-wine" title="Degustación"><Wine size={12} /></div>}
                                         {w.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
                                         {w.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
                                         {w.isKidFriendly && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Kid Friendly"><Baby size={12} /></div>}
@@ -1046,14 +1046,14 @@ export const WineriesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${w.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${w.isActive ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                         <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${w.isActive ? 'translate-x-4' : 'translate-x-0'}`}></div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <button
                                         onClick={() => setSelectedWinery(w)}
-                                        className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"
+                                        className="text-gray-400 hover:text-marga-wine font-medium text-xs flex items-center justify-end gap-1 ml-auto"
                                     >
                                         <Eye size={14} /> Ver
                                     </button>
@@ -1178,7 +1178,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">Hoteles</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase mb-3">Hoteles</h2>
                 <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -1186,7 +1186,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         placeholder="Buscar hotel..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -1195,7 +1195,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1207,7 +1207,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={caracteristicaFilter}
                             onChange={(e) => setCaracteristicaFilter(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Tipo</option>
                             <option value="Activos">Solo Activos</option>
@@ -1224,7 +1224,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                         title="Nuevo Hotel"
                     >
                         <Plus size={18} />
@@ -1234,7 +1234,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1250,7 +1250,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredData.map((h) => (
-                            <tr key={h.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr key={h.id} className="hover:bg-marga-cream transition-colors group">
                                 <td className="px-6 py-4">
                                     <button onClick={() => setSelectedHotel(h)} className="font-bold text-gray-800 hover:text-blue-600 text-left">{h.name}</button>
                                     {h.description && <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]" title={h.description}>{h.description}</p>}
@@ -1262,10 +1262,10 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     <div className="flex gap-1 flex-wrap">
                                         {h.hasWifi && <div className="p-1 rounded bg-cyan-50 text-cyan-600" title="WiFi"><Wifi size={12} /></div>}
                                         {h.hasPool && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Pileta"><Waves size={12} /></div>}
-                                        {h.hasGym && <div className="p-1 rounded bg-purple-50 text-purple-600" title="Gimnasio"><Dumbbell size={12} /></div>}
+                                        {h.hasGym && <div className="p-1 rounded bg-marga-cream text-marga-wine" title="Gimnasio"><Dumbbell size={12} /></div>}
                                         {h.hasSpa && <div className="p-1 rounded bg-pink-50 text-pink-600" title="Spa"><Sparkles size={12} /></div>}
                                         {h.hasRestaurant && <div className="p-1 rounded bg-orange-50 text-orange-600" title="Restaurante"><Utensils size={12} /></div>}
-                                        {h.hasParking && <div className="p-1 rounded bg-gray-100 text-gray-600" title="Estacionamiento"><Car size={12} /></div>}
+                                        {h.hasParking && <div className="p-1 rounded bg-marga-creamDark text-marga-dark/60" title="Estacionamiento"><Car size={12} /></div>}
                                         {h.isAccessible && <div className="p-1 rounded bg-blue-50 text-blue-600" title="Accesible"><Accessibility size={12} /></div>}
                                         {h.isPetFriendly && <div className="p-1 rounded bg-green-50 text-green-600" title="Pet Friendly"><Dog size={12} /></div>}
                                         {!h.hasWifi && !h.hasPool && !h.hasGym && !h.hasSpa && !h.hasRestaurant && !h.hasParking && !h.isAccessible && !h.isPetFriendly && <span className="text-gray-300 text-xs">—</span>}
@@ -1299,7 +1299,7 @@ export const HotelsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${h.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${h.isActive ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                         <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${h.isActive ? 'translate-x-4' : 'translate-x-0'}`}></div>
                                     </div>
                                 </td>
@@ -1420,7 +1420,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">Restaurantes</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase mb-3">Restaurantes</h2>
                 <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -1428,7 +1428,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         placeholder="Buscar restaurante..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -1437,7 +1437,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1449,7 +1449,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={caracteristicaFilter}
                             onChange={(e) => setCaracteristicaFilter(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Tipo</option>
                             <option value="Activos">Solo Activos</option>
@@ -1461,7 +1461,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                         title="Nuevo Restaurante"
                     >
                         <Plus size={18} />
@@ -1471,7 +1471,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1487,7 +1487,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredData.map((r) => (
-                            <tr key={r.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr key={r.id} className="hover:bg-marga-cream transition-colors group">
                                 <td className="px-6 py-4">
                                     <button onClick={() => setSelectedRestaurant(r)} className="font-bold text-gray-800 hover:text-orange-600 text-left">{r.name}</button>
                                 </td>
@@ -1524,7 +1524,7 @@ export const RestaurantsView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${r.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${r.isActive ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                         <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${r.isActive ? 'translate-x-4' : 'translate-x-0'}`}></div>
                                     </div>
                                 </td>
@@ -1615,7 +1615,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">Actividades</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase mb-3">Actividades</h2>
                 <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -1623,7 +1623,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         placeholder="Buscar actividad, proveedor..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -1632,7 +1632,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1644,7 +1644,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={caracteristicaFilter}
                             onChange={(e) => setCaracteristicaFilter(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Tipo</option>
                             <option value="Activos">Solo Activos</option>
@@ -1656,7 +1656,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                         title="Nueva Actividad"
                     >
                         <Plus size={18} />
@@ -1666,7 +1666,7 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1681,9 +1681,9 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredData.map((a) => (
-                            <tr key={a.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr key={a.id} className="hover:bg-marga-cream transition-colors group">
                                 <td className="px-6 py-4">
-                                    <button onClick={() => setSelectedActivity(a)} className="font-bold text-gray-800 hover:text-marga-violet text-left">
+                                    <button onClick={() => setSelectedActivity(a)} className="font-bold text-gray-800 hover:text-marga-wine text-left">
                                         {a.name}
                                     </button>
                                     {a.provider && <p className="text-xs text-gray-400 mt-0.5">{a.provider}</p>}
@@ -1717,14 +1717,14 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${a.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                    <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${a.isActive ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                         <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${a.isActive ? 'translate-x-4' : 'translate-x-0'}`}></div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <button
                                         onClick={() => setSelectedActivity(a)}
-                                        className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"
+                                        className="text-gray-400 hover:text-marga-wine font-medium text-xs flex items-center justify-end gap-1 ml-auto"
                                     >
                                         <Eye size={14} /> Ver
                                     </button>
@@ -1813,10 +1813,10 @@ export const RoutesView: React.FC = () => {
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
-            <div className="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="mb-8 bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-hidden">
+                <div className="px-6 py-4 border-b border-marga-creamDark bg-marga-cream/50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        <DollarSign size={18} className="text-marga-violet" />
+                        <DollarSign size={18} className="text-marga-wine" />
                         Ajustes de Tarifas
                     </h3>
                 </div>
@@ -1830,7 +1830,7 @@ export const RoutesView: React.FC = () => {
                                     type="number"
                                     value={costoKm}
                                     onChange={(e) => setCostoKm(e.target.value)}
-                                    className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                    className="pl-8 pr-4 py-2 w-full border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -1842,7 +1842,7 @@ export const RoutesView: React.FC = () => {
                                     type="number"
                                     value={precioFullDay}
                                     onChange={(e) => setPrecioFullDay(e.target.value)}
-                                    className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                    className="pl-8 pr-4 py-2 w-full border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -1854,7 +1854,7 @@ export const RoutesView: React.FC = () => {
                                     type="number"
                                     value={precioMedioDia}
                                     onChange={(e) => setPrecioMedioDia(e.target.value)}
-                                    className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                    className="pl-8 pr-4 py-2 w-full border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -1866,7 +1866,7 @@ export const RoutesView: React.FC = () => {
                                     type="number"
                                     value={precioViaticos}
                                     onChange={(e) => setPrecioViaticos(e.target.value)}
-                                    className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                    className="pl-8 pr-4 py-2 w-full border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -1878,18 +1878,18 @@ export const RoutesView: React.FC = () => {
                                     type="number"
                                     value={ganancia}
                                     onChange={(e) => setGanancia(e.target.value)}
-                                    className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                    className="pl-8 pr-4 py-2 w-full border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 flex justify-end items-center border-t border-gray-100">
+                <div className="px-6 py-4 bg-gray-50 flex justify-end items-center border-t border-marga-creamDark">
                     {saveSuccess && <span className="text-green-600 font-medium text-sm mr-4">¡Cambios guardados con éxito!</span>}
                     <button 
                         onClick={handleSaveRates}
                         disabled={isSaving}
-                        className="bg-marga-violet hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-white font-bold py-2 px-6 rounded-lg transition-colors"
                     >
                         {isSaving ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
@@ -1898,7 +1898,7 @@ export const RoutesView: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Distancias y Rutas</h2>
+                    <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Distancias y Rutas</h2>
                     <p className="text-sm text-gray-500 mt-1">Consulta los kilómetros entre distintos puntos de interés.</p>
                 </div>
                 <div className="relative w-full sm:w-56">
@@ -1908,12 +1908,12 @@ export const RoutesView: React.FC = () => {
                         placeholder="Buscar origen o destino..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -1925,15 +1925,15 @@ export const RoutesView: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredRoutes.map((r) => (
-                            <tr key={r.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr key={r.id} className="hover:bg-marga-cream transition-colors group">
                                 <td className="px-6 py-4 font-bold text-gray-800 w-1/3">{r.origin}</td>
                                 <td className="px-6 py-4 text-center text-gray-400 w-1/6">
                                     <div className="flex items-center justify-center gap-2">
                                         <div className="h-px bg-gray-200 flex-1"></div>
                                         {r.origin === r.destination ? (
-                                            <RefreshCw size={14} className="group-hover:text-marga-violet transition-colors" />
+                                            <RefreshCw size={14} className="group-hover:text-marga-wine transition-colors" />
                                         ) : (
-                                            <ArrowRightLeft size={14} className="group-hover:text-marga-violet transition-colors" />
+                                            <ArrowRightLeft size={14} className="group-hover:text-marga-wine transition-colors" />
                                         )}
                                         <div className="h-px bg-gray-200 flex-1"></div>
                                     </div>
@@ -1966,9 +1966,9 @@ export const GenericPlaceholderView: React.FC<{ title: string, filter?: string }
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <FileText size={32} className="text-gray-300" />
         </div>
-        <h2 className="text-xl font-bold text-gray-600 mb-2">{title}</h2>
+        <h2 className="text-xl font-bold text-marga-wine font-display uppercase mb-2">{title}</h2>
         {filter && (
-            <div className="flex items-center gap-2 bg-marga-violet/10 text-marga-violet px-3 py-1 rounded-full text-sm font-medium mb-2">
+            <div className="flex items-center gap-2 bg-marga-wine/10 text-marga-wine px-3 py-1 rounded-full text-sm font-medium mb-2">
                 <MapPin size={14} />
                 Filtro: {filter}
             </div>
@@ -1979,7 +1979,7 @@ export const GenericPlaceholderView: React.FC<{ title: string, filter?: string }
 
 // ─────────────────────── EXPERIENCES VIEW ───────────────────────
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-    'Enológica':   { bg: 'bg-purple-100', text: 'text-purple-700' },
+    'Enológica':   { bg: 'bg-marga-wine/10', text: 'text-marga-wine' },
     'Aventura':    { bg: 'bg-orange-100', text: 'text-orange-700' },
     'Trekking':    { bg: 'bg-green-100',  text: 'text-green-700' },
     'Cabalgata':   { bg: 'bg-amber-100',  text: 'text-amber-700' },
@@ -2041,7 +2041,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">Experiencias</h2>
+                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase mb-3">Experiencias</h2>
                 <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -2049,7 +2049,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         placeholder="Buscar experiencia..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent text-sm w-full"
+                        className="pl-9 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -2058,7 +2058,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedRegion}
                             onChange={(e) => setSelectedRegion(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Región</option>
                             {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -2070,7 +2070,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-violet/20 cursor-pointer w-full"
+                            className="appearance-none pl-8 pr-7 py-2 bg-white border border-marga-creamDark rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-marga-wine/20 cursor-pointer w-full"
                         >
                             <option value="Todas">Categoría</option>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -2079,7 +2079,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-marga-yellow hover:bg-yellow-500 text-marga-text font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                        className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                         title="Nueva Experiencia"
                     >
                         <Plus size={18} />
@@ -2089,7 +2089,7 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
                         <tr>
@@ -2108,9 +2108,9 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                         {filtered.map((exp) => {
                             const col = CATEGORY_COLORS[exp.category] || { bg: 'bg-gray-100', text: 'text-gray-600' };
                             return (
-                                <tr key={exp.id} className="hover:bg-gray-50 transition-colors group">
+                                <tr key={exp.id} className="hover:bg-marga-cream transition-colors group">
                                     <td className="px-6 py-4">
-                                        <button onClick={() => setSelectedExperience(exp)} className="font-bold text-gray-800 hover:text-marga-violet text-left">
+                                        <button onClick={() => setSelectedExperience(exp)} className="font-bold text-gray-800 hover:text-marga-wine text-left">
                                             {exp.name}
                                         </button>
                                         {exp.highlight && <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">{exp.highlight}</p>}
@@ -2156,14 +2156,14 @@ export const ExperiencesView: React.FC<{ filter?: string }> = ({ filter }) => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${exp.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                        <div className={`w-8 h-4 rounded-full p-0.5 mx-auto transition-colors ${exp.is_active ? 'bg-green-500' : 'bg-marga-creamDark'}`}>
                                             <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${exp.is_active ? 'translate-x-4' : 'translate-x-0'}`}></div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button
                                             onClick={() => setSelectedExperience(exp)}
-                                            className="text-gray-400 hover:text-marga-violet font-medium text-xs flex items-center justify-end gap-1 ml-auto"
+                                            className="text-gray-400 hover:text-marga-wine font-medium text-xs flex items-center justify-end gap-1 ml-auto"
                                         >
                                             <Eye size={14} /> Ver
                                         </button>

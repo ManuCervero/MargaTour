@@ -50,7 +50,7 @@ export const AddExperienceModal: React.FC<AddExperienceModalProps> = ({ isOpen, 
 
     if (!isOpen) return null;
 
-    const inputCls = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet";
+    const inputCls = "w-full px-3 py-2 text-sm border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -58,17 +58,17 @@ export const AddExperienceModal: React.FC<AddExperienceModalProps> = ({ isOpen, 
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-white shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-marga-cream/60 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-marga-violet/10 flex items-center justify-center">
-                            <Sparkles size={20} className="text-marga-violet" />
+                        <div className="w-10 h-10 rounded-xl bg-marga-wine/10 flex items-center justify-center">
+                            <Sparkles size={20} className="text-marga-wine" />
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-800">Nueva Experiencia</h2>
                             <p className="text-xs text-gray-500">Agregar al catálogo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -142,8 +142,8 @@ export const AddExperienceModal: React.FC<AddExperienceModalProps> = ({ isOpen, 
                                     { field: 'is_accessible', label: 'Accesible' },
                                     { field: 'is_active', label: 'Activa' },
                                 ].map(({ field, label }) => (
-                                    <label key={field} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                        <input type="checkbox" checked={(form as any)[field]} onChange={e => set(field, e.target.checked)} className="w-4 h-4 accent-marga-violet rounded" />
+                                    <label key={field} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
+                                        <input type="checkbox" checked={(form as any)[field]} onChange={e => set(field, e.target.checked)} className="w-4 h-4 accent-marga-wine rounded" />
                                         <span className="text-sm text-gray-700">{label}</span>
                                     </label>
                                 ))}
@@ -151,10 +151,10 @@ export const AddExperienceModal: React.FC<AddExperienceModalProps> = ({ isOpen, 
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancelar</button>
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-marga-creamDark">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors">Cancelar</button>
                         <button type="submit" disabled={loading || !form.name.trim()}
-                            className="px-6 py-2 bg-marga-yellow hover:bg-yellow-400 text-marga-text rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm">
+                            className="px-6 py-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm">
                             {loading ? <><Loader2 size={16} className="animate-spin" />Guardando...</> : 'Guardar Experiencia'}
                         </button>
                     </div>

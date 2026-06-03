@@ -51,7 +51,7 @@ export const BotToggle: React.FC<BotToggleProps> = ({
         >
           <div className={`flex items-center gap-1 px-3 rounded-md transition-all duration-200 font-bold ${
             isBotActive
-                ? 'bg-marga-violet text-white shadow-sm'
+                ? 'bg-marga-wine text-white shadow-sm'
                 : 'text-gray-500'
             }`}
           >
@@ -60,7 +60,7 @@ export const BotToggle: React.FC<BotToggleProps> = ({
           </div>
           <div className={`flex items-center gap-1 px-3 rounded-md transition-all duration-200 font-bold ${
             !isBotActive
-                ? 'bg-marga-yellow text-marga-text shadow-sm'
+                ? 'bg-marga-wine text-marga-cream shadow-sm'
                 : 'text-gray-500'
             }`}
           >
@@ -78,8 +78,8 @@ export const BotToggle: React.FC<BotToggleProps> = ({
         onClick={(e) => { e.stopPropagation(); onChange(true); }}
         className={`flex items-center gap-1 px-3 rounded-md transition-all duration-200 font-bold ${
           isBotActive
-            ? 'bg-marga-violet text-white shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
+            ? 'bg-marga-wine text-white shadow-sm'
+            : 'text-gray-500 hover:text-marga-wine'
         }`}
       >
         <Bot size={iconSize} />
@@ -89,8 +89,8 @@ export const BotToggle: React.FC<BotToggleProps> = ({
         onClick={(e) => { e.stopPropagation(); onChange(false); }}
         className={`flex items-center gap-1 px-3 rounded-md transition-all duration-200 font-bold ${
           !isBotActive
-            ? 'bg-marga-yellow text-marga-text shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
+            ? 'bg-marga-wine text-marga-cream shadow-sm'
+            : 'text-gray-500 hover:text-marga-wine'
         }`}
       >
         <User size={iconSize} />

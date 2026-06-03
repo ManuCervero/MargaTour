@@ -80,17 +80,17 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-white">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-marga-cream/60">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                            <Wine size={20} className="text-purple-600" />
+                        <div className="w-10 h-10 rounded-xl bg-marga-wine/10 flex items-center justify-center">
+                            <Wine size={20} className="text-marga-wine" />
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-800">Nueva Bodega</h2>
                             <p className="text-xs text-gray-500">Agregar al catálogo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -106,7 +106,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Bodega Catena Zapata"
                             />
                         </div>
@@ -117,7 +117,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                             <select
                                 value={formData.region}
                                 onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                             >
                                 {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
@@ -130,7 +130,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.department}
                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Luján de Cuyo"
                             />
                         </div>
@@ -142,7 +142,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.address}
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Cobos 4400, Perdriel"
                             />
                         </div>
@@ -154,7 +154,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: 2614671021"
                             />
                         </div>
@@ -166,7 +166,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="reservas@bodega.com"
                             />
                         </div>
@@ -178,7 +178,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.website}
                                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="https://..."
                             />
                         </div>
@@ -194,7 +194,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                     step="0.01"
                                     value={formData.menu_price}
                                     onChange={(e) => setFormData({ ...formData, menu_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full pl-7 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -211,7 +211,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                     step="0.01"
                                     value={formData.degustation_price}
                                     onChange={(e) => setFormData({ ...formData, degustation_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full pl-7 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -224,7 +224,7 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                                 value={formData.notes}
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent resize-none"
                                 placeholder="Información adicional, horarios..."
                             />
                         </div>
@@ -233,57 +233,57 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                         <div className="col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Características</label>
                             <div className="grid grid-cols-3 gap-3">
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.has_restaurant}
                                         onChange={(e) => setFormData({ ...formData, has_restaurant: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Restaurante</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.is_accessible}
                                         onChange={(e) => setFormData({ ...formData, is_accessible: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Accesible</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.is_pet_friendly}
                                         onChange={(e) => setFormData({ ...formData, is_pet_friendly: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Pet Friendly</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.is_kid_friendly}
                                         onChange={(e) => setFormData({ ...formData, is_kid_friendly: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Kid Friendly</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.has_degustation}
                                         onChange={(e) => setFormData({ ...formData, has_degustation: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Degustación</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.is_active}
                                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm text-gray-700">Activa</span>
                                 </label>
@@ -292,18 +292,18 @@ export const AddWineryModal: React.FC<AddWineryModalProps> = ({ isOpen, onClose,
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !formData.name.trim()}
-                            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-6 py-2 bg-marga-wine hover:bg-marga-wineLight text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {loading ? (
                                 <>

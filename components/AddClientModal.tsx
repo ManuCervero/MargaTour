@@ -99,17 +99,17 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-marga-violetLight/20 to-white">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-gradient-to-r from-marga-wineLight/20 to-white">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-marga-violetLight flex items-center justify-center">
-                            <User size={20} className="text-marga-violet" />
+                        <div className="w-10 h-10 rounded-xl bg-marga-wineLight flex items-center justify-center">
+                            <User size={20} className="text-marga-wine" />
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-800">Nuevo Cliente</h2>
                             <p className="text-xs text-gray-500">Agregar a cartera de clientes</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -125,7 +125,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Juan Pérez"
                             />
                         </div>
@@ -137,7 +137,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.document_id}
                                 onChange={(e) => setFormData({ ...formData, document_id: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: 35.123.456"
                             />
                         </div>
@@ -149,7 +149,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="juan@gmail.com"
                             />
                         </div>
@@ -161,7 +161,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="+54 9 261..."
                             />
                         </div>
@@ -173,7 +173,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="tel"
                                 value={formData.emergency_phone}
                                 onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Contacto extra..."
                             />
                         </div>
@@ -185,7 +185,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="date"
                                 value={formData.birthdate}
                                 onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                             />
                         </div>
 
@@ -196,7 +196,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.origin}
                                 onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Buenos Aires, Arg"
                             />
                         </div>
@@ -207,7 +207,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                             <select
                                 value={formData.client_type}
                                 onChange={(e) => setFormData({ ...formData, client_type: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                             >
                                 <option value="Particular">Particular</option>
                                 <option value="Agencia">Agencia</option>
@@ -222,7 +222,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 type="text"
                                 value={formData.visit_reason}
                                 onChange={(e) => setFormData({ ...formData, visit_reason: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-violet focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent"
                                 placeholder="Ej: Turismo, Negocios, Aniversario..."
                             />
                         </div>
@@ -232,12 +232,12 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Información Adicional</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={formData.has_food_restrictions}
                                             onChange={(e) => setFormData({ ...formData, has_food_restrictions: e.target.checked })}
-                                            className="w-4 h-4 text-marga-violet rounded focus:ring-marga-violet"
+                                            className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Restricciones Alimentarias</span>
                                     </label>
@@ -253,12 +253,12 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={formData.has_disability}
                                             onChange={(e) => setFormData({ ...formData, has_disability: e.target.checked })}
-                                            className="w-4 h-4 text-marga-violet rounded focus:ring-marga-violet"
+                                            className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Discapacidad / Movilidad</span>
                                     </label>
@@ -273,22 +273,22 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                                     )}
                                 </div>
 
-                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.travels_with_pet}
                                         onChange={(e) => setFormData({ ...formData, travels_with_pet: e.target.checked })}
-                                        className="w-4 h-4 text-marga-violet rounded focus:ring-marga-violet"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm font-medium text-gray-700">Viaja con Mascota</span>
                                 </label>
 
-                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={formData.image_consent}
                                         onChange={(e) => setFormData({ ...formData, image_consent: e.target.checked })}
-                                        className="w-4 h-4 text-marga-violet rounded focus:ring-marga-violet"
+                                        className="w-4 h-4 text-marga-wine rounded focus:ring-marga-wine"
                                     />
                                     <span className="text-sm font-medium text-gray-700">Acepta uso de imagen</span>
                                 </label>
@@ -297,18 +297,18 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose,
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !formData.name.trim()}
-                            className="px-6 py-2 bg-marga-violet hover:bg-purple-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                            className="px-6 py-2 bg-marga-wine hover:bg-marga-wineLight text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
                         >
                             {loading ? (
                                 <>

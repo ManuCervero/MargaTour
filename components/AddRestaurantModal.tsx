@@ -67,7 +67,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-marga-creamDark bg-gradient-to-r from-orange-50 to-white">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                             <Utensils size={20} className="text-orange-600" />
@@ -77,7 +77,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                             <p className="text-xs text-gray-500">Agregar al catálogo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -93,7 +93,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                 placeholder="Ej: 1884 Restaurante"
                             />
                         </div>
@@ -104,7 +104,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                             <select
                                 value={formData.region}
                                 onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                             >
                                 {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
@@ -117,7 +117,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                 placeholder="Ej: 2614671021"
                             />
                         </div>
@@ -129,7 +129,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                                 type="text"
                                 value={formData.schedule}
                                 onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                 placeholder="Ej: Lun-Sáb 12:00-15:00 / 20:00-00:00"
                             />
                         </div>
@@ -141,7 +141,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                                 type="number"
                                 value={formData.price_min}
                                 onChange={(e) => setFormData({ ...formData, price_min: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                 placeholder="Ej: 15000"
                                 min="0"
                             />
@@ -154,7 +154,7 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                                 type="number"
                                 value={formData.price_max}
                                 onChange={(e) => setFormData({ ...formData, price_max: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                 placeholder="Ej: 35000"
                                 min="0"
                             />
@@ -164,19 +164,19 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                         <div className="col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Características</label>
                             <div className="grid grid-cols-3 gap-3">
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_accessible} onChange={(e) => setFormData({ ...formData, is_accessible: e.target.checked })} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
                                     <span className="text-sm text-gray-700">Accesible</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_pet_friendly} onChange={(e) => setFormData({ ...formData, is_pet_friendly: e.target.checked })} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
                                     <span className="text-sm text-gray-700">Pet Friendly</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_kid_friendly} onChange={(e) => setFormData({ ...formData, is_kid_friendly: e.target.checked })} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
                                     <span className="text-sm text-gray-700">Kid Friendly</span>
                                 </label>
-                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-marga-creamDark transition-colors">
                                     <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
                                     <span className="text-sm text-gray-700">Activo</span>
                                 </label>
@@ -185,11 +185,11 @@ export const AddRestaurantModal: React.FC<AddRestaurantModalProps> = ({ isOpen, 
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-marga-creamDark">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-marga-creamDark rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>

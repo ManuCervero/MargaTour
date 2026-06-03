@@ -20,7 +20,7 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
       {/* Drawer Content */}
       <div className="relative w-full max-w-md bg-white h-full shadow-2xl transform transition-transform duration-300 flex flex-col">
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50">
+        <div className="p-5 border-b border-marga-creamDark flex justify-between items-start bg-gray-50">
           <div>
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               {lead.name || 'Nuevo Lead'}
@@ -33,7 +33,7 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
               <span className="text-sm font-mono">{lead.phone}</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-full transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-marga-wine p-1 hover:bg-marga-creamDark rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -49,7 +49,7 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <button className="flex items-center justify-center gap-2 bg-marga-violet text-white py-2.5 px-4 rounded-xl font-bold hover:bg-violet-700 transition-colors shadow-sm text-sm">
+            <button className="flex items-center justify-center gap-2 bg-marga-wine text-white py-2.5 px-4 rounded-xl font-bold hover:bg-marga-wineLight transition-colors shadow-sm text-sm">
                 <FileText size={16} />
                 Crear Cotización
             </button>
@@ -60,15 +60,15 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
           </div>
           
            <div className="grid grid-cols-3 gap-2 mb-6">
-            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors text-xs text-gray-600">
+            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-marga-creamDark border border-marga-creamDark transition-colors text-xs text-gray-600">
                 <CheckCircle size={16} className="text-green-500 mb-1"/>
                 Aprobado
             </button>
-            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors text-xs text-gray-600">
+            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-marga-creamDark border border-marga-creamDark transition-colors text-xs text-gray-600">
                 <XCircle size={16} className="text-red-500 mb-1"/>
                 Cancelado
             </button>
-            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors text-xs text-gray-600">
+            <button className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg hover:bg-marga-creamDark border border-marga-creamDark transition-colors text-xs text-gray-600">
                 <ArrowRight size={16} className="text-blue-500 mb-1"/>
                 Handoff
             </button>
@@ -77,21 +77,21 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
 
           {/* Details */}
           <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-gray-100">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-marga-creamDark">
                 <User className="text-gray-400 mt-1" size={18} />
                 <div>
                     <p className="text-xs text-gray-400 font-bold uppercase">Tipo de Cliente</p>
                     <p className="text-sm text-gray-700 font-medium">Turista Internacional</p>
                 </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-gray-100">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-marga-creamDark">
                 <MapPin className="text-gray-400 mt-1" size={18} />
                 <div>
                     <p className="text-xs text-gray-400 font-bold uppercase">Interés</p>
                     <p className="text-sm text-gray-700 font-medium">{lead.type}</p>
                 </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-gray-100">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-marga-creamDark">
                 <Calendar className="text-gray-400 mt-1" size={18} />
                 <div>
                     <p className="text-xs text-gray-400 font-bold uppercase">Actividad Reciente</p>
@@ -109,7 +109,7 @@ export const LeadDrawer: React.FC<LeadDrawerProps> = ({ lead, onClose, onToggleB
                         <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
                             msg.sender === 'user' 
                             ? 'bg-gray-100 text-gray-700 rounded-bl-none' 
-                            : 'bg-marga-violetLight text-violet-900 rounded-br-none'
+                            : 'bg-marga-wineLight text-marga-wine rounded-br-none'
                         }`}>
                             <p>{msg.text}</p>
                             <p className="text-[10px] opacity-60 text-right mt-1">{msg.timestamp}</p>
