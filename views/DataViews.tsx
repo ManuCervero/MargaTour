@@ -11,95 +11,10 @@ import { HotelDrawer } from '../components/HotelDrawer';
 import { RestaurantDrawer } from '../components/RestaurantDrawer';
 import { AirportTransferDrawer, TourDrawer } from '../components/TransferDrawer';
 import { ActivityDrawer, Activity as ActivityType } from '../components/ActivityDrawer';
-import { AddQuoteModal } from '../components/AddQuoteModal';
 import { AddClientModal } from '../components/AddClientModal';
 import { AddActivityModal } from '../components/AddActivityModal';
 import { ExperienceDrawer, Experience as ExperienceType } from '../components/ExperienceDrawer';
 import { AddExperienceModal } from '../components/AddExperienceModal';
-export const QuotesView: React.FC = () => {
-    const [quotes, setQuotes] = useState<Quote[]>([]);
-    const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
-
-    const fetchQuotes = () => {
-        api.from('quotes').select('*').then(({ data, error }) => {
-            if (!error && data) setQuotes(data as any);
-        });
-    };
-
-    useEffect(() => {
-        fetchQuotes();
-    }, []);
-
-    return (
-        <div className="p-4 sm:p-6 h-full overflow-y-auto">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Cotizaciones</h2>
-                <button onClick={() => setShowNewQuoteModal(true)} className="bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 transition-colors">
-                    <Plus size={18} />
-                    Nueva Cotización
-                </button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                {['Todas', 'Enviada', 'Aprobada', 'Cancelada', 'Sin respuesta'].map((status, idx) => (
-                    <button key={status} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${idx === 0 ? 'bg-marga-wine text-white' : 'bg-white text-gray-600 hover:bg-marga-creamDark border border-marga-creamDark'}`}>
-                        {status}
-                    </button>
-                ))}
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider">
-                        <tr>
-                            <th className="px-6 py-3">ID</th>
-                            <th className="px-6 py-3">Cliente</th>
-                            <th className="px-6 py-3">Tipo</th>
-                            <th className="px-6 py-3">Detalle (Org/Dest)</th>
-                            <th className="px-6 py-3 text-center">PAX</th>
-                            <th className="px-6 py-3 text-right">Precio</th>
-                            <th className="px-6 py-3">Estado</th>
-                            <th className="px-6 py-3 text-right">Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {quotes.map((q) => (
-                            <tr key={q.id} className="hover:bg-marga-cream transition-colors cursor-pointer">
-                                <td className="px-6 py-4 font-mono text-gray-500">{q.id}</td>
-                                <td className="px-6 py-4 font-bold text-gray-800">{q.leadName}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-md text-xs font-semibold ${q.type === 'Transfer' ? 'bg-blue-100 text-blue-700' : 'bg-marga-wine/10 text-marga-wine'}`}>
-                                        {q.type}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600">{q.origin} <span className="text-gray-300 mx-1">→</span> {q.destination}</td>
-                                <td className="px-6 py-4 text-center">{q.pax}</td>
-                                <td className="px-6 py-4 text-right font-mono font-bold">${q.price.toLocaleString()}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${q.status === 'Aprobada' ? 'bg-green-100 text-green-700' :
-                                        q.status === 'Enviada' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-marga-creamDark text-marga-dark/60'
-                                        }`}>
-                                        {q.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right text-gray-500">{q.date}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <AddQuoteModal
-                isOpen={showNewQuoteModal}
-                onClose={() => setShowNewQuoteModal(false)}
-                onSuccess={fetchQuotes}
-            />
-        </div>
-    )
-}
 
 export const TransfersView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'aeropuerto' | 'tours'>('aeropuerto');

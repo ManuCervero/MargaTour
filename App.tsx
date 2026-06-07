@@ -6,7 +6,8 @@ import { KanbanView } from './views/KanbanView';
 import { LeadDrawer } from './components/LeadDrawer';
 import { LoginPage } from './components/LoginPage';
 import { GlobalSearch } from './components/GlobalSearch';
-import { QuotesView, TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, ExperiencesView, RoutesView } from './views/DataViews';
+import { TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, ExperiencesView, RoutesView } from './views/DataViews';
+import { QuotesView } from './views/QuotesView';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<Record<string, string> | null>(() => getStoredUser());

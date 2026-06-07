@@ -40,6 +40,31 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  quotes: {
+    list: (filters?: { status?: string; client_id?: string; date_from?: string; date_to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.client_id) params.set('client_id', filters.client_id);
+      if (filters?.date_from) params.set('date_from', filters.date_from);
+      if (filters?.date_to) params.set('date_to', filters.date_to);
+      const qs = params.toString();
+      return request(`/api/quotes${qs ? `?${qs}` : ''}`);
+    },
+    get: (id: string) => request(`/api/quotes/${id}`),
+    create: (data: unknown) => request('/api/quotes', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) => request(`/api/quotes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateStatus: (id: string, status: string) =>
+      request(`/api/quotes/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    delete: (id: string) => request(`/api/quotes/${id}`, { method: 'DELETE' }),
+    nextNumber: () => request('/api/quotes/next-number'),
+  },
+
+  settings: {
+    getExchangeRate: (): Promise<{ value: number }> => request('/api/settings/exchange-rate'),
+    updateExchangeRate: (value: number) =>
+      request('/api/settings/exchange-rate', { method: 'PUT', body: JSON.stringify({ value }) }),
+  },
+
   auth: {
     login: (username: string, password: string) =>
       request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),

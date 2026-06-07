@@ -83,6 +83,134 @@ export interface Quote {
   date: string;
 }
 
+// ── SISTEMA DE COTIZACIONES ───────────────────────────────────────────────────
+
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected';
+export type QuoteType = 'experience' | 'custom';
+export type QuoteServiceType = 'winery' | 'hotel' | 'restaurant' | 'activity' | 'tour';
+
+export interface QuoteTransfer {
+  id?: string;
+  quote_id?: string;
+  day: string;
+  origin: string;
+  destination: string;
+  pax: number;
+  hour?: string;
+  distance_km?: number;
+  duration_hours?: number;
+  is_full_day?: boolean | number;
+  base_cost_ars?: number;
+  base_cost_usd?: number;
+  margin_pct?: number;
+  final_cost_usd?: number;
+  notes?: string;
+  sort_order?: number;
+}
+
+export interface QuoteService {
+  id?: string;
+  quote_id?: string;
+  day: string;
+  service_type: QuoteServiceType;
+  service_id?: string;
+  service_name: string;
+  pax: number;
+  unit_price_usd: number;
+  margin_pct?: number;
+  final_cost_usd?: number;
+  notes?: string;
+  sort_order?: number;
+}
+
+export interface FullQuote {
+  id?: string;
+  quote_number?: number;
+  client_id?: string;
+  client_name: string;
+  client_phone?: string;
+  client_email?: string;
+  description?: string;
+  date: string;
+  status: QuoteStatus;
+  type: QuoteType;
+  experience_id?: string;
+  exchange_rate?: number;
+  total_transfers?: number;
+  total_services?: number;
+  total_gross?: number;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  transfers: QuoteTransfer[];
+  services: QuoteService[];
+}
+
+export interface Hotel {
+  id: string;
+  name: string;
+  region: string;
+  stars?: number;
+  price_per_night?: number;
+  phone?: string;
+  email?: string;
+  address?: string;
+  website?: string;
+  description?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface Restaurant {
+  id: string;
+  name: string;
+  region: string;
+  category?: string;
+  price_min?: number;
+  price_max?: number;
+  phone?: string;
+  email?: string;
+  address?: string;
+  description?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface Activity {
+  id: string;
+  name: string;
+  region: string;
+  category?: string;
+  price?: number;
+  duration?: string;
+  description?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface Tour {
+  id: string;
+  name: string;
+  region: string;
+  price?: number;
+  duration?: string;
+  description?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface Experience {
+  id: string;
+  name: string;
+  region?: string;
+  price?: number;
+  duration?: string;
+  description?: string;
+  notes?: string;
+  image_url?: string;
+  is_active?: boolean;
+}
+
 export interface Transfer {
   id: string;
   name: string;
