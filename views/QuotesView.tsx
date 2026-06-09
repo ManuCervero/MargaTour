@@ -298,8 +298,8 @@ const TransferRow: React.FC<{
           </div>
         </div>
 
-        {/* Día / Hora / PAX / Duración */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        {/* Día / Hora / Duración */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
             <input type="date" value={transfer.day} onChange={e => onChange(index, { ...transfer, day: e.target.value })} className={inp} />
@@ -307,10 +307,6 @@ const TransferRow: React.FC<{
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Hora</label>
             <input type="time" value={transfer.hour || ''} onChange={e => onChange(index, { ...transfer, hour: e.target.value })} className={inp} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">PAX</label>
-            <input type="number" min={1} value={transfer.pax} onChange={e => onChange(index, { ...transfer, pax: parseInt(e.target.value) || 1 })} className={inp} />
           </div>
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Duración (hs)</label>
@@ -533,7 +529,7 @@ const ServiceRow: React.FC<{
         <X size={16} />
       </button>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
         <div>
           <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
           <input type="date" value={service.day} onChange={e => onChange(index, { ...service, day: e.target.value })} className={inp} />
@@ -545,10 +541,6 @@ const ServiceRow: React.FC<{
               <option key={t} value={t}>{SERVICE_LABELS[t]}</option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">PAX</label>
-          <input type="number" min={1} value={service.pax} onChange={e => handlePaxChange(parseInt(e.target.value) || 1)} className={inp} />
         </div>
         <div>
           <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Precio unit. USD</label>
@@ -1187,8 +1179,10 @@ const QuoteForm: React.FC<{
                           <label className="block text-xs font-medium text-amber-700 mb-1">{label}</label>
                           <input
                             type="number"
-                            value={(localSettings as any)[key]}
-                            onChange={e => setLocalSettings(s => ({ ...s, [key]: Number(e.target.value) }))}
+                            min={0}
+                            value={(localSettings as any)[key] || ''}
+                            onChange={e => setLocalSettings(s => ({ ...s, [key]: e.target.value === '' ? 0 : Number(e.target.value) }))}
+                            placeholder="0"
                             className="w-full border border-amber-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
                           />
                         </div>
