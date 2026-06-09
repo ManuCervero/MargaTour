@@ -40,7 +40,6 @@ function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSet
   const isFullDay = distKm > 150 || durHours >= 6;
   const baseCostArs =
     (distKm * settings.costo_km) +
-    settings.precio_viaticos +
     (isFullDay ? settings.precio_full_day : settings.precio_medio_dia);
   const finalCostArs = baseCostArs * (1 + settings.ganancia / 100);
   return { baseCostArs, finalCostArs, isFullDay };
@@ -1179,9 +1178,8 @@ const QuoteForm: React.FC<{
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
                         { label: 'Costo x km ($)', key: 'costo_km' },
-                        { label: 'Full day ($)', key: 'precio_full_day' },
-                        { label: 'Medio día ($)', key: 'precio_medio_dia' },
-                        { label: 'Ganancia (%)', key: 'ganancia' },
+                        { label: '+150 km ($)', key: 'precio_full_day' },
+                        { label: '-150 km ($)', key: 'precio_medio_dia' },
                       ].map(({ label, key }) => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-amber-700 mb-1">{label}</label>
