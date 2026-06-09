@@ -15,6 +15,7 @@ import { AddClientModal } from '../components/AddClientModal';
 import { AddActivityModal } from '../components/AddActivityModal';
 import { ExperienceDrawer, Experience as ExperienceType } from '../components/ExperienceDrawer';
 import { AddExperienceModal } from '../components/AddExperienceModal';
+import { RouteMapModal } from '../components/RouteMapModal';
 
 export const TransfersView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'aeropuerto' | 'tours'>('aeropuerto');
@@ -1668,6 +1669,8 @@ export const ActivitiesView: React.FC<{ filter?: string }> = ({ filter }) => {
 export const RoutesView: React.FC = () => {
     const [routes, setRoutes] = useState<Route[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showMapModal, setShowMapModal] = useState(false);
+    const [editingRoute, setEditingRoute] = useState<Route | null>(null);
 
     const [costoKm, setCostoKm] = useState('1500');
     const [precioFullDay, setPrecioFullDay] = useState('45000');
@@ -1677,10 +1680,23 @@ export const RoutesView: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
-    useEffect(() => {
+    const fetchRoutes = () => {
         api.from('routes').select('*').order('origin').then(({ data, error }) => {
             if (!error && data) setRoutes(data);
         });
+    };
+
+    const handleMapSave = async (origin: string, destination: string, distanceKm: number, routeId?: string) => {
+        if (routeId) {
+            await api.from('routes').update({ origin, destination, distance_km: distanceKm }).eq('id', routeId);
+        } else {
+            await api.from('routes').insert([{ origin, destination, distance_km: distanceKm }]);
+        }
+        fetchRoutes();
+    };
+
+    useEffect(() => {
+        fetchRoutes();
 
         // Load existing settings if they exist
         api.from('settings').select('*').eq('id', 1).single().then(({ data, error }) => {
@@ -1816,17 +1832,33 @@ export const RoutesView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Distancias y Rutas</h2>
                     <p className="text-sm text-gray-500 mt-1">Consulta los kilómetros entre distintos puntos de interés.</p>
                 </div>
-                <div className="relative w-full sm:w-56">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Buscar origen o destino..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
-                    />
+                <div className="flex items-center gap-2">
+                    <div className="relative w-full sm:w-56">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Buscar origen o destino..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
+                        />
+                    </div>
+                    <button
+                        onClick={() => { setEditingRoute(null); setShowMapModal(true); }}
+                        className="flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+                    >
+                        <Plus size={16} /> Nueva Ruta
+                    </button>
                 </div>
             </div>
+
+            {showMapModal && (
+                <RouteMapModal
+                    route={editingRoute}
+                    onClose={() => { setShowMapModal(false); setEditingRoute(null); }}
+                    onSave={handleMapSave}
+                />
+            )}
 
             <div className="bg-white rounded-xl shadow-sm border border-marga-creamDark overflow-x-auto">
                 <table className="w-full text-sm text-left">
@@ -1840,7 +1872,12 @@ export const RoutesView: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredRoutes.map((r) => (
-                            <tr key={r.id} className="hover:bg-marga-cream transition-colors group">
+                            <tr
+                                key={r.id}
+                                className="hover:bg-marga-cream transition-colors group cursor-pointer"
+                                onClick={() => { setEditingRoute(r); setShowMapModal(true); }}
+                                title="Clic para editar con mapa"
+                            >
                                 <td className="px-6 py-4 font-bold text-gray-800 w-1/3">{r.origin}</td>
                                 <td className="px-6 py-4 text-center text-gray-400 w-1/6">
                                     <div className="flex items-center justify-center gap-2">

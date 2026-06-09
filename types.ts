@@ -131,6 +131,7 @@ export interface FullQuote {
   client_phone?: string;
   client_email?: string;
   description?: string;
+  pax?: number;
   date: string;
   status: QuoteStatus;
   type: QuoteType;

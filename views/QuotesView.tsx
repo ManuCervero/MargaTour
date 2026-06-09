@@ -3,7 +3,7 @@ import {
   Plus, Search, FileText, Edit2, Trash2, Printer, ChevronLeft,
   DollarSign, ArrowRight, X, Check, Clock, SendHorizontal,
   CalendarDays, Users, MapPin, Utensils, Bed, Wine, Compass, Navigation,
-  AlertCircle, RefreshCw, PenLine
+  AlertCircle, RefreshCw, PenLine, Loader2
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { FullQuote, QuoteTransfer, QuoteService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
@@ -112,6 +112,7 @@ const emptyQuote = (): FullQuote => ({
   client_phone: '',
   client_email: '',
   description: '',
+  pax: 1,
   date: new Date().toISOString().slice(0, 10),
   status: 'draft',
   type: 'custom',
@@ -672,7 +673,7 @@ const QuoteForm: React.FC<{
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
     if (initial?.type === 'experience' && initial.services?.length > 0) return initial.services[0].pax || 1;
-    return 1;
+    return initial?.pax || 1;
   });
   const [expPriceUsd, setExpPriceUsd] = useState<number>(() => {
     if (initial?.type === 'experience' && initial.services?.length > 0) return initial.services[0].unit_price_usd || 0;
@@ -814,14 +815,29 @@ const QuoteForm: React.FC<{
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción</label>
                 <input type="text" value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp} placeholder="Ej: Tour Valle de Uco 3 días" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Fecha</label>
                 <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inp} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1 flex items-center gap-1">
+                  <Users size={12} /> PAX (personas)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.pax ?? ''}
+                  onChange={e => setForm(f => ({ ...f, pax: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
+                  className={inp}
+                />
               </div>
             </div>
 
@@ -936,7 +952,7 @@ const QuoteForm: React.FC<{
                   <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Transfers</h3>
                   <button
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, emptyTransfer()] }))}
+                    onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, { ...emptyTransfer(), pax: f.pax || 1 }] }))}
                     className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <Plus size={14} /> Agregar transfer
@@ -964,7 +980,7 @@ const QuoteForm: React.FC<{
                   <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Servicios</h3>
                   <button
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, services: [...f.services, emptyService()] }))}
+                    onClick={() => setForm(f => ({ ...f, services: [...f.services, { ...emptyService(), pax: f.pax || 1 }] }))}
                     className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <Plus size={14} /> Agregar servicio
@@ -1067,6 +1083,8 @@ export const QuotesView: React.FC = () => {
   const [tarifaSettings, setTarifaSettings] = useState<TarifaSettings>(DEFAULT_TARIFA);
   const [showTCModal, setShowTCModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState<FullQuote | null>(null);
+  const [fetchingBna, setFetchingBna] = useState(false);
+  const [bnaUpdatedAt, setBnaUpdatedAt] = useState<string | null>(null);
 
   // Filters
   const [filterStatus, setFilterStatus] = useState('');
@@ -1208,6 +1226,22 @@ export const QuotesView: React.FC = () => {
     await loadQuotes();
   };
 
+  const fetchBnaRate = async () => {
+    setFetchingBna(true);
+    try {
+      const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
+      const data = await res.json();
+      const venta = Number(data.venta);
+      if (!venta || venta <= 0) return;
+      setExchangeRate(venta);
+      setTarifaSettings(prev => ({ ...prev, usd_exchange_rate: venta }));
+      await api.settings.updateExchangeRate(venta);
+      const now = new Date();
+      setBnaUpdatedAt(`${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`);
+    } catch { /* red error silencioso */ }
+    setFetchingBna(false);
+  };
+
   const filteredQuotes = quotes.filter(q => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
@@ -1254,14 +1288,25 @@ export const QuotesView: React.FC = () => {
           <p className="text-sm text-marga-dark/50 mt-0.5">Gestión de presupuestos en USD</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowTCModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-marga-creamDark rounded-xl text-xs font-bold text-marga-dark/60 hover:border-marga-wine/40 hover:text-marga-wine transition-colors"
-          >
-            <DollarSign size={14} />
-            TC: ${exchangeRate.toLocaleString('es-AR')}
-            <Edit2 size={12} />
-          </button>
+          <div className="flex items-center border border-marga-creamDark rounded-xl overflow-hidden bg-white">
+            <button
+              onClick={() => setShowTCModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-marga-dark/60 hover:text-marga-wine transition-colors border-r border-marga-creamDark"
+            >
+              <DollarSign size={14} />
+              TC: ${exchangeRate.toLocaleString('es-AR')}
+              <Edit2 size={12} />
+            </button>
+            <button
+              onClick={fetchBnaRate}
+              disabled={fetchingBna}
+              title="Sincronizar con dólar BNA venta"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+            >
+              {fetchingBna ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+              BNA{bnaUpdatedAt && <span className="text-blue-400 font-normal">{bnaUpdatedAt}</span>}
+            </button>
+          </div>
           <button
             onClick={handleNewQuote}
             className="flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-xl text-sm shadow-sm transition-colors"
