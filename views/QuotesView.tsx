@@ -41,8 +41,7 @@ function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSet
   const baseCostArs =
     (distKm * settings.costo_km) +
     (isFullDay ? settings.precio_full_day : settings.precio_medio_dia);
-  const finalCostArs = baseCostArs * (1 + settings.ganancia / 100);
-  return { baseCostArs, finalCostArs, isFullDay };
+  return { baseCostArs, finalCostArs: baseCostArs, isFullDay };
 }
 
 function calcServiceFinal(unitPrice: number, pax: number) {
@@ -429,15 +428,9 @@ const TransferRow: React.FC<{
                 </span>
               )}
             </div>
-            {/* Precios */}
-            {(transfer.base_cost_ars || 0) > 0 && (
-              <div className="flex items-center justify-between text-sm border-t border-marga-creamDark pt-2">
-                <span className="text-marga-dark/50">Precio base</span>
-                <span className="font-mono text-marga-dark/70">{fmtARS(transfer.base_cost_ars || 0)}</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-bold text-marga-wine">Total (+{settings.ganancia || 50}%)</span>
+            {/* Precio */}
+            <div className="flex items-center justify-between text-sm border-t border-marga-creamDark pt-2">
+              <span className="font-bold text-marga-wine">Precio base</span>
               <span className="font-mono font-bold text-marga-wine">{fmtARS(transfer.final_cost_usd || 0)}</span>
             </div>
           </div>
