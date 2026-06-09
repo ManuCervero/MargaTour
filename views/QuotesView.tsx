@@ -857,7 +857,11 @@ const QuoteForm: React.FC<{
   catalogData: CatalogData;
   onSave: (quote: FullQuote, status: QuoteStatus) => Promise<void>;
   onCancel: () => void;
-}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel }) => {
+  onOpenTC: () => void;
+  onFetchBna: () => void;
+  fetchingBna: boolean;
+  bnaUpdatedAt: string | null;
+}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
   const [form, setForm] = useState<FullQuote>(initial ? { ...initial } : emptyQuote());
@@ -946,15 +950,33 @@ const QuoteForm: React.FC<{
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={onCancel} className="p-2 text-marga-dark/40 hover:text-marga-wine rounded-xl hover:bg-marga-creamDark transition-colors">
-          <ChevronLeft size={20} />
-        </button>
-        <div>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onCancel} className="p-2 text-marga-dark/40 hover:text-marga-wine rounded-xl hover:bg-marga-creamDark transition-colors">
+            <ChevronLeft size={20} />
+          </button>
           <h2 className="text-xl font-extrabold text-marga-wine uppercase tracking-tight">
             {initial?.id ? `Editar Cotización #${String(initial.quote_number || 0).padStart(4, '0')}` : 'Nueva Cotización'}
           </h2>
-          <p className="text-xs text-marga-dark/40">TC actual: ${exchangeRate.toLocaleString('es-AR')} por USD</p>
+        </div>
+        <div className="flex items-center border border-marga-creamDark rounded-xl overflow-hidden bg-white shadow-sm">
+          <button
+            onClick={onOpenTC}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-marga-dark/60 hover:text-marga-wine transition-colors border-r border-marga-creamDark"
+          >
+            <DollarSign size={14} />
+            TC: ${exchangeRate.toLocaleString('es-AR')}
+            <Edit2 size={12} />
+          </button>
+          <button
+            onClick={onFetchBna}
+            disabled={fetchingBna}
+            title="Sincronizar con dólar BNA venta"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+          >
+            {fetchingBna ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+            BNA{bnaUpdatedAt && <span className="text-blue-400 font-normal ml-1">{bnaUpdatedAt}</span>}
+          </button>
         </div>
       </div>
 
@@ -1592,6 +1614,10 @@ export const QuotesView: React.FC = () => {
           catalogData={catalogData}
           onSave={handleSaveQuote}
           onCancel={() => setMode('list')}
+          onOpenTC={() => setShowTCModal(true)}
+          onFetchBna={fetchBnaRate}
+          fetchingBna={fetchingBna}
+          bnaUpdatedAt={bnaUpdatedAt}
         />
       </div>
     );
