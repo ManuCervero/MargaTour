@@ -183,13 +183,23 @@ const TransferRow: React.FC<{
   index: number;
   routes: Route[];
   settings: TarifaSettings;
+  catalogData: CatalogData;
   onChange: (index: number, updated: QuoteTransfer) => void;
   onRemove: (index: number) => void;
-}> = ({ transfer, index, routes, settings, onChange, onRemove }) => {
+}> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
-  // Todos los nodos únicos (tanto como origen como destino) para el selector de origen
-  const allNodes = [...new Set([...routes.map(r => r.origin), ...routes.map(r => r.destination)])].sort();
+  // Nodos de rutas predefinidas
+  const routeNodes = [...new Set([...routes.map(r => r.origin), ...routes.map(r => r.destination)])].sort();
+  // Zonas de aeropuerto (activos)
+  const airportZones = catalogData.airportTransfers.filter(t => t.is_active).map((t: any) => t.zone).filter(Boolean);
+  // Nombres de tours (activos)
+  const tourNames = catalogData.tours.filter((t: any) => t.is_active !== false).map((t: any) => t.name).filter(Boolean);
+  // Aeropuerto como punto fijo
+  const airportNode = 'Aeropuerto Mendoza';
+
+  // Todos los nodos combinados para origen
+  const allNodes = [...new Set([...routeNodes, airportNode, ...airportZones, ...tourNames])].sort();
 
   // Destinos disponibles desde el origen seleccionado (rutas directas + inversas)
   const destinations = !transfer.origin
@@ -320,14 +330,48 @@ const TransferRow: React.FC<{
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Origen</label>
                 <select value={transfer.origin} onChange={e => handleOriginChange(e.target.value)} className={sel}>
                   <option value="">— Seleccionar —</option>
-                  {allNodes.map(o => <option key={o} value={o}>{o}</option>)}
+                  {routeNodes.length > 0 && (
+                    <optgroup label="Rutas">
+                      {routeNodes.map(o => <option key={o} value={o}>{o}</option>)}
+                    </optgroup>
+                  )}
+                  <optgroup label="Aeropuerto">
+                    <option value={airportNode}>{airportNode}</option>
+                  </optgroup>
+                  {airportZones.length > 0 && (
+                    <optgroup label="Zonas (Transfer Aeropuerto)">
+                      {airportZones.map((z: string) => <option key={z} value={z}>{z}</option>)}
+                    </optgroup>
+                  )}
+                  {tourNames.length > 0 && (
+                    <optgroup label="Tours">
+                      {tourNames.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                    </optgroup>
+                  )}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Destino</label>
                 <select value={transfer.destination} onChange={e => handleDestinationChange(e.target.value)} className={sel} disabled={!transfer.origin}>
                   <option value="">— Seleccionar —</option>
-                  {destinations.map(d => <option key={d} value={d}>{d}</option>)}
+                  {destinations.length > 0 && (
+                    <optgroup label="Rutas">
+                      {destinations.map(d => <option key={d} value={d}>{d}</option>)}
+                    </optgroup>
+                  )}
+                  <optgroup label="Aeropuerto">
+                    {transfer.origin !== airportNode && <option value={airportNode}>{airportNode}</option>}
+                  </optgroup>
+                  {airportZones.filter((z: string) => z !== transfer.origin).length > 0 && (
+                    <optgroup label="Zonas (Transfer Aeropuerto)">
+                      {airportZones.filter((z: string) => z !== transfer.origin).map((z: string) => <option key={z} value={z}>{z}</option>)}
+                    </optgroup>
+                  )}
+                  {tourNames.filter((t: string) => t !== transfer.origin).length > 0 && (
+                    <optgroup label="Tours">
+                      {tourNames.filter((t: string) => t !== transfer.origin).map((t: string) => <option key={t} value={t}>{t}</option>)}
+                    </optgroup>
+                  )}
                 </select>
               </div>
             </div>
@@ -715,6 +759,7 @@ interface CatalogData {
   activities: any[];
   tours: any[];
   experiences: any[];
+  airportTransfers: any[];
 }
 
 // ── QuoteForm ─────────────────────────────────────────────────────────────────
@@ -901,7 +946,15 @@ const QuoteForm: React.FC<{
                   type="number"
                   min={1}
                   value={form.pax ?? ''}
-                  onChange={e => setForm(f => ({ ...f, pax: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
+                  onChange={e => {
+                    const newPax = e.target.value === '' ? undefined : parseInt(e.target.value);
+                    setForm(f => ({
+                      ...f,
+                      pax: newPax,
+                      transfers: f.transfers.map(t => ({ ...t, pax: newPax || 1 })),
+                      services: f.services.map(s => ({ ...s, pax: newPax || 1 })),
+                    }));
+                  }}
                   className={inp}
                 />
               </div>
@@ -1034,6 +1087,7 @@ const QuoteForm: React.FC<{
                     index={i}
                     routes={routes}
                     settings={settings}
+                    catalogData={catalogData}
                     onChange={handleTransferChange}
                     onRemove={idx => setForm(f => ({ ...f, transfers: f.transfers.filter((_, j) => j !== idx) }))}
                   />
@@ -1162,7 +1216,7 @@ export const QuotesView: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [catalogData, setCatalogData] = useState<CatalogData>({
-    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], experiences: [],
+    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], experiences: [], airportTransfers: [],
   });
 
   const loadQuotes = useCallback(async () => {
@@ -1183,7 +1237,7 @@ export const QuotesView: React.FC = () => {
   }, [filterStatus, filterDateFrom, filterDateTo]);
 
   const loadCatalog = useCallback(async () => {
-    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, experiencesData] = await Promise.allSettled([
+    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, experiencesData, airportTransfersData] = await Promise.allSettled([
       api.from('routes').select('*'),
       api.from('clients').select('*'),
       api.settings.getExchangeRate(),
@@ -1193,6 +1247,7 @@ export const QuotesView: React.FC = () => {
       api.from('activities').select('*'),
       api.from('tours').select('*'),
       api.from('experiences').select('*'),
+      api.from('airport_transfers').select('*'),
     ]);
 
     const get = (r: PromiseSettledResult<any>) => {
@@ -1236,6 +1291,7 @@ export const QuotesView: React.FC = () => {
       activities: get(activitiesData),
       tours: get(toursData),
       experiences: get(experiencesData),
+      airportTransfers: get(airportTransfersData),
     });
   }, []);
 
