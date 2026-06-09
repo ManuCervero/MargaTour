@@ -230,23 +230,34 @@ const TransferRow: React.FC<{
 
   const handleOriginChange = (origin: string) => onChange(index, { ...transfer, origin, destination: '' });
 
+  const effectiveKm = (distKm: number) => distKm * (transfer.is_round_trip ? 2 : 1);
+
   const handleDestinationChange = (destination: string) => {
     const route = routes.find(r => r.origin === transfer.origin && r.destination === destination)
       || routes.find(r => r.origin === destination && r.destination === transfer.origin);
     const distKm = route?.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distKm, durHours, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings);
     onChange(index, { ...transfer, destination, distance_km: distKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleDurationChange = (durHours: number) => {
     const distKm = transfer.distance_km || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distKm, durHours, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings);
     onChange(index, { ...transfer, duration_hours: durHours, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
+  const handleRoundTripToggle = (isRoundTrip: boolean) => {
+    const distKm = transfer.distance_km || 0;
+    const durHours = transfer.duration_hours || 0;
+    const km = distKm * (isRoundTrip ? 2 : 1);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, durHours, settings);
+    onChange(index, { ...transfer, is_round_trip: isRoundTrip, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+  };
+
   const handleMapSave = async (origin: string, destination: string, distanceKm: number) => {
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distanceKm, transfer.duration_hours || 0, settings);
+    const km = effectiveKm(distanceKm);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings);
     onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
     setMapMode(true);
     setShowMap(false);
@@ -264,11 +275,27 @@ const TransferRow: React.FC<{
           <X size={16} />
         </button>
 
-        {/* Selector de tipo */}
-        <div className="flex items-center gap-2 mb-3">
-          <button className={modeBtn('aeropuerto', 'Aeropuerto')} onClick={() => handleModeChange('aeropuerto')}>✈ Aeropuerto</button>
-          <button className={modeBtn('tour', 'Tour')} onClick={() => handleModeChange('tour')}>🗺 Tour</button>
-          <button className={modeBtn('ruta', 'Ruta')} onClick={() => handleModeChange('ruta')}>📍 Ruta</button>
+        {/* Selector de tipo + Ida/Vuelta */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <button className={modeBtn('aeropuerto', 'Aeropuerto')} onClick={() => handleModeChange('aeropuerto')}>✈ Aeropuerto</button>
+            <button className={modeBtn('tour', 'Tour')} onClick={() => handleModeChange('tour')}>🗺 Tour</button>
+            <button className={modeBtn('ruta', 'Ruta')} onClick={() => handleModeChange('ruta')}>📍 Ruta</button>
+          </div>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
+            <button
+              onClick={() => handleRoundTripToggle(false)}
+              className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${!transfer.is_round_trip ? 'bg-white text-marga-wine shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Solo ida
+            </button>
+            <button
+              onClick={() => handleRoundTripToggle(true)}
+              className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${transfer.is_round_trip ? 'bg-white text-marga-wine shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Ida y vuelta
+            </button>
+          </div>
         </div>
 
         {/* Día / Hora / PAX / Duración */}
@@ -383,7 +410,13 @@ const TransferRow: React.FC<{
         {/* Resumen de costos */}
         {transfer.destination && (transfer.final_cost_usd || 0) > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-white rounded-xl border border-marga-creamDark">
-            {(transfer.distance_km || 0) > 0 && <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>}
+            {(transfer.distance_km || 0) > 0 && (
+              <span className="text-xs text-marga-dark/50">
+                {transfer.is_round_trip
+                  ? `${transfer.distance_km} km × 2 = ${(transfer.distance_km || 0) * 2} km`
+                  : `${transfer.distance_km} km`}
+              </span>
+            )}
             {transfer.is_full_day !== undefined && (transfer.distance_km || 0) > 0 && (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
                 {transfer.is_full_day ? 'Día completo' : 'Medio día'}

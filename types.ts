@@ -100,6 +100,7 @@ export interface QuoteTransfer {
   distance_km?: number;
   duration_hours?: number;
   is_full_day?: boolean | number;
+  is_round_trip?: boolean;
   base_cost_ars?: number;
   base_cost_usd?: number;
   margin_pct?: number;
