@@ -602,10 +602,14 @@ const TotalsPanel: React.FC<{
   services: QuoteService[];
   exchangeRate: number;
   viaticos?: number;
-}> = ({ transfers, services, exchangeRate, viaticos = 0 }) => {
+  gananciaTransfer?: number;
+  gananciaServicio?: number;
+}> = ({ transfers, services, exchangeRate, viaticos = 0, gananciaTransfer = 0, gananciaServicio = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
-  const grandTotal = totalTransfersArs + viaticos;
+  const subtotalTransfers = totalTransfersArs + viaticos;
+  const totalTransfersConGanancia = subtotalTransfers * (1 + gananciaTransfer / 100);
+  const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
   const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || viaticos > 0;
 
   return (
@@ -624,16 +628,34 @@ const TotalsPanel: React.FC<{
             <span className="font-mono font-semibold">{fmtARS(viaticos)}</span>
           </div>
         )}
+        {gananciaTransfer > 0 && subtotalTransfers > 0 && (
+          <div className="flex justify-between text-marga-dark/50 text-xs">
+            <span>Ganancia transfers ({gananciaTransfer}%)</span>
+            <span className="font-mono">+{fmtARS(subtotalTransfers * gananciaTransfer / 100)}</span>
+          </div>
+        )}
         {(totalTransfersArs > 0 || viaticos > 0) && (
           <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
             <span>Total transfers</span>
-            <span className="font-mono">{fmtARS(grandTotal)}</span>
+            <span className="font-mono">{fmtARS(totalTransfersConGanancia)}</span>
           </div>
         )}
         {totalServicesUsd > 0 && (
           <div className="flex justify-between text-marga-dark/70 mt-2 pt-2 border-t border-marga-creamDark">
             <span>Servicios</span>
             <span className="font-mono font-semibold">{fmt(totalServicesUsd)}</span>
+          </div>
+        )}
+        {gananciaServicio > 0 && totalServicesUsd > 0 && (
+          <div className="flex justify-between text-marga-dark/50 text-xs">
+            <span>Ganancia servicios ({gananciaServicio}%)</span>
+            <span className="font-mono">+{fmt(totalServicesUsd * gananciaServicio / 100)}</span>
+          </div>
+        )}
+        {gananciaServicio > 0 && totalServicesUsd > 0 && (
+          <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
+            <span>Total servicios</span>
+            <span className="font-mono">{fmt(totalServiciosConGanancia)}</span>
           </div>
         )}
         {!hasItems && (
@@ -840,6 +862,8 @@ const QuoteForm: React.FC<{
   const [localSettings, setLocalSettings] = useState<TarifaSettings>({ ...settings });
   const [showTarifas, setShowTarifas] = useState(false);
   const [viaticos, setViaticos] = useState<number>(0);
+  const [gananciaTransfer, setGananciaTransfer] = useState<number>(0);
+  const [gananciaServicio, setGananciaServicio] = useState<number>(0);
 
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
@@ -1217,6 +1241,40 @@ const QuoteForm: React.FC<{
                     </div>
                   )}
                 </div>
+
+                {/* Ganancia Transfer */}
+                <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-marga-wine">Ganancia transfers</p>
+                      <p className="text-xs text-marga-dark/40 mt-0.5">Se aplica sobre el total de transfers</p>
+                    </div>
+                    <div className="w-32">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={gananciaTransfer || ''}
+                          onChange={e => setGananciaTransfer(e.target.value === '' ? 0 : Number(e.target.value))}
+                          placeholder="0"
+                          className="w-full pr-7 pl-3 py-2 border border-marga-wine/30 rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-marga-wine font-bold text-sm">%</span>
+                      </div>
+                    </div>
+                  </div>
+                  {gananciaTransfer > 0 && (() => {
+                    const base = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0) + viaticos;
+                    const extra = base * gananciaTransfer / 100;
+                    return (
+                      <div className="flex justify-between mt-2 text-sm text-marga-wine font-bold border-t border-marga-wine/20 pt-2">
+                        <span>Total con ganancia</span>
+                        <span>{fmtARS(base + extra)}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
 
               {/* Servicios */}
@@ -1246,13 +1304,47 @@ const QuoteForm: React.FC<{
                   />
                 ))}
               </div>
+
+              {/* Ganancia Servicio */}
+              <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-marga-wine">Ganancia servicios</p>
+                    <p className="text-xs text-marga-dark/40 mt-0.5">Se aplica sobre el total de servicios</p>
+                  </div>
+                  <div className="w-32">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={gananciaServicio || ''}
+                        onChange={e => setGananciaServicio(e.target.value === '' ? 0 : Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full pr-7 pl-3 py-2 border border-marga-wine/30 rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-marga-wine font-bold text-sm">%</span>
+                    </div>
+                  </div>
+                </div>
+                {gananciaServicio > 0 && (() => {
+                  const base = form.services.reduce((a, s) => a + (s.final_cost_usd || 0), 0);
+                  const extra = base * gananciaServicio / 100;
+                  return (
+                    <div className="flex justify-between mt-2 text-sm text-marga-wine font-bold border-t border-marga-wine/20 pt-2">
+                      <span>Total con ganancia</span>
+                      <span>{fmt(base + extra)}</span>
+                    </div>
+                  );
+                })()}
+              </div>
             </>
           )}
         </div>
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} viaticos={viaticos} />
+          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} viaticos={viaticos} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button
