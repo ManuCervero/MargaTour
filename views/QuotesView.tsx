@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, Search, FileText, Edit2, Trash2, Printer, ChevronLeft,
   DollarSign, ArrowRight, X, Check, Clock, SendHorizontal,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { FullQuote, QuoteTransfer, QuoteService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
+import { RouteMapModal } from '../components/RouteMapModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -227,74 +228,139 @@ const TransferRow: React.FC<{
     onChange(index, { ...transfer, duration_hours: durHours, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
+  const [showMap, setShowMap] = useState(false);
+  const [mapMode, setMapMode] = useState(false);
+
   const inp = "w-full border border-marga-creamDark rounded-lg px-3 py-2 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white";
   const sel = inp + " cursor-pointer";
 
+  const handleMapSave = async (origin: string, destination: string, distanceKm: number) => {
+    const durHours = transfer.duration_hours || 0;
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distanceKm, durHours, settings);
+    onChange(index, {
+      ...transfer,
+      origin,
+      destination,
+      distance_km: distanceKm,
+      base_cost_ars: baseCostArs,
+      is_full_day: isFullDay,
+      final_cost_usd: finalCostArs,
+    });
+    setMapMode(true);
+    setShowMap(false);
+  };
+
   return (
-    <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
-      <button
-        onClick={() => onRemove(index)}
-        className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors"
-      >
-        <X size={16} />
-      </button>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
-          <input type="date" value={transfer.day} onChange={e => onChange(index, { ...transfer, day: e.target.value })} className={inp} />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Hora</label>
-          <input type="time" value={transfer.hour || ''} onChange={e => onChange(index, { ...transfer, hour: e.target.value })} className={inp} />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">PAX</label>
-          <input type="number" min={1} value={transfer.pax} onChange={e => onChange(index, { ...transfer, pax: parseInt(e.target.value) || 1 })} className={inp} />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Duración (hs)</label>
-          <input type="number" min={0} step={0.5} value={transfer.duration_hours || ''} onChange={e => handleDurationChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Origen</label>
-          <select value={transfer.origin} onChange={e => handleOriginChange(e.target.value)} className={sel}>
-            <option value="">— Seleccionar —</option>
-            {allNodes.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Destino</label>
-          <select value={transfer.destination} onChange={e => handleDestinationChange(e.target.value)} className={sel} disabled={!transfer.origin}>
-            <option value="">— Seleccionar —</option>
-            {destinations.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-      </div>
-
-      {transfer.destination && (transfer.distance_km || 0) > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-white rounded-xl border border-marga-creamDark">
-          <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
-            {transfer.is_full_day ? 'Día completo' : 'Medio día'}
-          </span>
-          <span className="text-xs text-marga-dark/50">
-            Base: {fmtARS(transfer.base_cost_ars || 0)}
-          </span>
-          <span className="text-sm font-bold text-marga-wine ml-auto">
-            {fmtARS(transfer.final_cost_usd || 0)}
-          </span>
-        </div>
+    <>
+      {showMap && (
+        <RouteMapModal
+          onClose={() => setShowMap(false)}
+          onSave={handleMapSave}
+          saveLabel="Usar este recorrido"
+        />
       )}
 
-      <div>
-        <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Notas</label>
-        <input type="text" value={transfer.notes || ''} onChange={e => onChange(index, { ...transfer, notes: e.target.value })} className={inp} placeholder="Opcional..." />
+      <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
+        <button
+          onClick={() => onRemove(index)}
+          className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors"
+        >
+          <X size={16} />
+        </button>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
+            <input type="date" value={transfer.day} onChange={e => onChange(index, { ...transfer, day: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Hora</label>
+            <input type="time" value={transfer.hour || ''} onChange={e => onChange(index, { ...transfer, hour: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">PAX</label>
+            <input type="number" min={1} value={transfer.pax} onChange={e => onChange(index, { ...transfer, pax: parseInt(e.target.value) || 1 })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Duración (hs)</label>
+            <input type="number" min={0} step={0.5} value={transfer.duration_hours || ''} onChange={e => handleDurationChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+          </div>
+        </div>
+
+        {/* Origen / Destino */}
+        {mapMode ? (
+          <div className="mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wide flex items-center gap-1">
+                <MapPin size={11} /> Recorrido calculado con mapa
+              </span>
+              <button
+                onClick={() => { setMapMode(false); onChange(index, { ...transfer, origin: '', destination: '', distance_km: 0, base_cost_ars: 0, final_cost_usd: 0 }); }}
+                className="text-xs text-blue-400 hover:text-blue-600 underline"
+              >
+                Limpiar
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-semibold text-gray-800 truncate">{transfer.origin}</span>
+              <ArrowRight size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">{transfer.destination}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{transfer.distance_km} km</span>
+              <button onClick={() => setShowMap(true)} className="text-xs text-blue-500 hover:text-blue-700 underline">
+                Recalcular
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+              <div>
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Origen</label>
+                <select value={transfer.origin} onChange={e => handleOriginChange(e.target.value)} className={sel}>
+                  <option value="">— Seleccionar —</option>
+                  {allNodes.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Destino</label>
+                <select value={transfer.destination} onChange={e => handleDestinationChange(e.target.value)} className={sel} disabled={!transfer.origin}>
+                  <option value="">— Seleccionar —</option>
+                  {destinations.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowMap(true)}
+              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors w-full justify-center"
+            >
+              <MapPin size={13} /> Calcular con mapa y paradas
+            </button>
+          </div>
+        )}
+
+        {transfer.destination && (transfer.distance_km || 0) > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-white rounded-xl border border-marga-creamDark">
+            <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
+              {transfer.is_full_day ? 'Día completo' : 'Medio día'}
+            </span>
+            <span className="text-xs text-marga-dark/50">
+              Base: {fmtARS(transfer.base_cost_ars || 0)}
+            </span>
+            <span className="text-sm font-bold text-marga-wine ml-auto">
+              {fmtARS(transfer.final_cost_usd || 0)}
+            </span>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Notas</label>
+          <input type="text" value={transfer.notes || ''} onChange={e => onChange(index, { ...transfer, notes: e.target.value })} className={inp} placeholder="Opcional..." />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

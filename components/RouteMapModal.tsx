@@ -161,9 +161,10 @@ interface RouteMapModalProps {
   route?: Route | null;
   onClose: () => void;
   onSave: (origin: string, destination: string, distanceKm: number, routeId?: string) => Promise<void>;
+  saveLabel?: string;
 }
 
-export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, onClose, onSave }) => {
+export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, onClose, onSave, saveLabel = 'Guardar ruta' }) => {
   const emptyWaypoint = (): Waypoint => ({ label: '', lat: 0, lon: 0 });
 
   const [waypoints, setWaypoints] = useState<Waypoint[]>(() => {
@@ -373,7 +374,7 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, onClose, on
               className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold bg-marga-wine text-marga-cream hover:bg-marga-wineLight transition-colors disabled:opacity-40"
             >
               {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-              {saving ? 'Guardando...' : 'Guardar ruta'}
+              {saving ? 'Guardando...' : saveLabel}
             </button>
           </div>
         </div>
