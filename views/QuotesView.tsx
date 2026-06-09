@@ -35,12 +35,13 @@ const DEFAULT_TARIFA: TarifaSettings = {
   usd_exchange_rate: 1200,
 };
 
-function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings) {
+function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings, viaticos = 0) {
   if (!distKm) return { baseCostArs: 0, finalCostArs: 0, isFullDay: false };
   const isFullDay = distKm > 150 || durHours >= 6;
   const baseCostArs =
     (distKm * settings.costo_km) +
-    (isFullDay ? settings.precio_full_day : settings.precio_medio_dia);
+    (isFullDay ? settings.precio_full_day : settings.precio_medio_dia) +
+    viaticos;
   return { baseCostArs, finalCostArs: baseCostArs, isFullDay };
 }
 
@@ -235,13 +236,13 @@ const TransferRow: React.FC<{
       || routes.find(r => r.origin === destination && r.destination === transfer.origin);
     const distKm = route?.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0);
     onChange(index, { ...transfer, destination, distance_km: distKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleDurationChange = (durHours: number) => {
     const distKm = transfer.distance_km || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0);
     onChange(index, { ...transfer, duration_hours: durHours, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
@@ -249,13 +250,20 @@ const TransferRow: React.FC<{
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
     const km = distKm * (isRoundTrip ? 2 : 1);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, durHours, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, durHours, settings, transfer.viaticos || 0);
     onChange(index, { ...transfer, is_round_trip: isRoundTrip, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+  };
+
+  const handleViaticosChange = (viaticos: number) => {
+    const distKm = transfer.distance_km || 0;
+    const durHours = transfer.duration_hours || 0;
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, viaticos);
+    onChange(index, { ...transfer, viaticos, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleMapSave = async (origin: string, destination: string, distanceKm: number) => {
     const km = effectiveKm(distanceKm);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0);
     onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
     setMapMode(true);
     setShowMap(false);
@@ -265,7 +273,7 @@ const TransferRow: React.FC<{
   React.useEffect(() => {
     if (mode !== 'ruta' || !transfer.distance_km) return;
     const km = effectiveKm(transfer.distance_km);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0);
     onChange(index, { ...transfer, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
@@ -427,6 +435,21 @@ const TransferRow: React.FC<{
                   {transfer.is_full_day ? 'Día completo' : 'Medio día'}
                 </span>
               )}
+            </div>
+            {/* Viáticos */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-marga-dark/50">Viáticos</span>
+              <div className="relative w-36">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-marga-dark/40 text-xs">$</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={transfer.viaticos || ''}
+                  onChange={e => handleViaticosChange(e.target.value === '' ? 0 : Number(e.target.value))}
+                  placeholder="0"
+                  className="w-full pl-5 pr-2 py-1 border border-marga-creamDark rounded-lg text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-marga-wine/30"
+                />
+              </div>
             </div>
             {/* Precio */}
             <div className="flex items-center justify-between text-sm border-t border-marga-creamDark pt-2">
@@ -594,16 +617,14 @@ const TotalsPanel: React.FC<{
   transfers: QuoteTransfer[];
   services: QuoteService[];
   exchangeRate: number;
-  viaticos?: number;
   gananciaTransfer?: number;
   gananciaServicio?: number;
-}> = ({ transfers, services, exchangeRate, viaticos = 0, gananciaTransfer = 0, gananciaServicio = 0 }) => {
+}> = ({ transfers, services, exchangeRate, gananciaTransfer = 0, gananciaServicio = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
-  const subtotalTransfers = totalTransfersArs + viaticos;
-  const totalTransfersConGanancia = subtotalTransfers * (1 + gananciaTransfer / 100);
+  const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
-  const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || viaticos > 0;
+  const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0;
 
   return (
     <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
@@ -615,19 +636,13 @@ const TotalsPanel: React.FC<{
             <span className="font-mono font-semibold">{fmtARS(totalTransfersArs)}</span>
           </div>
         )}
-        {viaticos > 0 && (
-          <div className="flex justify-between text-marga-dark/70">
-            <span>Viáticos</span>
-            <span className="font-mono font-semibold">{fmtARS(viaticos)}</span>
-          </div>
-        )}
-        {gananciaTransfer > 0 && subtotalTransfers > 0 && (
+        {gananciaTransfer > 0 && totalTransfersArs > 0 && (
           <div className="flex justify-between text-marga-dark/50 text-xs">
             <span>Ganancia transfers ({gananciaTransfer}%)</span>
-            <span className="font-mono">+{fmtARS(subtotalTransfers * gananciaTransfer / 100)}</span>
+            <span className="font-mono">+{fmtARS(totalTransfersArs * gananciaTransfer / 100)}</span>
           </div>
         )}
-        {(totalTransfersArs > 0 || viaticos > 0) && (
+        {totalTransfersArs > 0 && (
           <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
             <span>Total transfers</span>
             <span className="font-mono">{fmtARS(totalTransfersConGanancia)}</span>
@@ -1207,34 +1222,6 @@ const QuoteForm: React.FC<{
                   />
                 ))}
 
-                {/* Viáticos */}
-                <div className="mt-4 p-4 bg-gray-50 border border-marga-creamDark rounded-xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-gray-700">Viáticos</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Monto adicional que se suma al total de transfers</p>
-                    </div>
-                    <div className="w-40">
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                        <input
-                          type="number"
-                          min={0}
-                          value={viaticos || ''}
-                          onChange={e => setViaticos(e.target.value === '' ? 0 : Number(e.target.value))}
-                          placeholder="0"
-                          className="w-full pl-7 pr-3 py-2 border border-marga-creamDark rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {viaticos > 0 && (
-                    <div className="flex justify-end mt-2">
-                      <span className="text-sm font-bold text-marga-wine">+ {fmtARS(viaticos)}</span>
-                    </div>
-                  )}
-                </div>
-
                 {/* Ganancia Transfer */}
                 <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
                   <div className="flex items-center justify-between">
@@ -1258,7 +1245,7 @@ const QuoteForm: React.FC<{
                     </div>
                   </div>
                   {gananciaTransfer > 0 && (() => {
-                    const base = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0) + viaticos;
+                    const base = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0);
                     const extra = base * gananciaTransfer / 100;
                     return (
                       <div className="flex justify-between mt-2 text-sm text-marga-wine font-bold border-t border-marga-wine/20 pt-2">
@@ -1337,7 +1324,7 @@ const QuoteForm: React.FC<{
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} viaticos={viaticos} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
+          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button

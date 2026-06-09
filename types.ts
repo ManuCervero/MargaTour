@@ -101,6 +101,7 @@ export interface QuoteTransfer {
   duration_hours?: number;
   is_full_day?: boolean | number;
   is_round_trip?: boolean;
+  viaticos?: number;
   base_cost_ars?: number;
   base_cost_usd?: number;
   margin_pct?: number;
