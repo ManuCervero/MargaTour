@@ -409,21 +409,33 @@ const TransferRow: React.FC<{
 
         {/* Resumen de costos */}
         {transfer.destination && (transfer.final_cost_usd || 0) > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-white rounded-xl border border-marga-creamDark">
-            {(transfer.distance_km || 0) > 0 && (
-              <span className="text-xs text-marga-dark/50">
-                {transfer.is_round_trip
-                  ? `${transfer.distance_km} km × 2 = ${(transfer.distance_km || 0) * 2} km`
-                  : `${transfer.distance_km} km`}
-              </span>
+          <div className="mb-3 p-3 bg-white rounded-xl border border-marga-creamDark space-y-2">
+            {/* Tags km / tipo día */}
+            <div className="flex flex-wrap items-center gap-2">
+              {(transfer.distance_km || 0) > 0 && (
+                <span className="text-xs text-marga-dark/50">
+                  {transfer.is_round_trip
+                    ? `${transfer.distance_km} km × 2 = ${(transfer.distance_km || 0) * 2} km`
+                    : `${transfer.distance_km} km`}
+                </span>
+              )}
+              {(transfer.distance_km || 0) > 0 && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
+                  {transfer.is_full_day ? 'Día completo' : 'Medio día'}
+                </span>
+              )}
+            </div>
+            {/* Precios */}
+            {(transfer.base_cost_ars || 0) > 0 && (
+              <div className="flex items-center justify-between text-sm border-t border-marga-creamDark pt-2">
+                <span className="text-marga-dark/50">Precio base</span>
+                <span className="font-mono text-marga-dark/70">{fmtARS(transfer.base_cost_ars || 0)}</span>
+              </div>
             )}
-            {transfer.is_full_day !== undefined && (transfer.distance_km || 0) > 0 && (
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
-                {transfer.is_full_day ? 'Día completo' : 'Medio día'}
-              </span>
-            )}
-            {(transfer.base_cost_ars || 0) > 0 && <span className="text-xs text-marga-dark/50">Base: {fmtARS(transfer.base_cost_ars || 0)}</span>}
-            <span className="text-sm font-bold text-marga-wine ml-auto">{fmtARS(transfer.final_cost_usd || 0)}</span>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-bold text-marga-wine">Total (+{settings.ganancia || 50}%)</span>
+              <span className="font-mono font-bold text-marga-wine">{fmtARS(transfer.final_cost_usd || 0)}</span>
+            </div>
           </div>
         )}
 
