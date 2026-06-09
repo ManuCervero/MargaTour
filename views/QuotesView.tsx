@@ -263,6 +263,15 @@ const TransferRow: React.FC<{
     setShowMap(false);
   };
 
+  // Recalcular cuando cambian las tarifas locales (solo para modo ruta con km calculados)
+  React.useEffect(() => {
+    if (mode !== 'ruta' || !transfer.distance_km) return;
+    const km = effectiveKm(transfer.distance_km);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings);
+    onChange(index, { ...transfer, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
+
   const modeBtn = (m: TransferMode, label: string) =>
     `px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${mode === m ? 'bg-marga-wine text-marga-cream' : 'bg-white text-marga-dark/50 border border-marga-creamDark hover:border-marga-wine/40'}`;
 
