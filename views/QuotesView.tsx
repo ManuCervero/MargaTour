@@ -178,6 +178,8 @@ const ExchangeRateModal: React.FC<{
 
 // ── TransferRow ───────────────────────────────────────────────────────────────
 
+type TransferMode = 'aeropuerto' | 'tour' | 'ruta';
+
 const TransferRow: React.FC<{
   transfer: QuoteTransfer;
   index: number;
@@ -187,49 +189,54 @@ const TransferRow: React.FC<{
   onChange: (index: number, updated: QuoteTransfer) => void;
   onRemove: (index: number) => void;
 }> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove }) => {
-  const exchangeRate = settings.usd_exchange_rate || 1200;
 
-  // Nodos de rutas predefinidas
+  const [mode, setMode] = useState<TransferMode>('ruta');
+  const [showMap, setShowMap] = useState(false);
+  const [mapMode, setMapMode] = useState(false);
+
+  const inp = "w-full border border-marga-creamDark rounded-lg px-3 py-2 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white";
+  const sel = inp + " cursor-pointer";
+
+  // Datos del catálogo
+  const airportTransfers = catalogData.airportTransfers.filter((t: any) => t.is_active);
+  const tours = catalogData.tours.filter((t: any) => t.is_active !== false);
+
+  // Nodos de rutas (solo para modo ruta)
   const routeNodes = [...new Set([...routes.map(r => r.origin), ...routes.map(r => r.destination)])].sort();
-  // Zonas de aeropuerto (activos)
-  const airportZones = catalogData.airportTransfers.filter(t => t.is_active).map((t: any) => t.zone).filter(Boolean);
-  // Nombres de tours (activos)
-  const tourNames = catalogData.tours.filter((t: any) => t.is_active !== false).map((t: any) => t.name).filter(Boolean);
-  // Aeropuerto como punto fijo
-  const airportNode = 'Aeropuerto Mendoza';
+  const destinations = !transfer.origin ? [] : [
+    ...routes.filter(r => r.origin === transfer.origin).map(r => r.destination),
+    ...routes.filter(r => r.destination === transfer.origin).map(r => r.origin),
+  ].filter((d, i, arr) => arr.indexOf(d) === i && d !== transfer.origin).sort();
 
-  // Todos los nodos combinados para origen
-  const allNodes = [...new Set([...routeNodes, airportNode, ...airportZones, ...tourNames])].sort();
-
-  // Destinos disponibles desde el origen seleccionado (rutas directas + inversas)
-  const destinations = !transfer.origin
-    ? []
-    : [
-        ...routes.filter(r => r.origin === transfer.origin).map(r => r.destination),
-        ...routes.filter(r => r.destination === transfer.origin).map(r => r.origin),
-      ].filter((d, i, arr) => arr.indexOf(d) === i && d !== transfer.origin).sort();
-
-  const handleOriginChange = (origin: string) => {
-    const updated = { ...transfer, origin, destination: '' };
-    onChange(index, updated);
+  const handleModeChange = (newMode: TransferMode) => {
+    setMode(newMode);
+    setMapMode(false);
+    onChange(index, { ...transfer, origin: '', destination: '', distance_km: 0, base_cost_ars: 0, final_cost_usd: 0 });
   };
 
+  const handleAirportSelect = (id: string) => {
+    const t = airportTransfers.find((a: any) => a.id === id);
+    if (!t) return;
+    const price = t.needs_consultation ? 0 : (t.price || 0);
+    onChange(index, { ...transfer, origin: 'Aeropuerto Mendoza', destination: t.zone, distance_km: 0, base_cost_ars: price, final_cost_usd: price, notes: t.needs_consultation ? 'A consultar' : (transfer.notes || '') });
+  };
+
+  const handleTourSelect = (id: string) => {
+    const t = tours.find((t: any) => t.id === id);
+    if (!t) return;
+    const price = t.price || 0;
+    onChange(index, { ...transfer, origin: t.region || '', destination: t.name, distance_km: 0, base_cost_ars: price, final_cost_usd: price, duration_hours: t.duration_hours || transfer.duration_hours });
+  };
+
+  const handleOriginChange = (origin: string) => onChange(index, { ...transfer, origin, destination: '' });
+
   const handleDestinationChange = (destination: string) => {
-    // Buscar la ruta directa primero, si no existe buscar la inversa
-    const route =
-      routes.find(r => r.origin === transfer.origin && r.destination === destination) ||
-      routes.find(r => r.origin === destination && r.destination === transfer.origin);
+    const route = routes.find(r => r.origin === transfer.origin && r.destination === destination)
+      || routes.find(r => r.origin === destination && r.destination === transfer.origin);
     const distKm = route?.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
     const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distKm, durHours, settings);
-    onChange(index, {
-      ...transfer,
-      destination,
-      distance_km: distKm,
-      base_cost_ars: baseCostArs,
-      is_full_day: isFullDay,
-      final_cost_usd: finalCostArs,
-    });
+    onChange(index, { ...transfer, destination, distance_km: distKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleDurationChange = (durHours: number) => {
@@ -238,46 +245,33 @@ const TransferRow: React.FC<{
     onChange(index, { ...transfer, duration_hours: durHours, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
-  const [showMap, setShowMap] = useState(false);
-  const [mapMode, setMapMode] = useState(false);
-
-  const inp = "w-full border border-marga-creamDark rounded-lg px-3 py-2 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white";
-  const sel = inp + " cursor-pointer";
-
   const handleMapSave = async (origin: string, destination: string, distanceKm: number) => {
-    const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distanceKm, durHours, settings);
-    onChange(index, {
-      ...transfer,
-      origin,
-      destination,
-      distance_km: distanceKm,
-      base_cost_ars: baseCostArs,
-      is_full_day: isFullDay,
-      final_cost_usd: finalCostArs,
-    });
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(distanceKm, transfer.duration_hours || 0, settings);
+    onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
     setMapMode(true);
     setShowMap(false);
   };
 
+  const modeBtn = (m: TransferMode, label: string) =>
+    `px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${mode === m ? 'bg-marga-wine text-marga-cream' : 'bg-white text-marga-dark/50 border border-marga-creamDark hover:border-marga-wine/40'}`;
+
   return (
     <>
-      {showMap && (
-        <RouteMapModal
-          onClose={() => setShowMap(false)}
-          onSave={handleMapSave}
-          saveLabel="Usar este recorrido"
-        />
-      )}
+      {showMap && <RouteMapModal onClose={() => setShowMap(false)} onSave={handleMapSave} saveLabel="Usar este recorrido" />}
 
       <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
-        <button
-          onClick={() => onRemove(index)}
-          className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors"
-        >
+        <button onClick={() => onRemove(index)} className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors">
           <X size={16} />
         </button>
 
+        {/* Selector de tipo */}
+        <div className="flex items-center gap-2 mb-3">
+          <button className={modeBtn('aeropuerto', 'Aeropuerto')} onClick={() => handleModeChange('aeropuerto')}>✈ Aeropuerto</button>
+          <button className={modeBtn('tour', 'Tour')} onClick={() => handleModeChange('tour')}>🗺 Tour</button>
+          <button className={modeBtn('ruta', 'Ruta')} onClick={() => handleModeChange('ruta')}>📍 Ruta</button>
+        </div>
+
+        {/* Día / Hora / PAX / Duración */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
@@ -297,105 +291,106 @@ const TransferRow: React.FC<{
           </div>
         </div>
 
-        {/* Origen / Destino */}
-        {mapMode ? (
-          <div className="mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wide flex items-center gap-1">
-                <MapPin size={11} /> Recorrido calculado con mapa
-              </span>
-              <button
-                onClick={() => { setMapMode(false); onChange(index, { ...transfer, origin: '', destination: '', distance_km: 0, base_cost_ars: 0, final_cost_usd: 0 }); }}
-                className="text-xs text-blue-400 hover:text-blue-600 underline"
-              >
-                Limpiar
-              </button>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold text-gray-800 truncate">{transfer.origin}</span>
-              <ArrowRight size={14} className="text-gray-400 flex-shrink-0" />
-              <span className="font-semibold text-gray-800 truncate">{transfer.destination}</span>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{transfer.distance_km} km</span>
-              <button onClick={() => setShowMap(true)} className="text-xs text-blue-500 hover:text-blue-700 underline">
-                Recalcular
-              </button>
-            </div>
-          </div>
-        ) : (
+        {/* ── MODO AEROPUERTO ── */}
+        {mode === 'aeropuerto' && (
           <div className="mb-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-              <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Origen</label>
-                <select value={transfer.origin} onChange={e => handleOriginChange(e.target.value)} className={sel}>
-                  <option value="">— Seleccionar —</option>
-                  {routeNodes.length > 0 && (
-                    <optgroup label="Rutas">
-                      {routeNodes.map(o => <option key={o} value={o}>{o}</option>)}
-                    </optgroup>
-                  )}
-                  <optgroup label="Aeropuerto">
-                    <option value={airportNode}>{airportNode}</option>
-                  </optgroup>
-                  {airportZones.length > 0 && (
-                    <optgroup label="Zonas (Transfer Aeropuerto)">
-                      {airportZones.map((z: string) => <option key={z} value={z}>{z}</option>)}
-                    </optgroup>
-                  )}
-                  {tourNames.length > 0 && (
-                    <optgroup label="Tours">
-                      {tourNames.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Destino</label>
-                <select value={transfer.destination} onChange={e => handleDestinationChange(e.target.value)} className={sel} disabled={!transfer.origin}>
-                  <option value="">— Seleccionar —</option>
-                  {destinations.length > 0 && (
-                    <optgroup label="Rutas">
-                      {destinations.map(d => <option key={d} value={d}>{d}</option>)}
-                    </optgroup>
-                  )}
-                  <optgroup label="Aeropuerto">
-                    {transfer.origin !== airportNode && <option value={airportNode}>{airportNode}</option>}
-                  </optgroup>
-                  {airportZones.filter((z: string) => z !== transfer.origin).length > 0 && (
-                    <optgroup label="Zonas (Transfer Aeropuerto)">
-                      {airportZones.filter((z: string) => z !== transfer.origin).map((z: string) => <option key={z} value={z}>{z}</option>)}
-                    </optgroup>
-                  )}
-                  {tourNames.filter((t: string) => t !== transfer.origin).length > 0 && (
-                    <optgroup label="Tours">
-                      {tourNames.filter((t: string) => t !== transfer.origin).map((t: string) => <option key={t} value={t}>{t}</option>)}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowMap(true)}
-              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors w-full justify-center"
-            >
-              <MapPin size={13} /> Calcular con mapa y paradas
-            </button>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Transfer de aeropuerto</label>
+            <select onChange={e => handleAirportSelect(e.target.value)} defaultValue="" className={sel}>
+              <option value="">— Seleccionar transfer —</option>
+              {airportTransfers.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  Aeropuerto ↔ {t.zone}{t.price ? ` — $${t.price.toLocaleString('es-AR')}` : ''}{t.needs_consultation ? ' (A consultar)' : ''}
+                </option>
+              ))}
+            </select>
+            {transfer.destination && (
+              <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                <MapPin size={11} /> Aeropuerto Mendoza → {transfer.destination}
+              </p>
+            )}
           </div>
         )}
 
-        {transfer.destination && (transfer.distance_km || 0) > 0 && (
+        {/* ── MODO TOUR ── */}
+        {mode === 'tour' && (
+          <div className="mb-3">
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Tour</label>
+            <select onChange={e => handleTourSelect(e.target.value)} defaultValue="" className={sel}>
+              <option value="">— Seleccionar tour —</option>
+              {tours.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}{t.region ? ` — ${t.region}` : ''}{t.price ? ` — $${t.price.toLocaleString('es-AR')}` : ''}
+                </option>
+              ))}
+            </select>
+            {transfer.destination && (
+              <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                <Navigation size={11} /> {transfer.destination}{transfer.origin ? ` (${transfer.origin})` : ''}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── MODO RUTA ── */}
+        {mode === 'ruta' && (
+          <div className="mb-3">
+            {mapMode ? (
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wide flex items-center gap-1">
+                    <MapPin size={11} /> Recorrido calculado con mapa
+                  </span>
+                  <button onClick={() => { setMapMode(false); onChange(index, { ...transfer, origin: '', destination: '', distance_km: 0, base_cost_ars: 0, final_cost_usd: 0 }); }} className="text-xs text-blue-400 hover:text-blue-600 underline">
+                    Limpiar
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold text-gray-800 truncate">{transfer.origin}</span>
+                  <ArrowRight size={14} className="text-gray-400 flex-shrink-0" />
+                  <span className="font-semibold text-gray-800 truncate">{transfer.destination}</span>
+                </div>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{transfer.distance_km} km</span>
+                  <button onClick={() => setShowMap(true)} className="text-xs text-blue-500 hover:text-blue-700 underline">Recalcular</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Origen</label>
+                    <select value={transfer.origin} onChange={e => handleOriginChange(e.target.value)} className={sel}>
+                      <option value="">— Seleccionar —</option>
+                      {routeNodes.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Destino</label>
+                    <select value={transfer.destination} onChange={e => handleDestinationChange(e.target.value)} className={sel} disabled={!transfer.origin}>
+                      <option value="">— Seleccionar —</option>
+                      {destinations.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <button onClick={() => setShowMap(true)} className="flex items-center gap-1.5 text-xs font-bold text-blue-600 border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors w-full justify-center">
+                  <MapPin size={13} /> Calcular con mapa y paradas
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Resumen de costos */}
+        {transfer.destination && (transfer.final_cost_usd || 0) > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-white rounded-xl border border-marga-creamDark">
-            <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
-              {transfer.is_full_day ? 'Día completo' : 'Medio día'}
-            </span>
-            <span className="text-xs text-marga-dark/50">
-              Base: {fmtARS(transfer.base_cost_ars || 0)}
-            </span>
-            <span className="text-sm font-bold text-marga-wine ml-auto">
-              {fmtARS(transfer.final_cost_usd || 0)}
-            </span>
+            {(transfer.distance_km || 0) > 0 && <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>}
+            {transfer.is_full_day !== undefined && (transfer.distance_km || 0) > 0 && (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
+                {transfer.is_full_day ? 'Día completo' : 'Medio día'}
+              </span>
+            )}
+            {(transfer.base_cost_ars || 0) > 0 && <span className="text-xs text-marga-dark/50">Base: {fmtARS(transfer.base_cost_ars || 0)}</span>}
+            <span className="text-sm font-bold text-marga-wine ml-auto">{fmtARS(transfer.final_cost_usd || 0)}</span>
           </div>
         )}
 
