@@ -1181,7 +1181,6 @@ const QuoteForm: React.FC<{
                         { label: 'Costo x km ($)', key: 'costo_km' },
                         { label: 'Full day ($)', key: 'precio_full_day' },
                         { label: 'Medio día ($)', key: 'precio_medio_dia' },
-                        { label: 'Viáticos base ($)', key: 'precio_viaticos' },
                         { label: 'Ganancia (%)', key: 'ganancia' },
                       ].map(({ label, key }) => (
                         <div key={key}>
