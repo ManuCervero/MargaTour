@@ -452,6 +452,12 @@ const TransferRow: React.FC<{
 
 // ── ServiceRow ────────────────────────────────────────────────────────────────
 
+const CATALOG_TABLE: Partial<Record<QuoteServiceType, string>> = {
+  winery: 'wineries',
+  hotel: 'hotels',
+  restaurant: 'restaurants',
+};
+
 const ServiceRow: React.FC<{
   service: QuoteService;
   index: number;
@@ -459,8 +465,12 @@ const ServiceRow: React.FC<{
   catalogData: CatalogData;
   onChange: (index: number, updated: QuoteService) => void;
   onRemove: (index: number) => void;
-}> = ({ service, index, settings, catalogData, onChange, onRemove }) => {
-  const exchangeRate = settings.usd_exchange_rate || 1200;
+  onCatalogRefresh: () => void;
+}> = ({ service, index, settings, catalogData, onChange, onRemove, onCatalogRefresh }) => {
+
+  const [showAddNew, setShowAddNew] = React.useState(false);
+  const [newName, setNewName] = React.useState('');
+  const [savingNew, setSavingNew] = React.useState(false);
 
   const getItems = (type: QuoteServiceType) => {
     switch (type) {
@@ -472,22 +482,8 @@ const ServiceRow: React.FC<{
     }
   };
 
-  const getRefPrice = (type: QuoteServiceType, item: any): string => {
-    if (!item) return '';
-    switch (type) {
-      case 'hotel': return item.price_per_night ? `Ref: USD ${item.price_per_night}/noche` : '';
-      case 'restaurant': {
-        const min = item.price_min ? (item.price_min / exchangeRate).toFixed(0) : null;
-        const max = item.price_max ? (item.price_max / exchangeRate).toFixed(0) : null;
-        return min && max ? `Ref: USD ${min}–${max}/pp` : min ? `Ref: USD ${min}/pp` : '';
-      }
-      case 'activity': return item.price ? `Ref: USD ${(item.price / exchangeRate).toFixed(0)}/pp` : '';
-      case 'tour': return item.price ? `Ref: USD ${(item.price / exchangeRate).toFixed(0)}` : '';
-      case 'winery': return item.notes ? `Notas: ${String(item.notes).slice(0, 50)}` : '';
-    }
-  };
-
   const handleTypeChange = (type: QuoteServiceType) => {
+    setShowAddNew(false);
     onChange(index, { ...service, service_type: type, service_id: '', service_name: '', unit_price_usd: 0, final_cost_usd: 0 });
   };
 
@@ -495,36 +491,36 @@ const ServiceRow: React.FC<{
     const items = getItems(service.service_type);
     const item = items.find((i: any) => i.id === serviceId);
     if (!item) return;
-    let suggestedPrice = 0;
-    if (service.service_type === 'hotel') suggestedPrice = item.price_per_night || 0;
-    if (service.service_type === 'activity') suggestedPrice = item.price ? item.price / exchangeRate : 0;
-    if (service.service_type === 'tour') suggestedPrice = item.price ? item.price / exchangeRate : 0;
-    if (service.service_type === 'restaurant') {
-      suggestedPrice = item.price_min ? item.price_min / exchangeRate : 0;
+    onChange(index, { ...service, service_id: serviceId, service_name: item.name, unit_price_usd: 0, final_cost_usd: 0 });
+  };
+
+  const handlePriceChange = (priceArs: number) => {
+    onChange(index, { ...service, unit_price_usd: priceArs, final_cost_usd: calcServiceFinal(priceArs, service.pax) });
+  };
+
+  const handleAddNew = async () => {
+    if (!newName.trim()) return;
+    const table = CATALOG_TABLE[service.service_type];
+    if (!table) return;
+    setSavingNew(true);
+    try {
+      const res = await api.from(table).insert([{ name: newName.trim(), region: '', is_active: true }]);
+      const created = Array.isArray(res) ? res[0] : null;
+      await onCatalogRefresh();
+      if (created?.id) {
+        onChange(index, { ...service, service_id: created.id, service_name: created.name });
+      } else {
+        onChange(index, { ...service, service_name: newName.trim() });
+      }
+      setNewName('');
+      setShowAddNew(false);
+    } finally {
+      setSavingNew(false);
     }
-    const finalCost = calcServiceFinal(suggestedPrice, service.pax);
-    onChange(index, {
-      ...service,
-      service_id: serviceId,
-      service_name: item.name,
-      unit_price_usd: Math.round(suggestedPrice * 100) / 100,
-      final_cost_usd: finalCost,
-    });
-  };
-
-  const handlePriceChange = (unitPrice: number) => {
-    const finalCost = calcServiceFinal(unitPrice, service.pax);
-    onChange(index, { ...service, unit_price_usd: unitPrice, final_cost_usd: finalCost });
-  };
-
-  const handlePaxChange = (pax: number) => {
-    const finalCost = calcServiceFinal(service.unit_price_usd, pax);
-    onChange(index, { ...service, pax, final_cost_usd: finalCost });
   };
 
   const items = getItems(service.service_type);
-  const selectedItem = items.find((i: any) => i.id === service.service_id);
-  const refPrice = selectedItem ? getRefPrice(service.service_type, selectedItem) : '';
+  const canAddNew = !!CATALOG_TABLE[service.service_type];
 
   const inp = "w-full border border-marga-creamDark rounded-lg px-3 py-2 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white";
   const sel = inp + " cursor-pointer";
@@ -549,23 +545,53 @@ const ServiceRow: React.FC<{
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Precio unit. USD</label>
-          <input type="number" min={0} step={0.5} value={service.unit_price_usd || ''} onChange={e => handlePriceChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0.00" />
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Precio ARS</label>
+          <input type="number" min={0} step={1} value={service.unit_price_usd || ''} onChange={e => handlePriceChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Servicio específico</label>
-          <select value={service.service_id || ''} onChange={e => handleServiceSelect(e.target.value)} className={sel}>
-            <option value="">— Buscar en catálogo —</option>
-            {items.map((item: any) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {refPrice && <p className="text-xs text-marga-dark/40 mt-1">{refPrice}</p>}
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-semibold text-marga-dark/50">Servicio específico</label>
+            {canAddNew && (
+              <button
+                type="button"
+                onClick={() => setShowAddNew(v => !v)}
+                className="text-xs text-marga-wine font-bold hover:underline"
+              >
+                {showAddNew ? 'Cancelar' : '+ Agregar nueva'}
+              </button>
+            )}
+          </div>
+          {showAddNew ? (
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddNew()}
+                placeholder={`Nombre de ${SERVICE_LABELS[service.service_type].toLowerCase()}...`}
+                className={inp}
+              />
+              <button
+                type="button"
+                onClick={handleAddNew}
+                disabled={savingNew || !newName.trim()}
+                className="px-3 py-2 bg-marga-wine text-marga-cream text-xs font-bold rounded-lg disabled:opacity-40 whitespace-nowrap"
+              >
+                {savingNew ? '...' : 'Guardar'}
+              </button>
+            </div>
+          ) : (
+            <select value={service.service_id || ''} onChange={e => handleServiceSelect(e.target.value)} className={sel}>
+              <option value="">— Buscar en catálogo —</option>
+              {items.map((item: any) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         <div>
           <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción del servicio</label>
@@ -585,8 +611,8 @@ const ServiceRow: React.FC<{
           <input type="text" value={service.notes || ''} onChange={e => onChange(index, { ...service, notes: e.target.value })} className={inp} placeholder="Opcional..." />
         </div>
         <div className="ml-4 text-right">
-          <p className="text-xs text-marga-dark/40">Total (+10%)</p>
-          <p className="text-base font-bold text-marga-wine">{fmt(service.final_cost_usd || 0)}</p>
+          <p className="text-xs text-marga-dark/40">Total</p>
+          <p className="text-base font-bold text-marga-wine">{fmtARS(service.final_cost_usd || 0)}</p>
         </div>
       </div>
     </div>
@@ -843,7 +869,8 @@ const QuoteForm: React.FC<{
   onFetchBna: () => void;
   fetchingBna: boolean;
   bnaUpdatedAt: string | null;
-}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt }) => {
+  onCatalogRefresh: () => void;
+}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt, onCatalogRefresh }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
   const [form, setForm] = useState<FullQuote>(initial ? { ...initial } : emptyQuote());
@@ -1285,6 +1312,7 @@ const QuoteForm: React.FC<{
                     catalogData={catalogData}
                     onChange={handleServiceChange}
                     onRemove={idx => setForm(f => ({ ...f, services: f.services.filter((_, j) => j !== idx) }))}
+                    onCatalogRefresh={onCatalogRefresh}
                   />
                 ))}
 
@@ -1600,6 +1628,7 @@ export const QuotesView: React.FC = () => {
           onFetchBna={fetchBnaRate}
           fetchingBna={fetchingBna}
           bnaUpdatedAt={bnaUpdatedAt}
+          onCatalogRefresh={loadCatalog}
         />
       </div>
     );
