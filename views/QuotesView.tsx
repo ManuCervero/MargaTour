@@ -46,7 +46,7 @@ function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSet
 }
 
 function calcServiceFinal(unitPrice: number, pax: number) {
-  return unitPrice * pax * 1.1;
+  return unitPrice * pax;
 }
 
 const STATUS_LABELS: Record<QuoteStatus, string> = {
@@ -561,14 +561,14 @@ const ServiceRow: React.FC<{
             <option value="">— Buscar en catálogo —</option>
             {items.map((item: any) => (
               <option key={item.id} value={item.id}>
-                {item.name} {getRefPrice(service.service_type, item) ? `(${getRefPrice(service.service_type, item)})` : ''}
+                {item.name}
               </option>
             ))}
           </select>
           {refPrice && <p className="text-xs text-marga-dark/40 mt-1">{refPrice}</p>}
         </div>
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Nombre / Descripción</label>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción del servicio</label>
           <input
             type="text"
             value={service.service_name}
