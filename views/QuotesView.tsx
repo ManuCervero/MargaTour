@@ -556,9 +556,12 @@ const TotalsPanel: React.FC<{
   transfers: QuoteTransfer[];
   services: QuoteService[];
   exchangeRate: number;
-}> = ({ transfers, services, exchangeRate }) => {
+  viaticos?: number;
+}> = ({ transfers, services, exchangeRate, viaticos = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
+  const grandTotal = totalTransfersArs + viaticos;
+  const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || viaticos > 0;
 
   return (
     <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
@@ -570,13 +573,25 @@ const TotalsPanel: React.FC<{
             <span className="font-mono font-semibold">{fmtARS(totalTransfersArs)}</span>
           </div>
         )}
-        {totalServicesUsd > 0 && (
+        {viaticos > 0 && (
           <div className="flex justify-between text-marga-dark/70">
+            <span>Viáticos</span>
+            <span className="font-mono font-semibold">{fmtARS(viaticos)}</span>
+          </div>
+        )}
+        {(totalTransfersArs > 0 || viaticos > 0) && (
+          <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
+            <span>Total transfers</span>
+            <span className="font-mono">{fmtARS(grandTotal)}</span>
+          </div>
+        )}
+        {totalServicesUsd > 0 && (
+          <div className="flex justify-between text-marga-dark/70 mt-2 pt-2 border-t border-marga-creamDark">
             <span>Servicios</span>
             <span className="font-mono font-semibold">{fmt(totalServicesUsd)}</span>
           </div>
         )}
-        {totalTransfersArs === 0 && totalServicesUsd === 0 && (
+        {!hasItems && (
           <p className="text-xs text-marga-dark/30 text-center py-2">Sin ítems agregados</p>
         )}
       </div>
@@ -775,6 +790,11 @@ const QuoteForm: React.FC<{
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [useExistingClient, setUseExistingClient] = useState(!!initial?.client_id);
+
+  // Tarifas editables localmente para esta cotización
+  const [localSettings, setLocalSettings] = useState<TarifaSettings>({ ...settings });
+  const [showTarifas, setShowTarifas] = useState(false);
+  const [viaticos, setViaticos] = useState<number>(0);
 
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
@@ -1064,14 +1084,51 @@ const QuoteForm: React.FC<{
               <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Transfers</h3>
-                  <button
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, { ...emptyTransfer(), pax: f.pax || 1 }] }))}
-                    className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <Plus size={14} /> Agregar transfer
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowTarifas(v => !v)}
+                      className={`flex items-center gap-1.5 text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors ${showTarifas ? 'bg-marga-wine/10 text-marga-wine border-marga-wine/30' : 'text-marga-dark/40 border-marga-creamDark hover:border-marga-wine/30 hover:text-marga-wine'}`}
+                    >
+                      <DollarSign size={13} /> Tarifas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, { ...emptyTransfer(), pax: f.pax || 1 }] }))}
+                      className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Plus size={14} /> Agregar transfer
+                    </button>
+                  </div>
                 </div>
+
+                {/* Panel de tarifas colapsable */}
+                {showTarifas && (
+                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-3">Tarifas para esta cotización</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[
+                        { label: 'Costo x km ($)', key: 'costo_km' },
+                        { label: 'Full day ($)', key: 'precio_full_day' },
+                        { label: 'Medio día ($)', key: 'precio_medio_dia' },
+                        { label: 'Viáticos base ($)', key: 'precio_viaticos' },
+                        { label: 'Ganancia (%)', key: 'ganancia' },
+                      ].map(({ label, key }) => (
+                        <div key={key}>
+                          <label className="block text-xs font-medium text-amber-700 mb-1">{label}</label>
+                          <input
+                            type="number"
+                            value={(localSettings as any)[key]}
+                            onChange={e => setLocalSettings(s => ({ ...s, [key]: Number(e.target.value) }))}
+                            className="w-full border border-amber-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-amber-500 mt-2">Estos valores solo aplican a esta cotización. No modifican la configuración global.</p>
+                  </div>
+                )}
+
                 {form.transfers.length === 0 && (
                   <p className="text-sm text-marga-dark/30 text-center py-6">Sin transfers. Hacé clic en "Agregar transfer".</p>
                 )}
@@ -1081,12 +1138,40 @@ const QuoteForm: React.FC<{
                     transfer={t}
                     index={i}
                     routes={routes}
-                    settings={settings}
+                    settings={localSettings}
                     catalogData={catalogData}
                     onChange={handleTransferChange}
                     onRemove={idx => setForm(f => ({ ...f, transfers: f.transfers.filter((_, j) => j !== idx) }))}
                   />
                 ))}
+
+                {/* Viáticos */}
+                <div className="mt-4 p-4 bg-gray-50 border border-marga-creamDark rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-gray-700">Viáticos</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Monto adicional que se suma al total de transfers</p>
+                    </div>
+                    <div className="w-40">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={viaticos || ''}
+                          onChange={e => setViaticos(e.target.value === '' ? 0 : Number(e.target.value))}
+                          placeholder="0"
+                          className="w-full pl-7 pr-3 py-2 border border-marga-creamDark rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {viaticos > 0 && (
+                    <div className="flex justify-end mt-2">
+                      <span className="text-sm font-bold text-marga-wine">+ {fmtARS(viaticos)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Servicios */}
@@ -1122,7 +1207,7 @@ const QuoteForm: React.FC<{
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} />
+          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} viaticos={viaticos} />
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button
