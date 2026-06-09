@@ -1303,7 +1303,6 @@ const QuoteForm: React.FC<{
                     onRemove={idx => setForm(f => ({ ...f, services: f.services.filter((_, j) => j !== idx) }))}
                   />
                 ))}
-              </div>
 
               {/* Ganancia Servicio */}
               <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
@@ -1338,6 +1337,7 @@ const QuoteForm: React.FC<{
                   );
                 })()}
               </div>
+            </div>
             </>
           )}
         </div>
