@@ -297,20 +297,6 @@ const TransferRow: React.FC<{
             <button className={modeBtn('tour', 'Tour')} onClick={() => handleModeChange('tour')}>🗺 Tour</button>
             <button className={modeBtn('ruta', 'Ruta')} onClick={() => handleModeChange('ruta')}>📍 Ruta</button>
           </div>
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
-            <button
-              onClick={() => handleRoundTripToggle(false)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${!transfer.is_round_trip ? 'bg-white text-marga-wine shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              Solo ida
-            </button>
-            <button
-              onClick={() => handleRoundTripToggle(true)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${transfer.is_round_trip ? 'bg-white text-marga-wine shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              Ida y vuelta
-            </button>
-          </div>
         </div>
 
         {/* Día / Hora / Duración */}
@@ -424,11 +410,7 @@ const TransferRow: React.FC<{
             {/* Tags km / tipo día */}
             <div className="flex flex-wrap items-center gap-2">
               {(transfer.distance_km || 0) > 0 && (
-                <span className="text-xs text-marga-dark/50">
-                  {transfer.is_round_trip
-                    ? `${transfer.distance_km} km × 2 = ${(transfer.distance_km || 0) * 2} km`
-                    : `${transfer.distance_km} km`}
-                </span>
+                <span className="text-xs text-marga-dark/50">{transfer.distance_km} km</span>
               )}
               {(transfer.distance_km || 0) > 0 && (
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${transfer.is_full_day ? 'bg-marga-wine/10 text-marga-wine' : 'bg-blue-100 text-blue-700'}`}>
