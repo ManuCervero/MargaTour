@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, History, FileText, Truck, Map, MapPin, Globe, Star, Wine, Bed, Utensils, Settings, Search, Bell, ChevronDown, Users, UserCog, Compass, LogOut, Menu, X } from 'lucide-react';
 import { ViewState, Lead, LeadStatus } from './types';
-import { api, clearToken, getStoredUser, setStoredUser, setToken } from './lib/api';
+import { api, clearToken, getStoredUser, onAuthError, setStoredUser, setToken } from './lib/api';
 import { KanbanView } from './views/KanbanView';
 import { LeadDrawer } from './components/LeadDrawer';
 import { LoginPage } from './components/LoginPage';
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [activeRegionFilter, setActiveRegionFilter] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    onAuthError(() => setUser(null));
     const stored = getStoredUser();
     if (stored) {
       setUser(stored);

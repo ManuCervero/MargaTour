@@ -1,5 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || 'https://marga-tour-api.celalla.workers.dev';
 
+let _onAuthError: (() => void) | null = null;
+
+export function onAuthError(cb: () => void) {
+  _onAuthError = cb;
+}
+
 function getToken(): string | null {
   return localStorage.getItem('marga_token');
 }
@@ -33,6 +39,10 @@ async function request(path: string, options: RequestInit = {}) {
     },
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      clearToken();
+      _onAuthError?.();
+    }
     const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
