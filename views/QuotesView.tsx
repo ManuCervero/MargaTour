@@ -707,7 +707,7 @@ const TotalsPanel: React.FC<{
         {totalServicesUsd > 0 && (
           <div className="flex justify-between text-marga-dark/70 mt-2 pt-2 border-t border-marga-creamDark">
             <span>Servicios</span>
-            <span className="font-mono font-semibold">{fmt(totalServicesUsd)}</span>
+            <span className="font-mono font-semibold">{fmtARS(totalServicesUsd)}</span>
           </div>
         )}
         {gananciaServicio > 0 && totalServicesUsd > 0 && (
