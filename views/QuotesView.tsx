@@ -506,7 +506,7 @@ const ServiceRow: React.FC<{
   };
 
   const handleMostradorChange = (priceArs: number) => {
-    const total = isHotel ? priceArs * service.pax * nights : calcServiceFinal(priceArs, service.pax);
+    const total = isHotel ? priceArs * nights : calcServiceFinal(priceArs, service.pax);
     onChange(index, { ...service, unit_price_usd: priceArs, final_cost_usd: total });
   };
 
@@ -516,12 +516,12 @@ const ServiceRow: React.FC<{
 
   const handleCheckinChange = (val: string) => {
     const n = calcNights(val, service.checkout_day || '');
-    onChange(index, { ...service, day: val, final_cost_usd: service.unit_price_usd * service.pax * (n || 0) });
+    onChange(index, { ...service, day: val, final_cost_usd: service.unit_price_usd * (n || 0) });
   };
 
   const handleCheckoutChange = (val: string) => {
     const n = calcNights(service.day, val);
-    onChange(index, { ...service, checkout_day: val, final_cost_usd: service.unit_price_usd * service.pax * (n || 0) });
+    onChange(index, { ...service, checkout_day: val, final_cost_usd: service.unit_price_usd * (n || 0) });
   };
 
   const handleAddNew = async () => {
