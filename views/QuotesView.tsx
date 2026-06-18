@@ -645,11 +645,11 @@ const ServiceRow: React.FC<{
         </div>
         <div>
           <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción del servicio</label>
-          <input
-            type="text"
+          <textarea
+            rows={3}
             value={service.service_name}
             onChange={e => onChange(index, { ...service, service_name: e.target.value })}
-            className={inp}
+            className={inp + " resize-y"}
             placeholder="Ej: Bodega Casarena — Almuerzo gourmet"
           />
         </div>
