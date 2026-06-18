@@ -159,15 +159,19 @@ const WaypointRow: React.FC<{
 
 interface RouteMapModalProps {
   route?: Route | null;
+  initialWaypoints?: { label: string; lat: number; lon: number }[];
   onClose: () => void;
-  onSave: (origin: string, destination: string, distanceKm: number, routeId?: string) => Promise<void>;
+  onSave: (origin: string, destination: string, distanceKm: number, routeIdOrWaypoints?: string | { label: string; lat: number; lon: number }[], waypoints?: { label: string; lat: number; lon: number }[]) => Promise<void>;
   saveLabel?: string;
 }
 
-export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, onClose, onSave, saveLabel = 'Guardar ruta' }) => {
+export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWaypoints, onClose, onSave, saveLabel = 'Guardar ruta' }) => {
   const emptyWaypoint = (): Waypoint => ({ label: '', lat: 0, lon: 0 });
 
   const [waypoints, setWaypoints] = useState<Waypoint[]>(() => {
+    if (initialWaypoints && initialWaypoints.length >= 2) {
+      return initialWaypoints;
+    }
     if (route) {
       return [
         { label: route.origin, lat: 0, lon: 0 },
@@ -255,7 +259,7 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, onClose, on
     try {
       const origin = waypoints[0].label;
       const destination = waypoints[waypoints.length - 1].label;
-      await onSave(origin, destination, totalKm!, route?.id);
+      await onSave(origin, destination, totalKm!, route?.id, waypoints);
       onClose();
     } finally {
       setSaving(false);

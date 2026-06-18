@@ -98,6 +98,7 @@ export interface QuoteTransfer {
   pax: number;
   hour?: string;
   distance_km?: number;
+  map_waypoints?: { label: string; lat: number; lon: number }[];
   duration_hours?: number;
   is_full_day?: boolean | number;
   is_round_trip?: boolean;

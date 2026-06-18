@@ -261,10 +261,12 @@ const TransferRow: React.FC<{
     onChange(index, { ...transfer, viaticos, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
-  const handleMapSave = async (origin: string, destination: string, distanceKm: number) => {
+  const handleMapSave = async (_origin: string, _destination: string, distanceKm: number, _routeId?: string | { label: string; lat: number; lon: number }[], waypoints?: { label: string; lat: number; lon: number }[]) => {
+    const origin = waypoints ? waypoints[0].label : _origin;
+    const destination = waypoints ? waypoints[waypoints.length - 1].label : _destination;
     const km = effectiveKm(distanceKm);
     const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0);
-    onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+    onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, map_waypoints: waypoints, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
     setMapMode(true);
     setShowMap(false);
   };
@@ -283,7 +285,7 @@ const TransferRow: React.FC<{
 
   return (
     <>
-      {showMap && <RouteMapModal onClose={() => setShowMap(false)} onSave={handleMapSave} saveLabel="Usar este recorrido" />}
+      {showMap && <RouteMapModal onClose={() => setShowMap(false)} onSave={handleMapSave} saveLabel="Usar este recorrido" initialWaypoints={transfer.map_waypoints} />}
 
       <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
         <button onClick={() => onRemove(index)} className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors">
