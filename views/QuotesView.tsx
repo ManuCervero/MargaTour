@@ -482,9 +482,18 @@ const ServiceRow: React.FC<{
     }
   };
 
+  const isHotel = service.service_type === 'hotel';
+
+  const calcNights = (checkin: string, checkout: string) =>
+    checkin && checkout
+      ? Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000))
+      : 0;
+
+  const nights = isHotel ? calcNights(service.day, service.checkout_day || '') : 1;
+
   const handleTypeChange = (type: QuoteServiceType) => {
     setShowAddNew(false);
-    onChange(index, { ...service, service_type: type, service_id: '', service_name: '', unit_price_usd: 0, final_cost_usd: 0 });
+    onChange(index, { ...service, service_type: type, service_id: '', service_name: '', unit_price_usd: 0, final_cost_usd: 0, checkout_day: undefined });
   };
 
   const handleServiceSelect = (serviceId: string) => {
@@ -494,8 +503,23 @@ const ServiceRow: React.FC<{
     onChange(index, { ...service, service_id: serviceId, service_name: item.name, unit_price_usd: 0, final_cost_usd: 0 });
   };
 
-  const handlePriceChange = (priceArs: number) => {
-    onChange(index, { ...service, unit_price_usd: priceArs, final_cost_usd: calcServiceFinal(priceArs, service.pax) });
+  const handleMostradorChange = (priceArs: number) => {
+    const total = isHotel ? priceArs * service.pax * nights : calcServiceFinal(priceArs, service.pax);
+    onChange(index, { ...service, unit_price_usd: priceArs, final_cost_usd: total });
+  };
+
+  const handleAgenciaChange = (priceArs: number) => {
+    onChange(index, { ...service, agency_price_ars: priceArs });
+  };
+
+  const handleCheckinChange = (val: string) => {
+    const n = calcNights(val, service.checkout_day || '');
+    onChange(index, { ...service, day: val, final_cost_usd: service.unit_price_usd * service.pax * (n || 0) });
+  };
+
+  const handleCheckoutChange = (val: string) => {
+    const n = calcNights(service.day, val);
+    onChange(index, { ...service, checkout_day: val, final_cost_usd: service.unit_price_usd * service.pax * (n || 0) });
   };
 
   const handleAddNew = async () => {
@@ -531,11 +555,27 @@ const ServiceRow: React.FC<{
         <X size={16} />
       </button>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-        <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
-          <input type="date" value={service.day} onChange={e => onChange(index, { ...service, day: e.target.value })} className={inp} />
-        </div>
+      {/* Fila 1: fechas + tipo */}
+      <div className={`grid gap-3 mb-3 ${isHotel ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
+        {isHotel ? (
+          <>
+            <div>
+              <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Llegada</label>
+              <input type="date" value={service.day} onChange={e => handleCheckinChange(e.target.value)} className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-marga-dark/50 mb-1">
+                Salida{nights > 0 && <span className="ml-1 text-marga-wine font-bold">{nights} {nights === 1 ? 'noche' : 'noches'}</span>}
+              </label>
+              <input type="date" value={service.checkout_day || ''} onChange={e => handleCheckoutChange(e.target.value)} className={inp} />
+            </div>
+          </>
+        ) : (
+          <div>
+            <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
+            <input type="date" value={service.day} onChange={e => onChange(index, { ...service, day: e.target.value })} className={inp} />
+          </div>
+        )}
         <div>
           <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Tipo</label>
           <select value={service.service_type} onChange={e => handleTypeChange(e.target.value as QuoteServiceType)} className={sel}>
@@ -544,9 +584,17 @@ const ServiceRow: React.FC<{
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Fila 2: precios */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Precio ARS</label>
-          <input type="number" min={0} step={1} value={service.unit_price_usd || ''} onChange={e => handlePriceChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. agencia/noche ARS' : 'P. agencia ARS'}</label>
+          <input type="number" min={0} step={1} value={service.agency_price_ars || ''} onChange={e => handleAgenciaChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. mostrador/noche ARS' : 'P. mostrador ARS'}</label>
+          <input type="number" min={0} step={1} value={service.unit_price_usd || ''} onChange={e => handleMostradorChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
         </div>
       </div>
 
@@ -1217,8 +1265,8 @@ const QuoteForm: React.FC<{
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
                         { label: 'Costo x km ($)', key: 'costo_km' },
-                        { label: '+150 km ($)', key: 'precio_full_day' },
-                        { label: '-150 km ($)', key: 'precio_medio_dia' },
+                        { label: '+150 km / +6hs ($)', key: 'precio_full_day' },
+                        { label: '-150 km / -6hs ($)', key: 'precio_medio_dia' },
                       ].map(({ label, key }) => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-amber-700 mb-1">{label}</label>

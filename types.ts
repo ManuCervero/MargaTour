@@ -114,10 +114,12 @@ export interface QuoteService {
   id?: string;
   quote_id?: string;
   day: string;
+  checkout_day?: string;
   service_type: QuoteServiceType;
   service_id?: string;
   service_name: string;
   pax: number;
+  agency_price_ars?: number;
   unit_price_usd: number;
   margin_pct?: number;
   final_cost_usd?: number;
