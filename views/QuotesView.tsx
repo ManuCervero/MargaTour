@@ -722,6 +722,12 @@ const TotalsPanel: React.FC<{
             <span className="font-mono">{fmtARS(totalServiciosConGanancia)}</span>
           </div>
         )}
+        {hasItems && (totalTransfersArs > 0 || totalServicesUsd > 0) && (
+          <div className="flex justify-between font-bold text-marga-dark border-t-2 border-marga-dark/20 pt-2 mt-2 text-base">
+            <span>Total</span>
+            <span className="font-mono">{fmtARS(totalTransfersConGanancia + totalServiciosConGanancia)}</span>
+          </div>
+        )}
         {!hasItems && (
           <p className="text-xs text-marga-dark/30 text-center py-2">Sin ítems agregados</p>
         )}
