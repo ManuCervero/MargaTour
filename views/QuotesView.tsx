@@ -784,8 +784,16 @@ const QuoteDetailView: React.FC<{
             padding: 0;
             width: 210mm;
             height: 297mm;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
           @page { size: A4 portrait; margin: 0; }
+        }
+        #quote-print {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          color-adjust: exact;
         }
       `}</style>
 
