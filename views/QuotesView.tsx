@@ -493,14 +493,14 @@ const ServiceRow: React.FC<{
 
   const handleTypeChange = (type: QuoteServiceType) => {
     setShowAddNew(false);
-    onChange(index, { ...service, service_type: type, service_id: '', service_name: '', unit_price_usd: 0, final_cost_usd: 0, checkout_day: undefined });
+    onChange(index, { ...service, service_type: type, service_id: '', service_name: '', checkout_day: type !== 'hotel' ? undefined : service.checkout_day });
   };
 
   const handleServiceSelect = (serviceId: string) => {
     const items = getItems(service.service_type);
     const item = items.find((i: any) => i.id === serviceId);
     if (!item) return;
-    onChange(index, { ...service, service_id: serviceId, service_name: item.name, unit_price_usd: 0, final_cost_usd: 0 });
+    onChange(index, { ...service, service_id: serviceId, service_name: item.name });
   };
 
   const handleMostradorChange = (priceArs: number) => {
