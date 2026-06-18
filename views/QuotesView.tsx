@@ -673,9 +673,10 @@ const TotalsPanel: React.FC<{
   transfers: QuoteTransfer[];
   services: QuoteService[];
   exchangeRate: number;
+  onChangeExchangeRate?: (val: number) => void;
   gananciaTransfer?: number;
   gananciaServicio?: number;
-}> = ({ transfers, services, exchangeRate, gananciaTransfer = 0, gananciaServicio = 0 }) => {
+}> = ({ transfers, services, exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
   const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
@@ -726,6 +727,28 @@ const TotalsPanel: React.FC<{
           <div className="flex justify-between font-bold text-marga-dark border-t-2 border-marga-dark/20 pt-2 mt-2 text-base">
             <span>Total</span>
             <span className="font-mono">{fmtARS(totalTransfersConGanancia + totalServiciosConGanancia)}</span>
+          </div>
+        )}
+        {hasItems && onChangeExchangeRate && (
+          <div className="mt-3 pt-3 border-t border-marga-creamDark">
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-xs font-semibold text-marga-dark/50 whitespace-nowrap">Tipo de cambio (ARS/USD)</label>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={exchangeRate || ''}
+                onChange={e => onChangeExchangeRate(parseFloat(e.target.value) || 0)}
+                className="w-32 border border-marga-creamDark rounded-lg px-3 py-1.5 text-sm text-right font-mono bg-white focus:outline-none focus:ring-2 focus:ring-marga-wine/30"
+                placeholder="0"
+              />
+            </div>
+            {exchangeRate > 0 && (
+              <div className="flex justify-between text-xs text-marga-dark/50 mt-1.5">
+                <span>Total en USD</span>
+                <span className="font-mono font-semibold">{fmt((totalTransfersConGanancia + totalServiciosConGanancia) / exchangeRate)}</span>
+              </div>
+            )}
           </div>
         )}
         {!hasItems && (
@@ -1410,7 +1433,7 @@ const QuoteForm: React.FC<{
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={exchangeRate} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
+          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button
