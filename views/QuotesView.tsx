@@ -713,13 +713,13 @@ const TotalsPanel: React.FC<{
         {gananciaServicio > 0 && totalServicesUsd > 0 && (
           <div className="flex justify-between text-marga-dark/50 text-xs">
             <span>Ganancia servicios ({gananciaServicio}%)</span>
-            <span className="font-mono">+{fmt(totalServicesUsd * gananciaServicio / 100)}</span>
+            <span className="font-mono">+{fmtARS(totalServicesUsd * gananciaServicio / 100)}</span>
           </div>
         )}
         {gananciaServicio > 0 && totalServicesUsd > 0 && (
           <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
             <span>Total servicios</span>
-            <span className="font-mono">{fmt(totalServiciosConGanancia)}</span>
+            <span className="font-mono">{fmtARS(totalServiciosConGanancia)}</span>
           </div>
         )}
         {!hasItems && (
@@ -1392,7 +1392,7 @@ const QuoteForm: React.FC<{
                   return (
                     <div className="flex justify-between mt-2 text-sm text-marga-wine font-bold border-t border-marga-wine/20 pt-2">
                       <span>Total con ganancia</span>
-                      <span>{fmt(base + extra)}</span>
+                      <span>{fmtARS(base + extra)}</span>
                     </div>
                   );
                 })()}
