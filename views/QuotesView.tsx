@@ -699,7 +699,7 @@ const TotalsPanel: React.FC<{
             <span className="font-mono">+{fmtARS(totalTransfersArs * gananciaTransfer / 100)}</span>
           </div>
         )}
-        {totalTransfersArs > 0 && (
+        {gananciaTransfer > 0 && totalTransfersArs > 0 && (
           <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
             <span>Total transfers</span>
             <span className="font-mono">{fmtARS(totalTransfersConGanancia)}</span>
@@ -723,29 +723,29 @@ const TotalsPanel: React.FC<{
             <span className="font-mono">{fmtARS(totalServiciosConGanancia)}</span>
           </div>
         )}
-        {hasItems && (totalTransfersArs > 0 || totalServicesUsd > 0) && (
+        {hasItems && (
           <div className="flex justify-between font-bold text-marga-dark border-t-2 border-marga-dark/20 pt-2 mt-2 text-base">
             <span>Total</span>
             <span className="font-mono">{fmtARS(totalTransfersConGanancia + totalServiciosConGanancia)}</span>
           </div>
         )}
-        {hasItems && onChangeExchangeRate && (
-          <div className="mt-3 pt-3 border-t border-marga-creamDark">
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-xs font-semibold text-marga-dark/50 whitespace-nowrap">Tipo de cambio (ARS/USD)</label>
+        {onChangeExchangeRate && (
+          <div className="mt-3 pt-3 border-t border-dashed border-marga-creamDark space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-marga-dark/40 flex-1">TC (ARS/USD)</label>
               <input
                 type="number"
                 min={1}
                 step={1}
                 value={exchangeRate || ''}
                 onChange={e => onChangeExchangeRate(parseFloat(e.target.value) || 0)}
-                className="w-32 border border-marga-creamDark rounded-lg px-3 py-1.5 text-sm text-right font-mono bg-white focus:outline-none focus:ring-2 focus:ring-marga-wine/30"
+                className="w-28 border border-marga-creamDark rounded-lg px-2 py-1 text-sm text-right font-mono bg-white focus:outline-none focus:ring-2 focus:ring-marga-wine/30"
                 placeholder="0"
               />
             </div>
-            {exchangeRate > 0 && (
-              <div className="flex justify-between text-xs text-marga-dark/50 mt-1.5">
-                <span>Total en USD</span>
+            {exchangeRate > 0 && hasItems && (
+              <div className="flex justify-between text-xs text-marga-dark/50">
+                <span>Total USD</span>
                 <span className="font-mono font-semibold">{fmt((totalTransfersConGanancia + totalServiciosConGanancia) / exchangeRate)}</span>
               </div>
             )}
