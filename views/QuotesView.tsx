@@ -837,62 +837,91 @@ const QuoteDetailView: React.FC<{
             {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', fontStyle: 'italic' }}>"{quote.description}"</p>}
           </div>
 
-          {/* Transfers */}
-          {(quote.transfers || []).length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                Transfers
-              </p>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1.5px solid #4a1c2d' }}>
-                    {['Día', 'Hora', 'Recorrido', 'PAX', 'Total'].map((h, i) => (
-                      <th key={h} style={{ padding: '4px 6px', textAlign: i === 4 ? 'right' : i === 3 ? 'center' : 'left', fontSize: '10px', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(quote.transfers || []).map((t, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #e5e0d8' }}>
-                      <td style={{ padding: '6px 6px', color: '#444' }}>{t.day}</td>
-                      <td style={{ padding: '6px 6px', color: '#444' }}>{t.hour || '—'}</td>
-                      <td style={{ padding: '6px 6px', fontWeight: 600, color: '#1a1a1a' }}>{t.origin} → {t.destination}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'center', color: '#444' }}>{t.pax}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS(t.final_cost_usd || 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {/* Itinerario agrupado por día */}
+          {(() => {
+            const transfers = quote.transfers || [];
+            const services = quote.services || [];
+            const allDays = Array.from(new Set([
+              ...transfers.map(t => t.day),
+              ...services.map(s => s.day),
+            ])).sort();
 
-          {/* Servicios */}
-          {(quote.services || []).length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                Servicios
-              </p>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1.5px solid #4a1c2d' }}>
-                    {['Día', 'Servicio', 'PAX', 'Total'].map((h, i) => (
-                      <th key={h} style={{ padding: '4px 6px', textAlign: i === 3 ? 'right' : i === 2 ? 'center' : 'left', fontSize: '10px', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(quote.services || []).map((s, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #e5e0d8' }}>
-                      <td style={{ padding: '6px 6px', color: '#444' }}>{s.day}</td>
-                      <td style={{ padding: '6px 6px', fontWeight: 600, color: '#1a1a1a' }}>{s.service_name}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'center', color: '#444' }}>{s.pax}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmt(s.final_cost_usd || 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+            return allDays.map(day => {
+              const dayTransfers = transfers.filter(t => t.day === day);
+              const dayServices = services.filter(s => s.day === day);
+
+              return (
+                <div key={day} style={{ marginBottom: '20px' }}>
+                  {/* Cabecera del día */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+                      {day}
+                    </p>
+                    <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+                  </div>
+
+                  {/* Transfers del día */}
+                  {dayTransfers.length > 0 && (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>Hora</th>
+                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transfer</th>
+                          <th style={{ padding: '3px 6px', textAlign: 'center', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '40px' }}>PAX</th>
+                          <th style={{ padding: '3px 6px', textAlign: 'right', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '80px' }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dayTransfers.map((t, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                            <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
+                            <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>{t.origin} → {t.destination}</td>
+                            <td style={{ padding: '5px 6px', textAlign: 'center', color: '#555' }}>{t.pax}</td>
+                            <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS(t.final_cost_usd || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {/* Servicios del día */}
+                  {dayServices.length > 0 && (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Servicio</th>
+                          <th style={{ padding: '3px 6px', textAlign: 'center', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '40px' }}>PAX</th>
+                          <th style={{ padding: '3px 6px', textAlign: 'right', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '80px' }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dayServices.map((s, i) => {
+                          const isHotel = s.service_type === 'hotel';
+                          const nights = isHotel && s.checkout_day
+                            ? Math.max(0, Math.round((new Date(s.checkout_day).getTime() - new Date(s.day).getTime()) / 86400000))
+                            : null;
+                          return (
+                            <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                              <td style={{ padding: '5px 6px', color: '#1a1a1a' }}>
+                                <span style={{ fontWeight: 600 }}>{s.service_name}</span>
+                                {isHotel && nights !== null && s.checkout_day && (
+                                  <span style={{ fontSize: '11px', color: '#888', marginLeft: '6px' }}>
+                                    ({nights} {nights === 1 ? 'noche' : 'noches'} — salida {s.checkout_day})
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '5px 6px', textAlign: 'center', color: '#555' }}>{isHotel ? '—' : s.pax}</td>
+                              <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS(s.final_cost_usd || 0)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            });
+          })()}
 
           {/* Totales */}
           <div style={{ marginTop: '20px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
@@ -903,7 +932,7 @@ const QuoteDetailView: React.FC<{
             )}
             {totalServicesUsd > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555', marginBottom: '4px' }}>
-                <span>Total servicios</span><span style={{ fontWeight: 600 }}>{fmt(totalServicesUsd)}</span>
+                <span>Total servicios</span><span style={{ fontWeight: 600 }}>{fmtARS(totalServicesUsd)}</span>
               </div>
             )}
           </div>
