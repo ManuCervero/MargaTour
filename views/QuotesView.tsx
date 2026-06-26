@@ -864,7 +864,7 @@ const QuoteDetailView: React.FC<{
   const pageBackground: React.CSSProperties = {
     backgroundImage: 'url(/membrete.jpg)',
     backgroundSize: '100% auto',
-    backgroundRepeat: 'no-repeat',
+    backgroundRepeat: 'repeat-y',
     backgroundPosition: 'top center',
     WebkitPrintColorAdjust: 'exact' as any,
     printColorAdjust: 'exact' as any,
@@ -872,9 +872,9 @@ const QuoteDetailView: React.FC<{
     fontFamily: 'sans-serif',
   };
 
-  // Contenido interior A4 — mismo JSX para pantalla y portal de impresión
-  const innerContent = (
-    <div style={{ padding: '148px 56px 100px 56px' }}>
+  // Nodos de contenido sin padding — el padding lo pone cada envoltorio (pantalla/portal)
+  const contentNodes = (
+    <div>
 
       {/* Número y fecha */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '28px' }}>
@@ -1051,18 +1051,15 @@ const QuoteDetailView: React.FC<{
       {/* CSS: oculta todo en impresión excepto el portal; oculta el portal en pantalla */}
       <style>{`
         @media print {
-          body > * { visibility: hidden !important; }
+          body > * { display: none !important; }
           body > #print-portal {
-            visibility: visible !important;
-            position: absolute; top: 0; left: 0;
-            width: 210mm;
+            display: block !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-          body > #print-portal * { visibility: visible !important; }
           body > #print-portal .screen-only { display: none !important; }
-          @page { size: A4 portrait; margin: 0; }
+          @page { size: A4 portrait; margin: 55mm 15mm 26mm 15mm; }
         }
         @media screen { #print-portal { display: none !important; } }
       `}</style>
@@ -1090,14 +1087,20 @@ const QuoteDetailView: React.FC<{
       {/* Vista previa en pantalla — contenedor scrollable para el A4 */}
       <div style={{ overflowX: 'auto', overflowY: 'auto', background: '#d6cfc4', padding: '32px 24px', minHeight: 'calc(100vh - 57px)' }}>
         <div style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', boxShadow: '0 4px 32px rgba(0,0,0,0.2)', ...pageBackground }}>
-          {innerContent}
+          <div style={{ padding: '208px 56px 100px 56px' }}>
+            {contentNodes}
+          </div>
         </div>
       </div>
 
-      {/* Portal de impresión — renderizado directo en document.body */}
+      {/* Portal de impresión — fondo fijo se repite en cada página */}
       {createPortal(
-        <div id="print-portal" style={{ width: '210mm', ...pageBackground }}>
-          {innerContent}
+        <div id="print-portal" style={{ fontFamily: 'sans-serif', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }}>
+          {/* Fondo fijo: aparece en cada página impresa, siempre detrás del contenido */}
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, backgroundImage: 'url(/membrete.jpg)', backgroundSize: '100% 100%', backgroundPosition: 'top center', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            {contentNodes}
+          </div>
         </div>,
         document.body
       )}
