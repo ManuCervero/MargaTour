@@ -782,77 +782,131 @@ const TotalsPanel: React.FC<{
   );
 };
 
+// ── QuoteDetailView helpers ────────────────────────────────────────────────────
+
+function numToES(num: number): string {
+  const n = Math.round(Math.abs(num));
+  if (n === 0) return 'cero';
+  const ones = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+    'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho',
+    'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco',
+    'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
+  const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+  const hundreds = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
+    'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+  function below1000(x: number): string {
+    if (x === 0) return '';
+    if (x === 100) return 'cien';
+    const parts: string[] = [];
+    if (x >= 100) { parts.push(hundreds[Math.floor(x / 100)]); x = x % 100; }
+    if (x === 0) return parts.join(' ');
+    if (x < 30) parts.push(ones[x]);
+    else { const t = Math.floor(x / 10); const u = x % 10; parts.push(tens[t] + (u > 0 ? ' y ' + ones[u] : '')); }
+    return parts.filter(Boolean).join(' ');
+  }
+  const millions = Math.floor(n / 1000000);
+  const thousands = Math.floor((n % 1000000) / 1000);
+  const remainder = n % 1000;
+  const parts: string[] = [];
+  if (millions > 0) parts.push(millions === 1 ? 'un millón' : below1000(millions) + ' millones');
+  if (thousands > 0) parts.push(thousands === 1 ? 'mil' : below1000(thousands) + ' mil');
+  if (remainder > 0) parts.push(below1000(remainder));
+  return parts.join(' ');
+}
+
 // ── QuoteDetailView (impresión) ───────────────────────────────────────────────
 
 const QuoteDetailView: React.FC<{
   quote: FullQuote;
   onBack: () => void;
 }> = ({ quote, onBack }) => {
-  const totalTransfersArs = (quote.transfers || []).reduce((a, t) => a + (t.final_cost_usd || 0), 0);
-  const totalServicesUsd = (quote.services || []).reduce((a, s) => a + (s.final_cost_usd || 0), 0);
+  const [showUSD, setShowUSD] = useState(false);
+
+  const transfers = quote.transfers || [];
+  const allServices = quote.services || [];
+  const nonHotelServices = allServices.filter(s => s.service_type !== 'hotel');
+  const hotelServices = allServices.filter(s => s.service_type === 'hotel');
+
+  const gananciaTransfer = quote.ganancia_transfer || 0;
+  const gananciaServicio = quote.ganancia_servicio || 0;
+  const comision = quote.comision || 0;
+  const tc = quote.exchange_rate || 0;
+
+  const totalTransfersBase = transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0);
+  const totalServicesBase = allServices.reduce((a, s) => a + (s.final_cost_usd || 0), 0);
+  const totalTransfersConGanancia = totalTransfersBase * (1 + gananciaTransfer / 100);
+  const totalServiciosConGanancia = totalServicesBase * (1 + gananciaServicio / 100);
+  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia;
+  const montoComision = subtotal * comision / 100 * 2;
+  const totalFinal = subtotal + montoComision;
+  const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
+
+  const useUSD = showUSD && tc > 0;
+  const displayAmount = useUSD ? totalFinalUsd : totalFinal;
+  const displayFormatted = useUSD ? fmt(totalFinalUsd) : fmtARS(totalFinal);
+  const displayWords = numToES(displayAmount) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
+
+  const validityFormatted = quote.validity_date
+    ? new Date(quote.validity_date + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  const allDays = Array.from(new Set([
+    ...transfers.map(t => t.day),
+    ...nonHotelServices.map(s => s.day),
+  ])).sort();
+
+  const thStyle: React.CSSProperties = { padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
+  const thRight: React.CSSProperties = { ...thStyle, textAlign: 'right', width: '90px' };
+  const secTitle: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px 0' };
 
   return (
     <>
-      {/* Estilos de impresión */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
           #quote-print, #quote-print * { visibility: visible; }
           #quote-print {
-            position: fixed;
-            inset: 0;
-            margin: 0;
-            padding: 0;
-            width: 210mm;
-            height: 297mm;
+            position: fixed; inset: 0; margin: 0; padding: 0;
+            width: 210mm; height: 297mm;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
+          #quote-print .screen-only { display: none !important; }
           @page { size: A4 portrait; margin: 0; }
         }
-        #quote-print {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-          color-adjust: exact;
-        }
+        #quote-print { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
       `}</style>
 
-      {/* Barra de acciones (solo pantalla) */}
+      {/* Barra de acciones — solo pantalla */}
       <div className="print:hidden sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-marga-creamDark px-6 py-3 flex items-center gap-3">
         <button onClick={onBack} className="flex items-center gap-2 text-marga-dark/60 hover:text-marga-wine font-semibold text-sm transition-colors">
           <ChevronLeft size={18} /> Volver
         </button>
         <span className="text-xs text-marga-dark/30">Cotización #{String(quote.quote_number || 0).padStart(4, '0')} — {quote.client_name}</span>
         <button
+          onClick={() => setShowUSD(v => !v)}
+          className={`ml-auto flex items-center gap-2 font-bold py-2 px-4 rounded-xl text-sm transition-colors border ${useUSD ? 'bg-marga-wine text-marga-cream border-marga-wine' : 'bg-white text-marga-wine border-marga-wine/40 hover:border-marga-wine'}`}
+        >
+          <DollarSign size={14} /> {useUSD ? 'Ver en ARS' : 'Ver en USD'}
+        </button>
+        <button
           onClick={() => window.print()}
-          className="ml-auto flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-5 rounded-xl text-sm transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-5 rounded-xl text-sm transition-colors shadow-sm"
         >
           <Printer size={16} /> Imprimir / Exportar PDF
         </button>
       </div>
 
-      {/* Hoja con membrete — A4 */}
-      <div id="quote-print" style={{
-        width: '210mm',
-        minHeight: '297mm',
-        margin: '24px auto',
-        position: 'relative',
-        backgroundImage: 'url(/membrete.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'top center',
-        fontFamily: 'sans-serif',
-      }}>
-        {/* Contenido sobre el membrete — padding respeta logo (arriba) y footer (abajo) */}
+      {/* Hoja A4 con membrete */}
+      <div id="quote-print" style={{ width: '210mm', minHeight: '297mm', margin: '24px auto', position: 'relative', backgroundImage: 'url(/membrete.jpg)', backgroundSize: 'cover', backgroundPosition: 'top center', fontFamily: 'sans-serif' }}>
         <div style={{ padding: '148px 56px 130px 56px' }}>
 
-          {/* Número y fecha — arriba a la derecha */}
+          {/* Número y fecha */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '28px' }}>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Cotización</p>
-              <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>
-                #{String(quote.quote_number || 0).padStart(4, '0')}
-              </p>
+              <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>
               <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{quote.date}</p>
             </div>
           </div>
@@ -863,116 +917,194 @@ const QuoteDetailView: React.FC<{
             <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.client_name}</p>
             {quote.client_phone && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_phone}</p>}
             {quote.client_email && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_email}</p>}
+            {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>PAX:</strong> {quote.pax}</p>}
             {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', fontStyle: 'italic' }}>"{quote.description}"</p>}
           </div>
 
-          {/* Itinerario agrupado por día */}
-          {(() => {
-            const transfers = quote.transfers || [];
-            const services = quote.services || [];
-            const allDays = Array.from(new Set([
-              ...transfers.map(t => t.day),
-              ...services.map(s => s.day),
-            ])).sort();
-
-            return allDays.map(day => {
-              const dayTransfers = transfers.filter(t => t.day === day);
-              const dayServices = services.filter(s => s.day === day);
-
-              return (
-                <div key={day} style={{ marginBottom: '20px' }}>
-                  {/* Cabecera del día */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-                      {day}
-                    </p>
-                    <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
-                  </div>
-
-                  {/* Transfers del día */}
-                  {dayTransfers.length > 0 && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
-                      <thead>
-                        <tr>
-                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>Hora</th>
-                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transfer</th>
-                          <th style={{ padding: '3px 6px', textAlign: 'center', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '40px' }}>PAX</th>
-                          <th style={{ padding: '3px 6px', textAlign: 'right', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '80px' }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dayTransfers.map((t, i) => (
-                          <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
-                            <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
-                            <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>{t.origin} → {t.destination}</td>
-                            <td style={{ padding: '5px 6px', textAlign: 'center', color: '#555' }}>{t.pax}</td>
-                            <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS(t.final_cost_usd || 0)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-
-                  {/* Servicios del día */}
-                  {dayServices.length > 0 && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                      <thead>
-                        <tr>
-                          <th style={{ padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Servicio</th>
-                          <th style={{ padding: '3px 6px', textAlign: 'center', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '40px' }}>PAX</th>
-                          <th style={{ padding: '3px 6px', textAlign: 'right', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', width: '80px' }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dayServices.map((s, i) => {
-                          const isHotel = s.service_type === 'hotel';
-                          const nights = isHotel && s.checkout_day
-                            ? Math.max(0, Math.round((new Date(s.checkout_day).getTime() - new Date(s.day).getTime()) / 86400000))
-                            : null;
-                          return (
-                            <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
-                              <td style={{ padding: '5px 6px', color: '#1a1a1a' }}>
-                                <span style={{ fontWeight: 600 }}>{s.service_name}</span>
-                                {isHotel && nights !== null && s.checkout_day && (
-                                  <span style={{ fontSize: '11px', color: '#888', marginLeft: '6px' }}>
-                                    ({nights} {nights === 1 ? 'noche' : 'noches'} — salida {s.checkout_day})
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '5px 6px', textAlign: 'center', color: '#555' }}>{isHotel ? '—' : s.pax}</td>
-                              <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS(s.final_cost_usd || 0)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
+          {/* Itinerario por día (excluye hoteles) */}
+          {allDays.map(day => {
+            const dayTransfers = transfers.filter(t => t.day === day);
+            const dayServices = nonHotelServices.filter(s => s.day === day);
+            if (dayTransfers.length === 0 && dayServices.length === 0) return null;
+            return (
+              <div key={day} style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{day}</p>
+                  <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
                 </div>
-              );
-            });
-          })()}
 
-          {/* Totales */}
-          <div style={{ marginTop: '20px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
-            {totalTransfersArs > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555', marginBottom: '4px' }}>
-                <span>Total transfers</span><span style={{ fontWeight: 600 }}>{fmtARS(totalTransfersArs)}</span>
+                {/* Transfers */}
+                {dayTransfers.length > 0 && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ ...thStyle, width: '60px' }}>Hora</th>
+                        <th style={thStyle}>Transfer</th>
+                        <th className="screen-only" style={thRight}>Precio base</th>
+                        <th className="screen-only" style={thRight}>Con ganancia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dayTransfers.map((t, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                          <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
+                          <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>
+                            {t.origin} → {t.destination}
+                            {t.notes && <span style={{ fontWeight: 400, color: '#888', fontSize: '11px', display: 'block' }}>{t.notes}</span>}
+                          </td>
+                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(t.final_cost_usd || 0)}</td>
+                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((t.final_cost_usd || 0) * (1 + gananciaTransfer / 100))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {/* Servicios (no hoteles) */}
+                {dayServices.length > 0 && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Servicio</th>
+                        <th className="screen-only" style={thRight}>Precio base</th>
+                        <th className="screen-only" style={thRight}>Con ganancia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dayServices.map((s, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                          <td style={{ padding: '5px 6px', color: '#1a1a1a' }}>
+                            <span style={{ fontWeight: 600 }}>{s.service_name}</span>
+                            {s.notes && <span style={{ fontWeight: 400, color: '#777', fontSize: '11px', display: 'block', whiteSpace: 'pre-line' }}>{s.notes}</span>}
+                          </td>
+                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(s.final_cost_usd || 0)}</td>
+                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((s.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
-            )}
-            {totalServicesUsd > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555', marginBottom: '4px' }}>
-                <span>Total servicios</span><span style={{ fontWeight: 600 }}>{fmtARS(totalServicesUsd)}</span>
+            );
+          })}
+
+          {/* Alojamiento (hoteles) */}
+          {hotelServices.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Alojamiento</p>
+                <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+              </div>
+              {hotelServices.map((h, i) => {
+                const nights = h.checkout_day
+                  ? Math.max(0, Math.round((new Date(h.checkout_day).getTime() - new Date(h.day).getTime()) / 86400000))
+                  : null;
+                return (
+                  <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '10px', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
+                        <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
+                          Check-in: <strong>{h.day}</strong>
+                          {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{h.checkout_day}</strong></>}
+                          {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
+                        </p>
+                        {h.notes && <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic', whiteSpace: 'pre-line' }}>{h.notes}</p>}
+                      </div>
+                      <div className="screen-only" style={{ textAlign: 'right', minWidth: '120px' }}>
+                        <p style={{ fontSize: '11px', color: '#aaa', margin: '0 0 1px 0' }}>{fmtARS(h.final_cost_usd || 0)}</p>
+                        <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS((h.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Desglose de totales — solo pantalla */}
+          <div className="screen-only" style={{ marginTop: '16px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
+            {totalTransfersBase > 0 && (<>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}>
+                <span>Transfers</span><span style={{ fontWeight: 600 }}>{fmtARS(totalTransfersBase)}</span>
+              </div>
+              {gananciaTransfer > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>
+                  <span>Ganancia transfers ({gananciaTransfer}%)</span><span>+{fmtARS(totalTransfersBase * gananciaTransfer / 100)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}>
+                <span>Total transfers</span><span>{fmtARS(totalTransfersConGanancia)}</span>
+              </div>
+            </>)}
+            {totalServicesBase > 0 && (<>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}>
+                <span>Servicios</span><span style={{ fontWeight: 600 }}>{fmtARS(totalServicesBase)}</span>
+              </div>
+              {gananciaServicio > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>
+                  <span>Ganancia servicios ({gananciaServicio}%)</span><span>+{fmtARS(totalServicesBase * gananciaServicio / 100)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}>
+                <span>Total servicios</span><span>{fmtARS(totalServiciosConGanancia)}</span>
+              </div>
+            </>)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}>
+              <span>Subtotal</span><span>{fmtARS(subtotal)}</span>
+            </div>
+            {comision > 0 && (<>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}>
+                <span>Comisión ({comision}% × 2)</span><span>+{fmtARS(montoComision)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}>
+                <span>Total con comisión</span><span>{fmtARS(totalFinal)}</span>
+              </div>
+            </>)}
+            {tc > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}>
+                <span>Total USD (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsd)}</span>
               </div>
             )}
           </div>
 
-          {/* Notas */}
-          {quote.notes && (
-            <div style={{ marginTop: '20px', padding: '12px 14px', background: 'rgba(237,237,221,0.5)', borderRadius: '8px' }}>
-              <p style={{ fontSize: '10px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Notas</p>
-              <p style={{ fontSize: '13px', color: '#555', margin: 0 }}>{quote.notes}</p>
+          {/* Notas y Aclaraciones */}
+          <div style={{ marginTop: '28px', borderTop: '2px solid #4a1c2d', paddingTop: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: 900, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 14px 0' }}>Notas y Aclaraciones</p>
+
+            {/* Cotización */}
+            <div style={{ marginBottom: '12px' }}>
+              <p style={secTitle}>Cotización</p>
+              <p style={{ fontSize: '12px', color: '#444', margin: '0 0 4px 0' }}>Todos los servicios detallados anteriormente ascienden a la suma de:</p>
+              <p style={{ fontSize: '12px', color: '#4a1c2d', fontStyle: 'italic', margin: 0 }}>
+                {displayFormatted} ({displayWords})
+              </p>
             </div>
-          )}
+
+            {/* Forma de contratación */}
+            <div style={{ marginBottom: '12px' }}>
+              <p style={secTitle}>Forma de contratación</p>
+              <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Anticipo o seña del 30%, antes de reservar el servicio.</p>
+              <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Saldo 24 hs antes de comenzar el servicio</p>
+              <p style={{ fontSize: '12px', color: '#666', margin: '6px 0 0 0', fontStyle: 'italic' }}>Servicios sujetos a disponibilidad al momento de la reserva</p>
+            </div>
+
+            {/* Validez */}
+            {validityFormatted && (
+              <div style={{ marginBottom: '12px' }}>
+                <p style={secTitle}>Validez del Presupuesto</p>
+                <p style={{ fontSize: '12px', color: '#444', margin: 0 }}>Desde el día de la fecha hasta {validityFormatted}</p>
+              </div>
+            )}
+
+            {/* Forma de Pago */}
+            <div>
+              <p style={secTitle}>Forma de Pago</p>
+              {['Transferencia bancaria', 'Efectivo', 'Link de pago', 'Tarjeta de crédito con 6,19% de recargo', 'Tarjeta de débito con 3,19% de recargo', 'Combinaciones de formas detalladas anteriormente.'].map(item => (
+                <p key={item} style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- {item}</p>
+              ))}
+            </div>
+          </div>
 
         </div>
       </div>
