@@ -1947,7 +1947,13 @@ export const QuotesView: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              filteredQuotes.map(q => (
+              filteredQuotes.map(q => {
+                const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
+                  + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100);
+                const totalFinalArs = subtotalArs * (1 + (q.comision || 0) * 2 / 100);
+                const tc = q.exchange_rate || 0;
+                const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;
+                return (
                 <tr key={q.id} className="hover:bg-marga-cream/40 transition-colors group">
                   <td className="px-5 py-3.5">
                     <span className="font-mono text-xs font-bold text-marga-dark/40">
@@ -1959,8 +1965,11 @@ export const QuotesView: React.FC = () => {
                     {q.description || '—'}
                   </td>
                   <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{q.date}</td>
-                  <td className="px-5 py-3.5 text-right font-mono font-bold text-marga-dark">
-                    {fmt(q.total_gross || 0)}
+                  <td className="px-5 py-3.5 text-right">
+                    <div className="font-mono font-bold text-marga-dark">{fmtARS(totalFinalArs)}</div>
+                    {totalFinalUsd !== null && (
+                      <div className="font-mono text-xs text-marga-dark/40">{fmt(totalFinalUsd)} · TC ${tc.toLocaleString('es-AR')}</div>
+                    )}
                   </td>
                   <td className="px-5 py-3.5">
                     <StatusBadge status={(q.status as QuoteStatus) || 'draft'} />
@@ -1998,7 +2007,8 @@ export const QuotesView: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
