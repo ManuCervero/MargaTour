@@ -226,8 +226,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO quotes (id, quote_number, client_id, client_name, client_phone, client_email,
       description, pax, date, status, type, experience_id, exchange_rate, ganancia_transfer,
-      ganancia_servicio, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ganancia_servicio, comision, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, quoteNumber,
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
@@ -236,6 +236,7 @@ app.post('/api/quotes', requireAuth, async (c) => {
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
     body.ganancia_servicio || 0,
+    body.comision || 0,
     body.notes || null, now, now
   ).run();
 
@@ -300,7 +301,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
   await c.env.DB.prepare(`
     UPDATE quotes SET client_id=?, client_name=?, client_phone=?, client_email=?,
       description=?, pax=?, date=?, status=?, type=?, experience_id=?, notes=?,
-      exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, updated_at=?
+      exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, comision=?, updated_at=?
     WHERE id=?
   `).bind(
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
@@ -309,6 +310,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
     body.ganancia_servicio || 0,
+    body.comision || 0,
     now, id
   ).run();
 

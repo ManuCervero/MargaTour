@@ -683,11 +683,15 @@ const TotalsPanel: React.FC<{
   onChangeExchangeRate?: (val: number) => void;
   gananciaTransfer?: number;
   gananciaServicio?: number;
-}> = ({ transfers, services, exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0 }) => {
+  comision?: number;
+}> = ({ transfers, services, exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0, comision = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
   const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
+  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia;
+  const montoComision = subtotal * comision / 100 * 2;
+  const totalFinal = subtotal + montoComision;
   const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0;
 
   return (
@@ -732,9 +736,21 @@ const TotalsPanel: React.FC<{
         )}
         {hasItems && (
           <div className="flex justify-between font-bold text-marga-dark border-t-2 border-marga-dark/20 pt-2 mt-2 text-base">
-            <span>Total</span>
-            <span className="font-mono">{fmtARS(totalTransfersConGanancia + totalServiciosConGanancia)}</span>
+            <span>Subtotal</span>
+            <span className="font-mono">{fmtARS(subtotal)}</span>
           </div>
+        )}
+        {comision > 0 && hasItems && (
+          <>
+            <div className="flex justify-between text-xs text-amber-600 mt-1">
+              <span>Comisión ({comision}% × 2)</span>
+              <span className="font-mono">+{fmtARS(montoComision)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-amber-700 border-t border-amber-200 pt-1.5 text-base">
+              <span>Total con comisión</span>
+              <span className="font-mono">{fmtARS(totalFinal)}</span>
+            </div>
+          </>
         )}
         {onChangeExchangeRate && (
           <div className="mt-3 pt-3 border-t border-dashed border-marga-creamDark space-y-2">
@@ -753,7 +769,7 @@ const TotalsPanel: React.FC<{
             {exchangeRate > 0 && hasItems && (
               <div className="flex justify-between text-xs text-marga-dark/50">
                 <span>Total USD</span>
-                <span className="font-mono font-semibold">{fmt((totalTransfersConGanancia + totalServiciosConGanancia) / exchangeRate)}</span>
+                <span className="font-mono font-semibold">{fmt(totalFinal / exchangeRate)}</span>
               </div>
             )}
           </div>
@@ -1010,6 +1026,7 @@ const QuoteForm: React.FC<{
   const [viaticos, setViaticos] = useState<number>(0);
   const [gananciaTransfer, setGananciaTransfer] = useState<number>(initial?.ganancia_transfer || 0);
   const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
+  const [comision, setComision] = useState<number>(initial?.comision || 0);
 
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
@@ -1079,6 +1096,7 @@ const QuoteForm: React.FC<{
         exchange_rate: localSettings.usd_exchange_rate,
         ganancia_transfer: gananciaTransfer,
         ganancia_servicio: gananciaServicio,
+        comision,
       }, status);
     } finally {
       setSaving(false);
@@ -1481,13 +1499,55 @@ const QuoteForm: React.FC<{
                 })()}
               </div>
             </div>
+
+            {/* Comisión */}
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-amber-700">Comisión</p>
+                  <p className="text-xs text-amber-600/70 mt-0.5">Se suma al total × comisión × 2</p>
+                </div>
+                <div className="w-32">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={comision || ''}
+                      onChange={e => setComision(e.target.value === '' ? 0 : Number(e.target.value))}
+                      placeholder="0"
+                      className="w-full pr-7 pl-3 py-2 border border-amber-300 rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-amber-400/30 bg-white"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-700 font-bold text-sm">%</span>
+                  </div>
+                </div>
+              </div>
+              {comision > 0 && (() => {
+                const baseTransfers = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0) * (1 + gananciaTransfer / 100);
+                const baseServices = form.services.reduce((a, s) => a + (s.final_cost_usd || 0), 0) * (1 + gananciaServicio / 100);
+                const base = baseTransfers + baseServices;
+                const montoComision = base * comision / 100 * 2;
+                return (
+                  <div className="mt-2 border-t border-amber-200 pt-2 space-y-1">
+                    <div className="flex justify-between text-xs text-amber-600">
+                      <span>Monto comisión ({comision}% × 2)</span>
+                      <span className="font-mono">+{fmtARS(montoComision)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-amber-700 font-bold">
+                      <span>Total con comisión</span>
+                      <span className="font-mono">{fmtARS(base + montoComision)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
             </>
           )}
         </div>
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} />
+          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision} />
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button
