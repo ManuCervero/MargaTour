@@ -1057,6 +1057,11 @@ const QuoteDetailView: React.FC<{
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
+            background-image: url(/membrete.jpg) !important;
+            background-size: 210mm 297mm !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+            background-position: top left !important;
           }
           body > #print-portal .screen-only { display: none !important; }
           @page { size: A4 portrait; margin: 55mm 15mm 26mm 15mm; }
@@ -1093,14 +1098,10 @@ const QuoteDetailView: React.FC<{
         </div>
       </div>
 
-      {/* Portal de impresión — fondo fijo se repite en cada página */}
+      {/* Portal de impresión — background via CSS fixed, siempre detrás del contenido */}
       {createPortal(
         <div id="print-portal" style={{ fontFamily: 'sans-serif', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }}>
-          {/* Fondo fijo: aparece en cada página impresa, siempre detrás del contenido */}
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, backgroundImage: 'url(/membrete.jpg)', backgroundSize: '100% 100%', backgroundPosition: 'top center', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            {contentNodes}
-          </div>
+          {contentNodes}
         </div>,
         document.body
       )}
