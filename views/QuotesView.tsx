@@ -859,13 +859,11 @@ const QuoteDetailView: React.FC<{
   const thRight: React.CSSProperties = { ...thStyle, textAlign: 'right', width: '90px' };
   const secTitle: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px 0' };
 
-  // Estilo del fondo del membrete: cubre exactamente 297mm (una página A4),
-  // sin repetir — el contenido extra fluye sobre fondo blanco en páginas siguientes
   const pageBackground: React.CSSProperties = {
     backgroundImage: 'url(/membrete.jpg)',
-    backgroundSize: '100% auto',
+    backgroundSize: '210mm 297mm',
     backgroundRepeat: 'repeat-y',
-    backgroundPosition: 'top center',
+    backgroundPosition: 'top left',
     WebkitPrintColorAdjust: 'exact' as any,
     printColorAdjust: 'exact' as any,
     colorAdjust: 'exact' as any,
@@ -1084,12 +1082,21 @@ const QuoteDetailView: React.FC<{
         </button>
       </div>
 
-      {/* Vista previa en pantalla — contenedor scrollable para el A4 */}
+      {/* Vista previa en pantalla — misma estructura que el portal de impresión */}
       <div style={{ overflowX: 'auto', overflowY: 'auto', background: '#d6cfc4', padding: '32px 24px', minHeight: 'calc(100vh - 57px)' }}>
         <div style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', boxShadow: '0 4px 32px rgba(0,0,0,0.2)', ...pageBackground }}>
-          <div style={{ padding: '208px 56px 100px 56px' }}>
-            {contentNodes}
-          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr><td style={{ height: '55mm', padding: 0, border: 'none' }} /></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '0 15mm 26mm 15mm', verticalAlign: 'top', border: 'none' }}>
+                  {contentNodes}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1101,11 +1108,11 @@ const QuoteDetailView: React.FC<{
           {/* <thead> de la tabla se repite en cada página, creando el espacio para el logo */}
           <table style={{ width: '100%', borderCollapse: 'collapse', position: 'relative' }}>
             <thead>
-              <tr><td style={{ height: '55mm', padding: 0 }} /></tr>
+              <tr><td style={{ height: '55mm', padding: 0, border: 'none' }} /></tr>
             </thead>
             <tbody>
               <tr>
-                <td style={{ padding: '0 15mm 26mm 15mm', verticalAlign: 'top' }}>
+                <td style={{ padding: '0 15mm 26mm 15mm', verticalAlign: 'top', border: 'none' }}>
                   {contentNodes}
                 </td>
               </tr>
