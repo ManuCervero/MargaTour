@@ -1027,6 +1027,7 @@ const QuoteForm: React.FC<{
   const [gananciaTransfer, setGananciaTransfer] = useState<number>(initial?.ganancia_transfer || 0);
   const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
   const [comision, setComision] = useState<number>(initial?.comision || 0);
+  const [validityDate, setValidityDate] = useState<string>(initial?.validity_date || '');
 
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
@@ -1097,6 +1098,7 @@ const QuoteForm: React.FC<{
         ganancia_transfer: gananciaTransfer,
         ganancia_servicio: gananciaServicio,
         comision,
+        validity_date: validityDate || undefined,
       }, status);
     } finally {
       setSaving(false);
@@ -1549,6 +1551,22 @@ const QuoteForm: React.FC<{
         <div className="space-y-4">
           <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision} />
 
+          {/* Validez de presupuesto */}
+          <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
+            <h4 className="text-xs font-bold text-marga-dark/50 uppercase tracking-wider mb-3">Validez de presupuesto</h4>
+            <input
+              type="date"
+              value={validityDate}
+              onChange={e => setValidityDate(e.target.value)}
+              className="w-full border border-marga-creamDark rounded-xl px-4 py-2.5 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
+            />
+            {validityDate && (
+              <p className="text-xs text-marga-dark/40 mt-2">
+                Válido hasta el {new Date(validityDate + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
             <button
               onClick={() => handleSave('draft')}
@@ -1926,6 +1944,7 @@ export const QuotesView: React.FC = () => {
               <th className="px-5 py-3">Cliente</th>
               <th className="px-5 py-3 hidden sm:table-cell">Descripción</th>
               <th className="px-5 py-3 hidden md:table-cell">Fecha</th>
+              <th className="px-5 py-3 hidden lg:table-cell">Válido hasta</th>
               <th className="px-5 py-3 text-right">Total</th>
               <th className="px-5 py-3">Estado</th>
               <th className="px-5 py-3 text-right">Acciones</th>
@@ -1965,6 +1984,23 @@ export const QuotesView: React.FC = () => {
                     {q.description || '—'}
                   </td>
                   <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{q.date}</td>
+                  <td className="px-5 py-3.5 hidden lg:table-cell">
+                    {q.validity_date ? (
+                      (() => {
+                        const vd = new Date(q.validity_date + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const expired = vd < today;
+                        return (
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${expired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
+                            {vd.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-marga-dark/20 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="font-mono font-bold text-marga-dark">{fmtARS(totalFinalArs)}</div>
                     {totalFinalUsd !== null && (

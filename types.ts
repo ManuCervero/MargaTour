@@ -145,6 +145,7 @@ export interface FullQuote {
   ganancia_transfer?: number;
   ganancia_servicio?: number;
   comision?: number;
+  validity_date?: string;
   total_transfers?: number;
   total_services?: number;
   total_gross?: number;
