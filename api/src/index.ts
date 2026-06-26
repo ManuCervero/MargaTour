@@ -225,13 +225,13 @@ app.post('/api/quotes', requireAuth, async (c) => {
   // Insert quote — usa TC y ganancias del frontend
   await c.env.DB.prepare(`
     INSERT INTO quotes (id, quote_number, client_id, client_name, client_phone, client_email,
-      description, date, status, type, experience_id, exchange_rate, ganancia_transfer,
+      description, pax, date, status, type, experience_id, exchange_rate, ganancia_transfer,
       ganancia_servicio, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, quoteNumber,
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
-    body.description || null, body.date, body.status || 'draft', body.type || 'custom',
+    body.description || null, body.pax || 1, body.date, body.status || 'draft', body.type || 'custom',
     body.experience_id || null,
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
@@ -299,12 +299,12 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
 
   await c.env.DB.prepare(`
     UPDATE quotes SET client_id=?, client_name=?, client_phone=?, client_email=?,
-      description=?, date=?, status=?, type=?, experience_id=?, notes=?,
+      description=?, pax=?, date=?, status=?, type=?, experience_id=?, notes=?,
       exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, updated_at=?
     WHERE id=?
   `).bind(
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
-    body.description || null, body.date, body.status || 'draft', body.type || 'custom',
+    body.description || null, body.pax || 1, body.date, body.status || 'draft', body.type || 'custom',
     body.experience_id || null, body.notes || null,
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
