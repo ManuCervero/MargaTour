@@ -87,7 +87,7 @@ export interface Quote {
 
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected';
 export type QuoteType = 'experience' | 'custom';
-export type QuoteServiceType = 'winery' | 'hotel' | 'restaurant' | 'activity' | 'tour';
+export type QuoteServiceType = 'winery' | 'hotel' | 'restaurant' | 'activity' | 'tour' | 'guide';
 
 export interface QuoteTransfer {
   id?: string;
@@ -142,6 +142,8 @@ export interface FullQuote {
   type: QuoteType;
   experience_id?: string;
   exchange_rate?: number;
+  ganancia_transfer?: number;
+  ganancia_servicio?: number;
   total_transfers?: number;
   total_services?: number;
   total_gross?: number;

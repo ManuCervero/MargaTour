@@ -3,7 +3,7 @@ import {
   Plus, Search, FileText, Edit2, Trash2, Printer, ChevronLeft,
   DollarSign, ArrowRight, X, Check, Clock, SendHorizontal,
   CalendarDays, Users, MapPin, Utensils, Bed, Wine, Compass, Navigation,
-  AlertCircle, RefreshCw, PenLine, Loader2
+  AlertCircle, RefreshCw, PenLine, Loader2, UserCheck
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { FullQuote, QuoteTransfer, QuoteService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
@@ -69,6 +69,7 @@ const SERVICE_ICONS: Record<QuoteServiceType, React.ReactNode> = {
   restaurant: <Utensils size={14} />,
   activity: <Compass size={14} />,
   tour: <Navigation size={14} />,
+  guide: <UserCheck size={14} />,
 };
 
 const SERVICE_LABELS: Record<QuoteServiceType, string> = {
@@ -77,6 +78,7 @@ const SERVICE_LABELS: Record<QuoteServiceType, string> = {
   restaurant: 'Restaurante',
   activity: 'Actividad',
   tour: 'Tour',
+  guide: 'Guía',
 };
 
 const emptyTransfer = (): QuoteTransfer => ({
@@ -458,6 +460,7 @@ const CATALOG_TABLE: Partial<Record<QuoteServiceType, string>> = {
   winery: 'wineries',
   hotel: 'hotels',
   restaurant: 'restaurants',
+  guide: 'guides',
 };
 
 const ServiceRow: React.FC<{
@@ -481,10 +484,12 @@ const ServiceRow: React.FC<{
       case 'restaurant': return catalogData.restaurants;
       case 'activity': return catalogData.activities;
       case 'tour': return catalogData.tours;
+      case 'guide': return catalogData.guides;
     }
   };
 
   const isHotel = service.service_type === 'hotel';
+  const isGuide = service.service_type === 'guide';
 
   const calcNights = (checkin: string, checkout: string) =>
     checkin && checkout
@@ -591,11 +596,11 @@ const ServiceRow: React.FC<{
       {/* Fila 2: precios */}
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. agencia/noche ARS' : 'P. agencia ARS'}</label>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. agencia/noche ARS' : isGuide ? 'P. agencia/servicio ARS' : 'P. agencia ARS'}</label>
           <input type="number" min={0} step={1} value={service.agency_price_ars || ''} onChange={e => handleAgenciaChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. mostrador/noche ARS' : 'P. mostrador ARS'}</label>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'P. mostrador/noche ARS' : isGuide ? 'P. mostrador/servicio ARS' : 'P. mostrador ARS'}</label>
           <input type="number" min={0} step={1} value={service.unit_price_usd || ''} onChange={e => handleMostradorChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
         </div>
       </div>
@@ -969,6 +974,7 @@ interface CatalogData {
   tours: any[];
   experiences: any[];
   airportTransfers: any[];
+  guides: any[];
 }
 
 // ── QuoteForm ─────────────────────────────────────────────────────────────────
@@ -996,11 +1002,14 @@ const QuoteForm: React.FC<{
   const [useExistingClient, setUseExistingClient] = useState(!!initial?.client_id);
 
   // Tarifas editables localmente para esta cotización
-  const [localSettings, setLocalSettings] = useState<TarifaSettings>({ ...settings });
+  const [localSettings, setLocalSettings] = useState<TarifaSettings>({
+    ...settings,
+    usd_exchange_rate: initial?.exchange_rate || settings.usd_exchange_rate,
+  });
   const [showTarifas, setShowTarifas] = useState(false);
   const [viaticos, setViaticos] = useState<number>(0);
-  const [gananciaTransfer, setGananciaTransfer] = useState<number>(0);
-  const [gananciaServicio, setGananciaServicio] = useState<number>(0);
+  const [gananciaTransfer, setGananciaTransfer] = useState<number>(initial?.ganancia_transfer || 0);
+  const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
 
   // Estado para experiencia: PAX y precio unitario en USD
   const [expPax, setExpPax] = useState<number>(() => {
@@ -1064,7 +1073,13 @@ const QuoteForm: React.FC<{
     if (!form.client_name.trim() || !form.date) return;
     setSaving(true);
     try {
-      await onSave({ ...form, status }, status);
+      await onSave({
+        ...form,
+        status,
+        exchange_rate: localSettings.usd_exchange_rate,
+        ganancia_transfer: gananciaTransfer,
+        ganancia_servicio: gananciaServicio,
+      }, status);
     } finally {
       setSaving(false);
     }
@@ -1561,7 +1576,7 @@ export const QuotesView: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [catalogData, setCatalogData] = useState<CatalogData>({
-    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], experiences: [], airportTransfers: [],
+    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], experiences: [], airportTransfers: [], guides: [],
   });
 
   const loadQuotes = useCallback(async () => {
@@ -1582,7 +1597,7 @@ export const QuotesView: React.FC = () => {
   }, [filterStatus, filterDateFrom, filterDateTo]);
 
   const loadCatalog = useCallback(async () => {
-    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, experiencesData, airportTransfersData] = await Promise.allSettled([
+    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, experiencesData, airportTransfersData, guidesData] = await Promise.allSettled([
       api.from('routes').select('*'),
       api.from('clients').select('*'),
       api.settings.getExchangeRate(),
@@ -1593,6 +1608,7 @@ export const QuotesView: React.FC = () => {
       api.from('tours').select('*'),
       api.from('experiences').select('*'),
       api.from('airport_transfers').select('*'),
+      api.from('guides').select('*'),
     ]);
 
     const get = (r: PromiseSettledResult<any>) => {
@@ -1637,6 +1653,7 @@ export const QuotesView: React.FC = () => {
       tours: get(toursData),
       experiences: get(experiencesData),
       airportTransfers: get(airportTransfersData),
+      guides: get(guidesData),
     });
   }, []);
 
