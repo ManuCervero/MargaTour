@@ -1057,14 +1057,9 @@ const QuoteDetailView: React.FC<{
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
-            background-image: url(/membrete.jpg) !important;
-            background-size: 210mm 297mm !important;
-            background-attachment: fixed !important;
-            background-repeat: no-repeat !important;
-            background-position: top left !important;
           }
           body > #print-portal .screen-only { display: none !important; }
-          @page { size: A4 portrait; margin: 55mm 15mm 26mm 15mm; }
+          @page { size: A4 portrait; margin: 0; }
         }
         @media screen { #print-portal { display: none !important; } }
       `}</style>
@@ -1098,10 +1093,24 @@ const QuoteDetailView: React.FC<{
         </div>
       </div>
 
-      {/* Portal de impresión — background via CSS fixed, siempre detrás del contenido */}
+      {/* Portal de impresión */}
       {createPortal(
         <div id="print-portal" style={{ fontFamily: 'sans-serif', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }}>
-          {contentNodes}
+          {/* Con @page margin:0, position:fixed arranca en (0,0) del borde de página — correcto */}
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'url(/membrete.jpg)', backgroundSize: '100% 100%', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }} />
+          {/* <thead> de la tabla se repite en cada página, creando el espacio para el logo */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', position: 'relative' }}>
+            <thead>
+              <tr><td style={{ height: '55mm', padding: 0 }} /></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '0 15mm 26mm 15mm', verticalAlign: 'top' }}>
+                  {contentNodes}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>,
         document.body
       )}
