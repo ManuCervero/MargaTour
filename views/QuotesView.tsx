@@ -866,8 +866,10 @@ const QuoteDetailView: React.FC<{
           body * { visibility: hidden; }
           #quote-print, #quote-print * { visibility: visible; }
           #quote-print {
-            position: fixed; inset: 0; margin: 0; padding: 0;
-            width: 210mm; height: 297mm;
+            position: absolute;
+            top: 0; left: 0;
+            margin: 0 !important;
+            width: 210mm;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
@@ -927,7 +929,7 @@ const QuoteDetailView: React.FC<{
             const dayServices = nonHotelServices.filter(s => s.day === day);
             if (dayTransfers.length === 0 && dayServices.length === 0) return null;
             return (
-              <div key={day} style={{ marginBottom: '20px' }}>
+              <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                   <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{day}</p>
                   <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
@@ -949,8 +951,7 @@ const QuoteDetailView: React.FC<{
                         <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
                           <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
                           <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>
-                            {t.origin} → {t.destination}
-                            {t.notes && <span style={{ fontWeight: 400, color: '#888', fontSize: '11px', display: 'block' }}>{t.notes}</span>}
+                            {t.notes || `${t.origin} → ${t.destination}`}
                           </td>
                           <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(t.final_cost_usd || 0)}</td>
                           <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((t.final_cost_usd || 0) * (1 + gananciaTransfer / 100))}</td>
@@ -990,7 +991,7 @@ const QuoteDetailView: React.FC<{
 
           {/* Alojamiento (hoteles) */}
           {hotelServices.length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Alojamiento</p>
                 <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
@@ -1069,7 +1070,7 @@ const QuoteDetailView: React.FC<{
           </div>
 
           {/* Notas y Aclaraciones */}
-          <div style={{ marginTop: '28px', borderTop: '2px solid #4a1c2d', paddingTop: '16px' }}>
+          <div style={{ marginTop: '28px', borderTop: '2px solid #4a1c2d', paddingTop: '16px', pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: '13px', fontWeight: 900, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 14px 0' }}>Notas y Aclaraciones</p>
 
             {/* Cotización */}
@@ -1335,7 +1336,7 @@ const QuoteForm: React.FC<{
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción</label>
-                <input type="text" value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp} placeholder="Ej: Tour Valle de Uco 3 días" />
+                <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp + " resize-y"} placeholder="Ej: Tour Valle de Uco 3 días" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Fecha</label>
