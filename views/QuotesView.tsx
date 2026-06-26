@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus, Search, FileText, Edit2, Trash2, Printer, ChevronLeft,
   DollarSign, ArrowRight, X, Check, Clock, SendHorizontal,
@@ -842,9 +843,8 @@ const QuoteDetailView: React.FC<{
   const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
 
   const useUSD = showUSD && tc > 0;
-  const displayAmount = useUSD ? totalFinalUsd : totalFinal;
   const displayFormatted = useUSD ? fmt(totalFinalUsd) : fmtARS(totalFinal);
-  const displayWords = numToES(displayAmount) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
+  const displayWords = numToES(useUSD ? totalFinalUsd : totalFinal) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
 
   const validityFormatted = quote.validity_date
     ? new Date(quote.validity_date + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -859,25 +859,212 @@ const QuoteDetailView: React.FC<{
   const thRight: React.CSSProperties = { ...thStyle, textAlign: 'right', width: '90px' };
   const secTitle: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px 0' };
 
+  // Estilo del fondo del membrete: cubre exactamente 297mm (una página A4),
+  // sin repetir — el contenido extra fluye sobre fondo blanco en páginas siguientes
+  const pageBackground: React.CSSProperties = {
+    backgroundImage: 'url(/membrete.jpg)',
+    backgroundSize: '100% auto',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'top center',
+    WebkitPrintColorAdjust: 'exact' as any,
+    printColorAdjust: 'exact' as any,
+    colorAdjust: 'exact' as any,
+    fontFamily: 'sans-serif',
+  };
+
+  // Contenido interior A4 — mismo JSX para pantalla y portal de impresión
+  const innerContent = (
+    <div style={{ padding: '148px 56px 100px 56px' }}>
+
+      {/* Número y fecha */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Cotización</p>
+          <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>
+          <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{quote.date}</p>
+        </div>
+      </div>
+
+      {/* Datos del cliente */}
+      <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
+        <p style={{ fontSize: '10px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Para</p>
+        <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.client_name}</p>
+        {quote.client_phone && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_phone}</p>}
+        {quote.client_email && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_email}</p>}
+        {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>PAX:</strong> {quote.pax}</p>}
+        {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', fontStyle: 'italic' }}>"{quote.description}"</p>}
+      </div>
+
+      {/* Itinerario por día (excluye hoteles) */}
+      {allDays.map(day => {
+        const dayTransfers = transfers.filter(t => t.day === day);
+        const dayServices = nonHotelServices.filter(s => s.day === day);
+        if (dayTransfers.length === 0 && dayServices.length === 0) return null;
+        return (
+          <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{day}</p>
+              <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+            </div>
+
+            {dayTransfers.length > 0 && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: '60px' }}>Hora</th>
+                    <th style={thStyle}>Transfer</th>
+                    <th className="screen-only" style={thRight}>Precio base</th>
+                    <th className="screen-only" style={thRight}>Con ganancia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dayTransfers.map((t, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                      <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
+                      <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>
+                        {t.notes || `${t.origin} → ${t.destination}`}
+                      </td>
+                      <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(t.final_cost_usd || 0)}</td>
+                      <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((t.final_cost_usd || 0) * (1 + gananciaTransfer / 100))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {dayServices.length > 0 && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Servicio</th>
+                    <th className="screen-only" style={thRight}>Precio base</th>
+                    <th className="screen-only" style={thRight}>Con ganancia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dayServices.map((s, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
+                      <td style={{ padding: '5px 6px', color: '#1a1a1a' }}>
+                        <span style={{ fontWeight: 600 }}>{s.service_name}</span>
+                        {s.notes && <span style={{ fontWeight: 400, color: '#777', fontSize: '11px', display: 'block', whiteSpace: 'pre-line' }}>{s.notes}</span>}
+                      </td>
+                      <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(s.final_cost_usd || 0)}</td>
+                      <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((s.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Alojamiento */}
+      {hotelServices.length > 0 && (
+        <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Alojamiento</p>
+            <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+          </div>
+          {hotelServices.map((h, i) => {
+            const nights = h.checkout_day
+              ? Math.max(0, Math.round((new Date(h.checkout_day).getTime() - new Date(h.day).getTime()) / 86400000))
+              : null;
+            return (
+              <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '10px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
+                    <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
+                      Check-in: <strong>{h.day}</strong>
+                      {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{h.checkout_day}</strong></>}
+                      {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
+                    </p>
+                    {h.notes && <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic', whiteSpace: 'pre-line' }}>{h.notes}</p>}
+                  </div>
+                  <div className="screen-only" style={{ textAlign: 'right', minWidth: '120px' }}>
+                    <p style={{ fontSize: '11px', color: '#aaa', margin: '0 0 1px 0' }}>{fmtARS(h.final_cost_usd || 0)}</p>
+                    <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS((h.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Desglose de totales — solo pantalla */}
+      <div className="screen-only" style={{ marginTop: '16px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
+        {totalTransfersBase > 0 && (<>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}>
+            <span>Transfers</span><span style={{ fontWeight: 600 }}>{fmtARS(totalTransfersBase)}</span>
+          </div>
+          {gananciaTransfer > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}><span>Ganancia transfers ({gananciaTransfer}%)</span><span>+{fmtARS(totalTransfersBase * gananciaTransfer / 100)}</span></div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}><span>Total transfers</span><span>{fmtARS(totalTransfersConGanancia)}</span></div>
+        </>)}
+        {totalServicesBase > 0 && (<>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}><span>Servicios</span><span style={{ fontWeight: 600 }}>{fmtARS(totalServicesBase)}</span></div>
+          {gananciaServicio > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}><span>Ganancia servicios ({gananciaServicio}%)</span><span>+{fmtARS(totalServicesBase * gananciaServicio / 100)}</span></div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}><span>Total servicios</span><span>{fmtARS(totalServiciosConGanancia)}</span></div>
+        </>)}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}><span>Subtotal</span><span>{fmtARS(subtotal)}</span></div>
+        {comision > 0 && (<>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}><span>Comisión ({comision}% × 2)</span><span>+{fmtARS(montoComision)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}><span>Total con comisión</span><span>{fmtARS(totalFinal)}</span></div>
+        </>)}
+        {tc > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}><span>Total USD (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsd)}</span></div>}
+      </div>
+
+      {/* Notas y Aclaraciones */}
+      <div style={{ marginTop: '28px', borderTop: '2px solid #4a1c2d', paddingTop: '16px', pageBreakInside: 'avoid' }}>
+        <p style={{ fontSize: '13px', fontWeight: 900, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 14px 0' }}>Notas y Aclaraciones</p>
+        <div style={{ marginBottom: '12px' }}>
+          <p style={secTitle}>Cotización</p>
+          <p style={{ fontSize: '12px', color: '#444', margin: '0 0 4px 0' }}>Todos los servicios detallados anteriormente ascienden a la suma de:</p>
+          <p style={{ fontSize: '12px', color: '#4a1c2d', fontStyle: 'italic', margin: 0 }}>{displayFormatted} ({displayWords})</p>
+        </div>
+        <div style={{ marginBottom: '12px' }}>
+          <p style={secTitle}>Forma de contratación</p>
+          <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Anticipo o seña del 30%, antes de reservar el servicio.</p>
+          <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Saldo 24 hs antes de comenzar el servicio</p>
+          <p style={{ fontSize: '12px', color: '#666', margin: '6px 0 0 0', fontStyle: 'italic' }}>Servicios sujetos a disponibilidad al momento de la reserva</p>
+        </div>
+        {validityFormatted && (
+          <div style={{ marginBottom: '12px' }}>
+            <p style={secTitle}>Validez del Presupuesto</p>
+            <p style={{ fontSize: '12px', color: '#444', margin: 0 }}>Desde el día de la fecha hasta {validityFormatted}</p>
+          </div>
+        )}
+        <div>
+          <p style={secTitle}>Forma de Pago</p>
+          {['Transferencia bancaria', 'Efectivo', 'Link de pago', 'Tarjeta de crédito con 6,19% de recargo', 'Tarjeta de débito con 3,19% de recargo', 'Combinaciones de formas detalladas anteriormente.'].map(item => (
+            <p key={item} style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- {item}</p>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+
   return (
     <>
+      {/* CSS: oculta todo en impresión excepto el portal; oculta el portal en pantalla */}
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          #quote-print, #quote-print * { visibility: visible; }
-          #quote-print {
-            position: absolute;
-            top: 0; left: 0;
-            margin: 0 !important;
+          body > * { visibility: hidden !important; }
+          body > #print-portal {
+            visibility: visible !important;
+            position: absolute; top: 0; left: 0;
             width: 210mm;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-          #quote-print .screen-only { display: none !important; }
+          body > #print-portal * { visibility: visible !important; }
+          body > #print-portal .screen-only { display: none !important; }
           @page { size: A4 portrait; margin: 0; }
         }
-        #quote-print { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+        @media screen { #print-portal { display: none !important; } }
       `}</style>
 
       {/* Barra de acciones — solo pantalla */}
@@ -900,215 +1087,20 @@ const QuoteDetailView: React.FC<{
         </button>
       </div>
 
-      {/* Hoja A4 con membrete */}
-      <div id="quote-print" style={{ width: '210mm', minHeight: '297mm', margin: '24px auto', position: 'relative', backgroundImage: 'url(/membrete.jpg)', backgroundSize: 'cover', backgroundPosition: 'top center', fontFamily: 'sans-serif' }}>
-        <div style={{ padding: '148px 56px 130px 56px' }}>
-
-          {/* Número y fecha */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '28px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Cotización</p>
-              <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>
-              <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{quote.date}</p>
-            </div>
-          </div>
-
-          {/* Datos del cliente */}
-          <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
-            <p style={{ fontSize: '10px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Para</p>
-            <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.client_name}</p>
-            {quote.client_phone && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_phone}</p>}
-            {quote.client_email && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_email}</p>}
-            {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>PAX:</strong> {quote.pax}</p>}
-            {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', fontStyle: 'italic' }}>"{quote.description}"</p>}
-          </div>
-
-          {/* Itinerario por día (excluye hoteles) */}
-          {allDays.map(day => {
-            const dayTransfers = transfers.filter(t => t.day === day);
-            const dayServices = nonHotelServices.filter(s => s.day === day);
-            if (dayTransfers.length === 0 && dayServices.length === 0) return null;
-            return (
-              <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{day}</p>
-                  <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
-                </div>
-
-                {/* Transfers */}
-                {dayTransfers.length > 0 && (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
-                    <thead>
-                      <tr>
-                        <th style={{ ...thStyle, width: '60px' }}>Hora</th>
-                        <th style={thStyle}>Transfer</th>
-                        <th className="screen-only" style={thRight}>Precio base</th>
-                        <th className="screen-only" style={thRight}>Con ganancia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dayTransfers.map((t, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
-                          <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
-                          <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>
-                            {t.notes || `${t.origin} → ${t.destination}`}
-                          </td>
-                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(t.final_cost_usd || 0)}</td>
-                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((t.final_cost_usd || 0) * (1 + gananciaTransfer / 100))}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-
-                {/* Servicios (no hoteles) */}
-                {dayServices.length > 0 && (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <thead>
-                      <tr>
-                        <th style={thStyle}>Servicio</th>
-                        <th className="screen-only" style={thRight}>Precio base</th>
-                        <th className="screen-only" style={thRight}>Con ganancia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dayServices.map((s, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
-                          <td style={{ padding: '5px 6px', color: '#1a1a1a' }}>
-                            <span style={{ fontWeight: 600 }}>{s.service_name}</span>
-                            {s.notes && <span style={{ fontWeight: 400, color: '#777', fontSize: '11px', display: 'block', whiteSpace: 'pre-line' }}>{s.notes}</span>}
-                          </td>
-                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(s.final_cost_usd || 0)}</td>
-                          <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((s.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Alojamiento (hoteles) */}
-          {hotelServices.length > 0 && (
-            <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Alojamiento</p>
-                <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
-              </div>
-              {hotelServices.map((h, i) => {
-                const nights = h.checkout_day
-                  ? Math.max(0, Math.round((new Date(h.checkout_day).getTime() - new Date(h.day).getTime()) / 86400000))
-                  : null;
-                return (
-                  <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '10px', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
-                        <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
-                          Check-in: <strong>{h.day}</strong>
-                          {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{h.checkout_day}</strong></>}
-                          {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
-                        </p>
-                        {h.notes && <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic', whiteSpace: 'pre-line' }}>{h.notes}</p>}
-                      </div>
-                      <div className="screen-only" style={{ textAlign: 'right', minWidth: '120px' }}>
-                        <p style={{ fontSize: '11px', color: '#aaa', margin: '0 0 1px 0' }}>{fmtARS(h.final_cost_usd || 0)}</p>
-                        <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS((h.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Desglose de totales — solo pantalla */}
-          <div className="screen-only" style={{ marginTop: '16px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
-            {totalTransfersBase > 0 && (<>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}>
-                <span>Transfers</span><span style={{ fontWeight: 600 }}>{fmtARS(totalTransfersBase)}</span>
-              </div>
-              {gananciaTransfer > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>
-                  <span>Ganancia transfers ({gananciaTransfer}%)</span><span>+{fmtARS(totalTransfersBase * gananciaTransfer / 100)}</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}>
-                <span>Total transfers</span><span>{fmtARS(totalTransfersConGanancia)}</span>
-              </div>
-            </>)}
-            {totalServicesBase > 0 && (<>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '2px' }}>
-                <span>Servicios</span><span style={{ fontWeight: 600 }}>{fmtARS(totalServicesBase)}</span>
-              </div>
-              {gananciaServicio > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>
-                  <span>Ganancia servicios ({gananciaServicio}%)</span><span>+{fmtARS(totalServicesBase * gananciaServicio / 100)}</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}>
-                <span>Total servicios</span><span>{fmtARS(totalServiciosConGanancia)}</span>
-              </div>
-            </>)}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}>
-              <span>Subtotal</span><span>{fmtARS(subtotal)}</span>
-            </div>
-            {comision > 0 && (<>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}>
-                <span>Comisión ({comision}% × 2)</span><span>+{fmtARS(montoComision)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}>
-                <span>Total con comisión</span><span>{fmtARS(totalFinal)}</span>
-              </div>
-            </>)}
-            {tc > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}>
-                <span>Total USD (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsd)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Notas y Aclaraciones */}
-          <div style={{ marginTop: '28px', borderTop: '2px solid #4a1c2d', paddingTop: '16px', pageBreakInside: 'avoid' }}>
-            <p style={{ fontSize: '13px', fontWeight: 900, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 14px 0' }}>Notas y Aclaraciones</p>
-
-            {/* Cotización */}
-            <div style={{ marginBottom: '12px' }}>
-              <p style={secTitle}>Cotización</p>
-              <p style={{ fontSize: '12px', color: '#444', margin: '0 0 4px 0' }}>Todos los servicios detallados anteriormente ascienden a la suma de:</p>
-              <p style={{ fontSize: '12px', color: '#4a1c2d', fontStyle: 'italic', margin: 0 }}>
-                {displayFormatted} ({displayWords})
-              </p>
-            </div>
-
-            {/* Forma de contratación */}
-            <div style={{ marginBottom: '12px' }}>
-              <p style={secTitle}>Forma de contratación</p>
-              <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Anticipo o seña del 30%, antes de reservar el servicio.</p>
-              <p style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- Saldo 24 hs antes de comenzar el servicio</p>
-              <p style={{ fontSize: '12px', color: '#666', margin: '6px 0 0 0', fontStyle: 'italic' }}>Servicios sujetos a disponibilidad al momento de la reserva</p>
-            </div>
-
-            {/* Validez */}
-            {validityFormatted && (
-              <div style={{ marginBottom: '12px' }}>
-                <p style={secTitle}>Validez del Presupuesto</p>
-                <p style={{ fontSize: '12px', color: '#444', margin: 0 }}>Desde el día de la fecha hasta {validityFormatted}</p>
-              </div>
-            )}
-
-            {/* Forma de Pago */}
-            <div>
-              <p style={secTitle}>Forma de Pago</p>
-              {['Transferencia bancaria', 'Efectivo', 'Link de pago', 'Tarjeta de crédito con 6,19% de recargo', 'Tarjeta de débito con 3,19% de recargo', 'Combinaciones de formas detalladas anteriormente.'].map(item => (
-                <p key={item} style={{ fontSize: '12px', color: '#444', margin: '2px 0' }}>- {item}</p>
-              ))}
-            </div>
-          </div>
-
+      {/* Vista previa en pantalla — contenedor scrollable para el A4 */}
+      <div style={{ overflowX: 'auto', overflowY: 'auto', background: '#d6cfc4', padding: '32px 24px', minHeight: 'calc(100vh - 57px)' }}>
+        <div style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', boxShadow: '0 4px 32px rgba(0,0,0,0.2)', ...pageBackground }}>
+          {innerContent}
         </div>
       </div>
+
+      {/* Portal de impresión — renderizado directo en document.body */}
+      {createPortal(
+        <div id="print-portal" style={{ width: '210mm', ...pageBackground }}>
+          {innerContent}
+        </div>,
+        document.body
+      )}
     </>
   );
 };
