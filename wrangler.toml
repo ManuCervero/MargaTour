@@ -1,0 +1,12 @@
+name = "marga-tour-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "marga-tour-db"
+database_id = "665529f0-ac0d-4c8d-a205-51cd1151f994"
+
+[vars]
+JWT_SECRET = "CHANGE_THIS_SECRET_IN_PRODUCTION"
