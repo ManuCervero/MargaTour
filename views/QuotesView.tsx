@@ -1084,7 +1084,7 @@ const QuoteDetailView: React.FC<{
 
       {/* Vista previa en pantalla — misma estructura que el portal de impresión */}
       <div style={{ overflowX: 'auto', overflowY: 'auto', background: '#d6cfc4', padding: '32px 24px', minHeight: 'calc(100vh - 57px)' }}>
-        <div style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', boxShadow: '0 4px 32px rgba(0,0,0,0.2)', ...pageBackground }}>
+        <div style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', boxShadow: '0 4px 32px rgba(0,0,0,0.2)', background: 'white', fontFamily: 'sans-serif' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr><td style={{ height: '55mm', padding: 0, border: 'none' }} /></tr>
