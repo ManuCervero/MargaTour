@@ -128,6 +128,14 @@ export interface QuoteService {
   sort_order?: number;
 }
 
+export interface QuoteExtraService {
+  id?: string;
+  quote_id?: string;
+  description: string;
+  price: number;
+  sort_order?: number;
+}
+
 export interface FullQuote {
   id?: string;
   quote_number?: number;
@@ -154,6 +162,7 @@ export interface FullQuote {
   updated_at?: string;
   transfers: QuoteTransfer[];
   services: QuoteService[];
+  extra_services: QuoteExtraService[];
 }
 
 export interface Hotel {

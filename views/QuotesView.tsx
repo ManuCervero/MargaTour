@@ -7,7 +7,7 @@ import {
   AlertCircle, RefreshCw, PenLine, Loader2, UserCheck
 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { FullQuote, QuoteTransfer, QuoteService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
+import type { FullQuote, QuoteTransfer, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
 import { RouteMapModal } from '../components/RouteMapModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -110,6 +110,11 @@ const emptyService = (): QuoteService => ({
   notes: '',
 });
 
+const emptyExtraService = (): QuoteExtraService => ({
+  description: '',
+  price: 0,
+});
+
 const emptyQuote = (): FullQuote => ({
   client_name: '',
   client_phone: '',
@@ -122,6 +127,7 @@ const emptyQuote = (): FullQuote => ({
   notes: '',
   transfers: [],
   services: [],
+  extra_services: [],
 });
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
@@ -675,25 +681,68 @@ const ServiceRow: React.FC<{
   );
 };
 
+// ── ExtraServiceRow ───────────────────────────────────────────────────────────
+
+const ExtraServiceRow: React.FC<{
+  service: QuoteExtraService;
+  index: number;
+  onChange: (index: number, updated: QuoteExtraService) => void;
+  onRemove: (index: number) => void;
+}> = ({ service, index, onChange, onRemove }) => {
+  const inp = "w-full border border-marga-creamDark rounded-lg px-3 py-2 text-sm text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white";
+  return (
+    <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
+      <button onClick={() => onRemove(index)} className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors">
+        <X size={16} />
+      </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción</label>
+          <input
+            type="text"
+            value={service.description}
+            onChange={e => onChange(index, { ...service, description: e.target.value })}
+            className={inp}
+            placeholder="Ej: Chofer bilingüe, Agua para pasajeros..."
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Precio mostrador ARS</label>
+          <input
+            type="number"
+            min={0}
+            value={service.price || ''}
+            onChange={e => onChange(index, { ...service, price: parseFloat(e.target.value) || 0 })}
+            className={inp}
+            placeholder="0"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── TotalsPanel ───────────────────────────────────────────────────────────────
 
 const TotalsPanel: React.FC<{
   transfers: QuoteTransfer[];
   services: QuoteService[];
+  extraServices?: QuoteExtraService[];
   exchangeRate: number;
   onChangeExchangeRate?: (val: number) => void;
   gananciaTransfer?: number;
   gananciaServicio?: number;
   comision?: number;
-}> = ({ transfers, services, exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0, comision = 0 }) => {
+}> = ({ transfers, services, extraServices = [], exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0, comision = 0 }) => {
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
+  const totalExtrasArs = extraServices.reduce((acc, e) => acc + (e.price || 0), 0);
   const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
-  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia;
+  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasArs;
   const montoComision = subtotal * comision / 100 * 2;
   const totalFinal = subtotal + montoComision;
-  const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0;
+  const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || totalExtrasArs > 0;
 
   return (
     <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
@@ -733,6 +782,12 @@ const TotalsPanel: React.FC<{
           <div className="flex justify-between font-bold text-marga-wine border-t border-marga-creamDark pt-1.5 mt-1">
             <span>Total servicios</span>
             <span className="font-mono">{fmtARS(totalServiciosConGanancia)}</span>
+          </div>
+        )}
+        {totalExtrasArs > 0 && (
+          <div className="flex justify-between text-marga-dark/70 mt-2 pt-2 border-t border-marga-creamDark">
+            <span>Servicios extra</span>
+            <span className="font-mono font-semibold">{fmtARS(totalExtrasArs)}</span>
           </div>
         )}
         {hasItems && (
@@ -827,6 +882,7 @@ const QuoteDetailView: React.FC<{
   const allServices = quote.services || [];
   const nonHotelServices = allServices.filter(s => s.service_type !== 'hotel');
   const hotelServices = allServices.filter(s => s.service_type === 'hotel');
+  const extraServices = quote.extra_services || [];
 
   const gananciaTransfer = quote.ganancia_transfer || 0;
   const gananciaServicio = quote.ganancia_servicio || 0;
@@ -835,9 +891,10 @@ const QuoteDetailView: React.FC<{
 
   const totalTransfersBase = transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0);
   const totalServicesBase = allServices.reduce((a, s) => a + (s.final_cost_usd || 0), 0);
+  const totalExtrasBase = extraServices.reduce((a, e) => a + (e.price || 0), 0);
   const totalTransfersConGanancia = totalTransfersBase * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesBase * (1 + gananciaServicio / 100);
-  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia;
+  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasBase;
   const montoComision = subtotal * comision / 100 * 2;
   const totalFinal = subtotal + montoComision;
   const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
@@ -991,6 +1048,22 @@ const QuoteDetailView: React.FC<{
         </div>
       )}
 
+      {/* Servicios Extra — print + pantalla */}
+      {extraServices.length > 0 && (
+        <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Servicios Extra</p>
+            <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+          </div>
+          {extraServices.map((es, i) => (
+            <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>{es.description}</p>
+              <p className="screen-only" style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS(es.price || 0)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Desglose de totales — solo pantalla */}
       <div className="screen-only" style={{ marginTop: '16px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
         {totalTransfersBase > 0 && (<>
@@ -1005,6 +1078,9 @@ const QuoteDetailView: React.FC<{
           {gananciaServicio > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#bbb', marginBottom: '2px' }}><span>Ganancia servicios ({gananciaServicio}%)</span><span>+{fmtARS(totalServicesBase * gananciaServicio / 100)}</span></div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}><span>Total servicios</span><span>{fmtARS(totalServiciosConGanancia)}</span></div>
         </>)}
+        {totalExtrasBase > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '8px' }}><span>Servicios extra</span><span style={{ fontWeight: 600 }}>{fmtARS(totalExtrasBase)}</span></div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}><span>Subtotal</span><span>{fmtARS(subtotal)}</span></div>
         {comision > 0 && (<>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}><span>Comisión ({comision}% × 2)</span><span>+{fmtARS(montoComision)}</span></div>
@@ -1156,7 +1232,7 @@ const QuoteForm: React.FC<{
 }> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt, onCatalogRefresh }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
-  const [form, setForm] = useState<FullQuote>(initial ? { ...initial } : emptyQuote());
+  const [form, setForm] = useState<FullQuote>(initial ? { ...initial, extra_services: initial.extra_services || [] } : emptyQuote());
   const [saving, setSaving] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -1647,6 +1723,41 @@ const QuoteForm: React.FC<{
               </div>
             </div>
 
+            {/* Servicios Extra */}
+            <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Servicios Extra</h3>
+                  <p className="text-xs text-marga-dark/40 mt-0.5">Sin ganancia — incluidos en base de comisión</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, extra_services: [...(f.extra_services || []), emptyExtraService()] }))}
+                  className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus size={14} /> Agregar servicio extra
+                </button>
+              </div>
+              {(form.extra_services || []).length === 0 && (
+                <p className="text-sm text-marga-dark/30 text-center py-4">Sin servicios extra. Ej: chofer bilingüe, agua para pasajeros...</p>
+              )}
+              {(form.extra_services || []).map((es, i) => (
+                <ExtraServiceRow
+                  key={i}
+                  service={es}
+                  index={i}
+                  onChange={(idx, updated) => setForm(f => ({ ...f, extra_services: (f.extra_services || []).map((e, j) => j === idx ? updated : e) }))}
+                  onRemove={idx => setForm(f => ({ ...f, extra_services: (f.extra_services || []).filter((_, j) => j !== idx) }))}
+                />
+              ))}
+              {(form.extra_services || []).length > 0 && (
+                <div className="flex justify-between text-sm font-bold text-marga-wine border-t border-marga-creamDark pt-3 mt-1">
+                  <span>Total servicios extra</span>
+                  <span>{fmtARS((form.extra_services || []).reduce((a, e) => a + (e.price || 0), 0))}</span>
+                </div>
+              )}
+            </div>
+
             {/* Comisión */}
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <div className="flex items-center justify-between">
@@ -1672,7 +1783,8 @@ const QuoteForm: React.FC<{
               {comision > 0 && (() => {
                 const baseTransfers = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0) * (1 + gananciaTransfer / 100);
                 const baseServices = form.services.reduce((a, s) => a + (s.final_cost_usd || 0), 0) * (1 + gananciaServicio / 100);
-                const base = baseTransfers + baseServices;
+                const baseExtras = (form.extra_services || []).reduce((a, e) => a + (e.price || 0), 0);
+                const base = baseTransfers + baseServices + baseExtras;
                 const montoComision = base * comision / 100 * 2;
                 return (
                   <div className="mt-2 border-t border-amber-200 pt-2 space-y-1">
@@ -1694,7 +1806,7 @@ const QuoteForm: React.FC<{
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision} />
+          <TotalsPanel transfers={form.transfers} services={form.services} extraServices={form.extra_services || []} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision} />
 
           {/* Validez de presupuesto */}
           <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">

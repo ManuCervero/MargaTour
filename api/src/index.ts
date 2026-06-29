@@ -199,11 +199,18 @@ app.get('/api/quotes/:id', requireAuth, async (c) => {
   const { results: services } = await c.env.DB.prepare(
     'SELECT * FROM quote_services WHERE quote_id = ? ORDER BY sort_order ASC'
   ).bind(id).all();
+  let extraServices: any[] = [];
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM quote_extra_services WHERE quote_id = ? ORDER BY sort_order ASC'
+    ).bind(id).all();
+    extraServices = results;
+  } catch {}
   const transfers = rawTransfers.map((t: any) => ({
     ...t,
     map_waypoints: t.map_waypoints ? JSON.parse(t.map_waypoints) : undefined,
   }));
-  return c.json({ ...quote, transfers, services });
+  return c.json({ ...quote, transfers, services, extra_services: extraServices });
 });
 
 app.post('/api/quotes', requireAuth, async (c) => {
@@ -221,6 +228,7 @@ app.post('/api/quotes', requireAuth, async (c) => {
 
   const transfers: any[] = body.transfers || [];
   const services: any[] = body.services || [];
+  const extraServices: any[] = body.extra_services || [];
 
   // Insert quote — usa TC y ganancias del frontend
   await c.env.DB.prepare(`
@@ -284,6 +292,15 @@ app.post('/api/quotes', requireAuth, async (c) => {
     ).run();
   }
 
+  for (let i = 0; i < extraServices.length; i++) {
+    const es = extraServices[i];
+    const esid = generateId();
+    await c.env.DB.prepare(`
+      INSERT INTO quote_extra_services (id, quote_id, description, price, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(esid, id, es.description || '', es.price || 0, i).run();
+  }
+
   const totalGross = totalTransfers + totalServices;
   await c.env.DB.prepare(`
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
@@ -316,12 +333,14 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     now, id
   ).run();
 
-  // Replace transfers and services
+  // Replace transfers, services and extra_services
   await c.env.DB.prepare('DELETE FROM quote_transfers WHERE quote_id = ?').bind(id).run();
   await c.env.DB.prepare('DELETE FROM quote_services WHERE quote_id = ?').bind(id).run();
+  try { await c.env.DB.prepare('DELETE FROM quote_extra_services WHERE quote_id = ?').bind(id).run(); } catch {}
 
   const transfers: any[] = body.transfers || [];
   const services: any[] = body.services || [];
+  const extraServices: any[] = body.extra_services || [];
   let totalTransfers = 0;
   let totalServices = 0;
 
@@ -363,6 +382,17 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     ).run();
   }
 
+  for (let i = 0; i < extraServices.length; i++) {
+    const es = extraServices[i];
+    const esid = generateId();
+    try {
+      await c.env.DB.prepare(`
+        INSERT INTO quote_extra_services (id, quote_id, description, price, sort_order)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(esid, id, es.description || '', es.price || 0, i).run();
+    } catch {}
+  }
+
   const totalGross = totalTransfers + totalServices;
   await c.env.DB.prepare(`
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
@@ -382,7 +412,9 @@ app.patch('/api/quotes/:id/status', requireAuth, async (c) => {
 });
 
 app.delete('/api/quotes/:id', requireAuth, async (c) => {
-  await c.env.DB.prepare('DELETE FROM quotes WHERE id = ?').bind(c.req.param('id')).run();
+  const id = c.req.param('id');
+  await c.env.DB.prepare('DELETE FROM quotes WHERE id = ?').bind(id).run();
+  try { await c.env.DB.prepare('DELETE FROM quote_extra_services WHERE quote_id = ?').bind(id).run(); } catch {}
   return c.json({ ok: true });
 });
 

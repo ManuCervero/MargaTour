@@ -312,3 +312,12 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 INSERT OR IGNORE INTO settings (id) VALUES (1);
+
+-- Quote extra services (sin ganancia, incluidos en base de comisión)
+CREATE TABLE IF NOT EXISTS quote_extra_services (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  quote_id TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price REAL DEFAULT 0,
+  sort_order INTEGER DEFAULT 0
+);
