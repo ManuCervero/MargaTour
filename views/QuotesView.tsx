@@ -1232,7 +1232,7 @@ const QuoteForm: React.FC<{
 }> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt, onCatalogRefresh }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
-  const [form, setForm] = useState<FullQuote>(initial ? { ...initial, extra_services: initial.extra_services || [] } : emptyQuote());
+  const [form, setForm] = useState<FullQuote>(initial ? { ...initial, transfers: initial.transfers || [], services: initial.services || [], extra_services: initial.extra_services || [] } : emptyQuote());
   const [saving, setSaving] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -1321,6 +1321,8 @@ const QuoteForm: React.FC<{
         comision,
         validity_date: validityDate || undefined,
       }, status);
+    } catch (err) {
+      alert(`Error al guardar la cotización: ${err instanceof Error ? err.message : 'Error desconocido'}. Por favor intentá de nuevo.`);
     } finally {
       setSaving(false);
     }
@@ -2224,8 +2226,10 @@ export const QuotesView: React.FC = () => {
               </tr>
             ) : (
               filteredQuotes.map(q => {
+                const totalExtrasArs = (q.extra_services || []).reduce((a, e) => a + (e.price || 0), 0);
                 const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
-                  + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100);
+                  + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100)
+                  + totalExtrasArs;
                 const totalFinalArs = subtotalArs * (1 + (q.comision || 0) * 2 / 100);
                 const tc = q.exchange_rate || 0;
                 const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;
