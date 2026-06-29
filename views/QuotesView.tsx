@@ -2226,10 +2226,9 @@ export const QuotesView: React.FC = () => {
               </tr>
             ) : (
               filteredQuotes.map(q => {
-                const totalExtrasArs = (q.extra_services || []).reduce((a, e) => a + (e.price || 0), 0);
                 const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
                   + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100)
-                  + totalExtrasArs;
+                  + ((q as any).total_extras || 0);
                 const totalFinalArs = subtotalArs * (1 + (q.comision || 0) * 2 / 100);
                 const tc = q.exchange_rate || 0;
                 const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;

@@ -178,13 +178,13 @@ app.get('/api/quotes/next-number', requireAuth, async (c) => {
 
 app.get('/api/quotes', requireAuth, async (c) => {
   const { status, client_id, date_from, date_to } = c.req.query();
-  let sql = 'SELECT * FROM quotes WHERE 1=1';
+  let sql = 'SELECT q.*, COALESCE((SELECT SUM(price) FROM quote_extra_services WHERE quote_id = q.id), 0) as total_extras FROM quotes q WHERE 1=1';
   const params: unknown[] = [];
-  if (status) { sql += ' AND status = ?'; params.push(status); }
-  if (client_id) { sql += ' AND client_id = ?'; params.push(client_id); }
-  if (date_from) { sql += ' AND date >= ?'; params.push(date_from); }
-  if (date_to) { sql += ' AND date <= ?'; params.push(date_to); }
-  sql += ' ORDER BY created_at DESC';
+  if (status) { sql += ' AND q.status = ?'; params.push(status); }
+  if (client_id) { sql += ' AND q.client_id = ?'; params.push(client_id); }
+  if (date_from) { sql += ' AND q.date >= ?'; params.push(date_from); }
+  if (date_to) { sql += ' AND q.date <= ?'; params.push(date_to); }
+  sql += ' ORDER BY q.created_at DESC';
   const { results } = await c.env.DB.prepare(sql).bind(...params).all();
   return c.json(results);
 });
