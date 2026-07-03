@@ -89,6 +89,11 @@ export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected';
 export type QuoteType = 'experience' | 'custom';
 export type QuoteServiceType = 'winery' | 'hotel' | 'restaurant' | 'activity' | 'tour' | 'guide';
 
+export interface QuoteViatico {
+  description: string;
+  price: number;
+}
+
 export interface QuoteTransfer {
   id?: string;
   quote_id?: string;
@@ -103,6 +108,7 @@ export interface QuoteTransfer {
   is_full_day?: boolean | number;
   is_round_trip?: boolean;
   viaticos?: number;
+  viaticos_items?: QuoteViatico[];
   base_cost_ars?: number;
   base_cost_usd?: number;
   margin_pct?: number;
@@ -154,6 +160,9 @@ export interface FullQuote {
   ganancia_servicio?: number;
   comision?: number;
   validity_date?: string;
+  costo_km?: number;
+  precio_full_day?: number;
+  precio_medio_dia?: number;
   total_transfers?: number;
   total_services?: number;
   total_gross?: number;

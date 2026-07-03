@@ -209,6 +209,7 @@ app.get('/api/quotes/:id', requireAuth, async (c) => {
   const transfers = rawTransfers.map((t: any) => ({
     ...t,
     map_waypoints: t.map_waypoints ? JSON.parse(t.map_waypoints) : undefined,
+    viaticos_items: t.viaticos_items ? JSON.parse(t.viaticos_items) : [],
   }));
   return c.json({ ...quote, transfers, services, extra_services: extraServices });
 });
@@ -234,8 +235,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO quotes (id, quote_number, client_id, client_name, client_phone, client_email,
       description, pax, date, status, type, experience_id, exchange_rate, ganancia_transfer,
-      ganancia_servicio, comision, validity_date, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ganancia_servicio, comision, validity_date, notes, costo_km, precio_full_day, precio_medio_dia, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, quoteNumber,
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
@@ -246,7 +247,11 @@ app.post('/api/quotes', requireAuth, async (c) => {
     body.ganancia_servicio || 0,
     body.comision || 0,
     body.validity_date || null,
-    body.notes || null, now, now
+    body.notes || null,
+    body.costo_km || null,
+    body.precio_full_day || null,
+    body.precio_medio_dia || null,
+    now, now
   ).run();
 
   let totalTransfers = 0;
@@ -261,8 +266,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO quote_transfers (id, quote_id, day, origin, destination, pax, hour,
         distance_km, duration_hours, is_full_day, is_round_trip, viaticos,
-        base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, viaticos_items, notes, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       tid, id, t.day, t.origin, t.destination, t.pax || 1, t.hour || null,
       t.distance_km || 0, t.duration_hours || 0,
@@ -270,6 +275,7 @@ app.post('/api/quotes', requireAuth, async (c) => {
       t.base_cost_ars || 0, t.base_cost_usd || 0,
       t.margin_pct || 0, finalCost,
       t.map_waypoints ? JSON.stringify(t.map_waypoints) : null,
+      t.viaticos_items ? JSON.stringify(t.viaticos_items) : null,
       t.notes || null, i
     ).run();
   }
@@ -319,7 +325,8 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
   await c.env.DB.prepare(`
     UPDATE quotes SET client_id=?, client_name=?, client_phone=?, client_email=?,
       description=?, pax=?, date=?, status=?, type=?, experience_id=?, notes=?,
-      exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, comision=?, validity_date=?, updated_at=?
+      exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, comision=?, validity_date=?,
+      costo_km=?, precio_full_day=?, precio_medio_dia=?, updated_at=?
     WHERE id=?
   `).bind(
     body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
@@ -330,6 +337,9 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     body.ganancia_servicio || 0,
     body.comision || 0,
     body.validity_date || null,
+    body.costo_km || null,
+    body.precio_full_day || null,
+    body.precio_medio_dia || null,
     now, id
   ).run();
 
@@ -352,8 +362,8 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO quote_transfers (id, quote_id, day, origin, destination, pax, hour,
         distance_km, duration_hours, is_full_day, is_round_trip, viaticos,
-        base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, viaticos_items, notes, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       tid, id, t.day, t.origin, t.destination, t.pax || 1, t.hour || null,
       t.distance_km || 0, t.duration_hours || 0,
@@ -361,6 +371,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
       t.base_cost_ars || 0, t.base_cost_usd || 0,
       t.margin_pct || 0, finalCost,
       t.map_waypoints ? JSON.stringify(t.map_waypoints) : null,
+      t.viaticos_items ? JSON.stringify(t.viaticos_items) : null,
       t.notes || null, i
     ).run();
   }

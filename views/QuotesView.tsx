@@ -7,7 +7,7 @@ import {
   AlertCircle, RefreshCw, PenLine, Loader2, UserCheck
 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { FullQuote, QuoteTransfer, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
+import type { FullQuote, QuoteTransfer, QuoteViatico, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
 import { RouteMapModal } from '../components/RouteMapModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,6 +55,12 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
   sent: 'Enviada',
   approved: 'Aprobada',
   rejected: 'Rechazada',
+};
+
+const fmtDate = (iso: string): string => {
+  if (!iso) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
 };
 
 const STATUS_COLORS: Record<QuoteStatus, string> = {
@@ -270,6 +276,14 @@ const TransferRow: React.FC<{
     onChange(index, { ...transfer, viaticos, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
+  const handleViaticosItemsChange = (items: QuoteViatico[]) => {
+    const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
+    const distKm = transfer.distance_km || 0;
+    const durHours = transfer.duration_hours || 0;
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, total);
+    onChange(index, { ...transfer, viaticos: total, viaticos_items: items, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+  };
+
   const handleMapSave = async (_origin: string, _destination: string, distanceKm: number, _routeId?: string | { label: string; lat: number; lon: number }[], waypoints?: { label: string; lat: number; lon: number }[]) => {
     const origin = waypoints ? waypoints[0].label : _origin;
     const destination = waypoints ? waypoints[waypoints.length - 1].label : _destination;
@@ -430,19 +444,62 @@ const TransferRow: React.FC<{
               )}
             </div>
             {/* Viáticos */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-marga-dark/50">Viáticos</span>
-              <div className="relative w-36">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-marga-dark/40 text-xs">$</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={transfer.viaticos || ''}
-                  onChange={e => handleViaticosChange(e.target.value === '' ? 0 : Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full pl-5 pr-2 py-1 border border-marga-creamDark rounded-lg text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-marga-wine/30"
-                />
+            <div className="text-sm">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-marga-dark/50">Viáticos</span>
+                <button
+                  type="button"
+                  onClick={() => handleViaticosItemsChange([...(transfer.viaticos_items || []), { description: '', price: 0 }])}
+                  className="flex items-center gap-1 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-2 py-1 rounded-lg transition-colors"
+                >
+                  <Plus size={11} /> Agregar
+                </button>
               </div>
+              {(transfer.viaticos_items || []).length === 0 && (
+                <p className="text-xs text-marga-dark/30 italic">Sin viáticos</p>
+              )}
+              {(transfer.viaticos_items || []).map((item, vi) => (
+                <div key={vi} className="flex items-center gap-1.5 mb-1">
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={e => {
+                      const items = [...(transfer.viaticos_items || [])];
+                      items[vi] = { ...items[vi], description: e.target.value };
+                      handleViaticosItemsChange(items);
+                    }}
+                    placeholder="Descripción"
+                    className="flex-1 min-w-0 border border-marga-creamDark rounded-lg px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-marga-wine/30"
+                  />
+                  <div className="relative w-28 shrink-0">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-marga-dark/40 text-xs">$</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={item.price || ''}
+                      onChange={e => {
+                        const items = [...(transfer.viaticos_items || [])];
+                        items[vi] = { ...items[vi], price: e.target.value === '' ? 0 : Number(e.target.value) };
+                        handleViaticosItemsChange(items);
+                      }}
+                      placeholder="0"
+                      className="w-full pl-5 pr-2 py-1 border border-marga-creamDark rounded-lg text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-marga-wine/30"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleViaticosItemsChange((transfer.viaticos_items || []).filter((_, j) => j !== vi))}
+                    className="text-marga-dark/30 hover:text-red-500 transition-colors shrink-0"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+              {(transfer.viaticos_items || []).length > 1 && (
+                <div className="flex justify-end text-xs text-marga-dark/40 mt-0.5">
+                  Total: {fmtARS((transfer.viaticos_items || []).reduce((s, i) => s + (i.price || 0), 0))}
+                </div>
+              )}
             </div>
             {/* Precio */}
             <div className="flex items-center justify-between text-sm border-t border-marga-creamDark pt-2">
@@ -740,7 +797,7 @@ const TotalsPanel: React.FC<{
   const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
   const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasArs;
-  const montoComision = subtotal * comision / 100 * 2;
+  const montoComision = subtotal * (comision / 100) * (1 + comision / 100);
   const totalFinal = subtotal + montoComision;
   const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || totalExtrasArs > 0;
 
@@ -798,9 +855,20 @@ const TotalsPanel: React.FC<{
         )}
         {comision > 0 && hasItems && (
           <>
-            <div className="flex justify-between text-xs text-amber-600 mt-1">
-              <span>Comisión ({comision}% × 2)</span>
-              <span className="font-mono">+{fmtARS(montoComision)}</span>
+            <div className="mt-1 pt-1 border-t border-amber-100 space-y-0.5">
+              <p className="text-xs font-bold text-amber-700 mb-1">Comisión ({comision}%)</p>
+              <div className="flex justify-between text-xs text-amber-600">
+                <span>{comision}% de {fmtARS(subtotal)}</span>
+                <span className="font-mono">+{fmtARS(subtotal * comision / 100)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-amber-600">
+                <span>{comision}% de {fmtARS(subtotal * comision / 100)}</span>
+                <span className="font-mono">+{fmtARS(subtotal * (comision / 100) * (comision / 100))}</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-amber-700 border-t border-amber-200 pt-0.5">
+                <span>Total comisión</span>
+                <span className="font-mono">+{fmtARS(montoComision)}</span>
+              </div>
             </div>
             <div className="flex justify-between font-bold text-amber-700 border-t border-amber-200 pt-1.5 text-base">
               <span>Total con comisión</span>
@@ -895,7 +963,7 @@ const QuoteDetailView: React.FC<{
   const totalTransfersConGanancia = totalTransfersBase * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesBase * (1 + gananciaServicio / 100);
   const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasBase;
-  const montoComision = subtotal * comision / 100 * 2;
+  const montoComision = subtotal * (comision / 100) * (1 + comision / 100);
   const totalFinal = subtotal + montoComision;
   const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
 
@@ -903,9 +971,7 @@ const QuoteDetailView: React.FC<{
   const displayFormatted = useUSD ? fmt(totalFinalUsd) : fmtARS(totalFinal);
   const displayWords = numToES(useUSD ? totalFinalUsd : totalFinal) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
 
-  const validityFormatted = quote.validity_date
-    ? new Date(quote.validity_date + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
-    : null;
+  const validityFormatted = quote.validity_date ? fmtDate(quote.validity_date) : null;
 
   const allDays = Array.from(new Set([
     ...transfers.map(t => t.day),
@@ -936,7 +1002,7 @@ const QuoteDetailView: React.FC<{
         <div style={{ textAlign: 'right' }}>
           <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Cotización</p>
           <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{quote.date}</p>
+          <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{fmtDate(quote.date)}</p>
         </div>
       </div>
 
@@ -958,7 +1024,7 @@ const QuoteDetailView: React.FC<{
         return (
           <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{day}</p>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{fmtDate(day)}</p>
               <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
             </div>
 
@@ -1031,8 +1097,8 @@ const QuoteDetailView: React.FC<{
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
                     <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
-                      Check-in: <strong>{h.day}</strong>
-                      {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{h.checkout_day}</strong></>}
+                      Check-in: <strong>{fmtDate(h.day)}</strong>
+                      {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{fmtDate(h.checkout_day)}</strong></>}
                       {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
                     </p>
                     {h.notes && <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic', whiteSpace: 'pre-line' }}>{h.notes}</p>}
@@ -1083,7 +1149,18 @@ const QuoteDetailView: React.FC<{
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}><span>Subtotal</span><span>{fmtARS(subtotal)}</span></div>
         {comision > 0 && (<>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}><span>Comisión ({comision}% × 2)</span><span>+{fmtARS(montoComision)}</span></div>
+          <div style={{ marginTop: '4px', borderTop: '1px solid #f0d090', paddingTop: '6px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#c47a00', marginBottom: '4px' }}>Comisión ({comision}%)</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '2px' }}>
+              <span>{comision}% de {fmtARS(subtotal)}</span><span>+{fmtARS(subtotal * comision / 100)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#c47a00', marginBottom: '4px' }}>
+              <span>{comision}% de {fmtARS(subtotal * comision / 100)}</span><span>+{fmtARS(subtotal * (comision / 100) * (comision / 100))}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '3px', marginBottom: '4px' }}>
+              <span>Total comisión</span><span>+{fmtARS(montoComision)}</span>
+            </div>
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}><span>Total con comisión</span><span>{fmtARS(totalFinal)}</span></div>
         </>)}
         {tc > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}><span>Total USD (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsd)}</span></div>}
@@ -1179,16 +1256,21 @@ const QuoteDetailView: React.FC<{
       {/* Portal de impresión */}
       {createPortal(
         <div id="print-portal" style={{ fontFamily: 'sans-serif', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }}>
-          {/* Con @page margin:0, position:fixed arranca en (0,0) del borde de página — correcto */}
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'url(/membrete.jpg)', backgroundSize: '100% 100%', WebkitPrintColorAdjust: 'exact' as any, printColorAdjust: 'exact' as any, colorAdjust: 'exact' as any }} />
+          {/* <img> en lugar de background-image: se imprime siempre sin necesitar "Gráficos en segundo plano" */}
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+            <img src="/membrete.jpg" alt="" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'fill' }} />
+          </div>
           {/* <thead> de la tabla se repite en cada página, creando el espacio para el logo */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', position: 'relative' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', position: 'relative', zIndex: 1 }}>
             <thead>
               <tr><td style={{ height: '55mm', padding: 0, border: 'none' }} /></tr>
             </thead>
+            <tfoot>
+              <tr><td style={{ height: '35mm', padding: 0, border: 'none' }} /></tr>
+            </tfoot>
             <tbody>
               <tr>
-                <td style={{ padding: '0 15mm 26mm 15mm', verticalAlign: 'top', border: 'none' }}>
+                <td style={{ padding: '0 15mm 0 15mm', verticalAlign: 'top', border: 'none' }}>
                   {contentNodes}
                 </td>
               </tr>
@@ -1242,6 +1324,9 @@ const QuoteForm: React.FC<{
   const [localSettings, setLocalSettings] = useState<TarifaSettings>({
     ...settings,
     usd_exchange_rate: initial?.exchange_rate || settings.usd_exchange_rate,
+    costo_km: initial?.costo_km || settings.costo_km,
+    precio_full_day: initial?.precio_full_day || settings.precio_full_day,
+    precio_medio_dia: initial?.precio_medio_dia || settings.precio_medio_dia,
   });
   const [showTarifas, setShowTarifas] = useState(false);
   const [viaticos, setViaticos] = useState<number>(0);
@@ -1316,6 +1401,9 @@ const QuoteForm: React.FC<{
         ...form,
         status,
         exchange_rate: localSettings.usd_exchange_rate,
+        costo_km: localSettings.costo_km,
+        precio_full_day: localSettings.precio_full_day,
+        precio_medio_dia: localSettings.precio_medio_dia,
         ganancia_transfer: gananciaTransfer,
         ganancia_servicio: gananciaServicio,
         comision,
@@ -1765,7 +1853,7 @@ const QuoteForm: React.FC<{
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-amber-700">Comisión</p>
-                  <p className="text-xs text-amber-600/70 mt-0.5">Se suma al total × comisión × 2</p>
+                  <p className="text-xs text-amber-600/70 mt-0.5">Se suma al total × (comisión%)²</p>
                 </div>
                 <div className="w-32">
                   <div className="relative">
@@ -1787,14 +1875,23 @@ const QuoteForm: React.FC<{
                 const baseServices = form.services.reduce((a, s) => a + (s.final_cost_usd || 0), 0) * (1 + gananciaServicio / 100);
                 const baseExtras = (form.extra_services || []).reduce((a, e) => a + (e.price || 0), 0);
                 const base = baseTransfers + baseServices + baseExtras;
-                const montoComision = base * comision / 100 * 2;
+                const montoComision = base * (comision / 100) * (1 + comision / 100);
                 return (
-                  <div className="mt-2 border-t border-amber-200 pt-2 space-y-1">
+                  <div className="mt-2 border-t border-amber-200 pt-2 space-y-0.5">
+                    <p className="text-xs font-bold text-amber-700 mb-1">Comisión ({comision}%)</p>
                     <div className="flex justify-between text-xs text-amber-600">
-                      <span>Monto comisión ({comision}% × 2)</span>
+                      <span>{comision}% de {fmtARS(base)}</span>
+                      <span className="font-mono">+{fmtARS(base * comision / 100)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-amber-600">
+                      <span>{comision}% de {fmtARS(base * comision / 100)}</span>
+                      <span className="font-mono">+{fmtARS(base * (comision / 100) * (comision / 100))}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold text-amber-700 border-t border-amber-200 pt-0.5">
+                      <span>Total comisión</span>
                       <span className="font-mono">+{fmtARS(montoComision)}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-amber-700 font-bold">
+                    <div className="flex justify-between text-sm text-amber-700 font-bold pt-0.5">
                       <span>Total con comisión</span>
                       <span className="font-mono">{fmtARS(base + montoComision)}</span>
                     </div>
@@ -1821,7 +1918,7 @@ const QuoteForm: React.FC<{
             />
             {validityDate && (
               <p className="text-xs text-marga-dark/40 mt-2">
-                Válido hasta el {new Date(validityDate + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                Válido hasta el {fmtDate(validityDate)}
               </p>
             )}
           </div>
@@ -2229,7 +2326,7 @@ export const QuotesView: React.FC = () => {
                 const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
                   + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100)
                   + ((q as any).total_extras || 0);
-                const totalFinalArs = subtotalArs * (1 + (q.comision || 0) * 2 / 100);
+                const r = (q.comision || 0) / 100; const totalFinalArs = subtotalArs * (1 + r * (1 + r));
                 const tc = q.exchange_rate || 0;
                 const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;
                 return (
@@ -2243,7 +2340,7 @@ export const QuotesView: React.FC = () => {
                   <td className="px-5 py-3.5 text-marga-dark/50 hidden sm:table-cell max-w-[200px] truncate">
                     {q.description || '—'}
                   </td>
-                  <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{q.date}</td>
+                  <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{fmtDate(q.date)}</td>
                   <td className="px-5 py-3.5 hidden lg:table-cell">
                     {q.validity_date ? (
                       (() => {
@@ -2253,7 +2350,7 @@ export const QuotesView: React.FC = () => {
                         const expired = vd < today;
                         return (
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${expired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
-                            {vd.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                            {fmtDate(q.validity_date)}
                           </span>
                         );
                       })()
