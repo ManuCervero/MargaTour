@@ -713,23 +713,29 @@ const ServiceRow: React.FC<{
           )}
         </div>
         <div>
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción del servicio</label>
-          <textarea
-            rows={3}
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Nombre en cotización</label>
+          <input
+            type="text"
             value={service.service_name}
             onChange={e => onChange(index, { ...service, service_name: e.target.value })}
-            className={inp + " resize-y"}
-            placeholder="Ej: Bodega Casarena — Almuerzo gourmet"
+            className={inp}
+            placeholder="Ej: Trekking Vallecitos"
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between mb-0">
         <div className="flex-1">
-          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Notas</label>
-          <input type="text" value={service.notes || ''} onChange={e => onChange(index, { ...service, notes: e.target.value })} className={inp} placeholder="Opcional..." />
+          <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción / Incluye</label>
+          <textarea
+            rows={3}
+            value={service.notes || ''}
+            onChange={e => onChange(index, { ...service, notes: e.target.value })}
+            className={inp + " resize-y"}
+            placeholder="Ej: Incluye almuerzo, guía de trekking..."
+          />
         </div>
-        <div className="ml-4 text-right">
+        <div className="ml-4 text-right shrink-0">
           <p className="text-xs text-marga-dark/40">Total</p>
           <p className="text-base font-bold text-marga-wine">{fmtARS(service.final_cost_usd || 0)}</p>
         </div>
