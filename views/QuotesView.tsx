@@ -945,6 +945,7 @@ const QuoteDetailView: React.FC<{
   onBack: () => void;
 }> = ({ quote, onBack }) => {
   const [showUSD, setShowUSD] = useState(false);
+  const [showPrices, setShowPrices] = useState(false);
 
   const transfers = quote.transfers || [];
   const allServices = quote.services || [];
@@ -970,6 +971,12 @@ const QuoteDetailView: React.FC<{
   const useUSD = showUSD && tc > 0;
   const displayFormatted = useUSD ? fmt(totalFinalUsd) : fmtARS(totalFinal);
   const displayWords = numToES(useUSD ? totalFinalUsd : totalFinal) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
+
+  const commissionMultiplier = subtotal > 0 ? totalFinal / subtotal : 1;
+  const fmtItemFinal = (baseArs: number, ganancia: number) => {
+    const withAll = baseArs * (1 + ganancia / 100) * commissionMultiplier;
+    return useUSD && tc > 0 ? fmt(withAll / tc) : fmtARS(withAll);
+  };
 
   const validityFormatted = quote.validity_date ? fmtDate(quote.validity_date) : null;
 
@@ -1036,6 +1043,7 @@ const QuoteDetailView: React.FC<{
                     <th style={thStyle}>Transfer</th>
                     <th className="screen-only" style={thRight}>Precio base</th>
                     <th className="screen-only" style={thRight}>Con ganancia</th>
+                    {showPrices && <th style={{ ...thRight, color: '#4a1c2d' }}>Precio</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -1047,6 +1055,7 @@ const QuoteDetailView: React.FC<{
                       </td>
                       <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(t.final_cost_usd || 0)}</td>
                       <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((t.final_cost_usd || 0) * (1 + gananciaTransfer / 100))}</td>
+                      {showPrices && <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#4a1c2d', fontSize: '12px' }}>{fmtItemFinal(t.final_cost_usd || 0, gananciaTransfer)}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -1060,6 +1069,7 @@ const QuoteDetailView: React.FC<{
                     <th style={thStyle}>Servicio</th>
                     <th className="screen-only" style={thRight}>Precio base</th>
                     <th className="screen-only" style={thRight}>Con ganancia</th>
+                    {showPrices && <th style={{ ...thRight, color: '#4a1c2d' }}>Precio</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -1071,6 +1081,7 @@ const QuoteDetailView: React.FC<{
                       </td>
                       <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', color: '#999', fontSize: '12px' }}>{fmtARS(s.final_cost_usd || 0)}</td>
                       <td className="screen-only" style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}>{fmtARS((s.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</td>
+                      {showPrices && <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700, color: '#4a1c2d', fontSize: '12px' }}>{fmtItemFinal(s.final_cost_usd || 0, gananciaServicio)}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -1107,6 +1118,11 @@ const QuoteDetailView: React.FC<{
                     <p style={{ fontSize: '11px', color: '#aaa', margin: '0 0 1px 0' }}>{fmtARS(h.final_cost_usd || 0)}</p>
                     <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS((h.final_cost_usd || 0) * (1 + gananciaServicio / 100))}</p>
                   </div>
+                  {showPrices && (
+                    <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                      <p style={{ fontSize: '13px', fontWeight: 700, color: '#4a1c2d', margin: 0 }}>{fmtItemFinal(h.final_cost_usd || 0, gananciaServicio)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1124,7 +1140,10 @@ const QuoteDetailView: React.FC<{
           {extraServices.map((es, i) => (
             <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>{es.description}</p>
-              <p className="screen-only" style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS(es.price || 0)}</p>
+              {showPrices
+                ? <p style={{ fontSize: '13px', fontWeight: 700, color: '#4a1c2d', margin: 0 }}>{fmtItemFinal(es.price || 0, 0)}</p>
+                : <p className="screen-only" style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS(es.price || 0)}</p>
+              }
             </div>
           ))}
         </div>
@@ -1227,6 +1246,15 @@ const QuoteDetailView: React.FC<{
         >
           <DollarSign size={14} /> {useUSD ? 'Ver en ARS' : 'Ver en USD'}
         </button>
+        <label className="flex items-center gap-2 text-sm font-semibold text-marga-dark/70 cursor-pointer select-none border border-marga-wine/40 rounded-xl py-2 px-4 hover:border-marga-wine transition-colors">
+          <input
+            type="checkbox"
+            checked={showPrices}
+            onChange={e => setShowPrices(e.target.checked)}
+            className="w-4 h-4 accent-marga-wine"
+          />
+          Mostrar precios
+        </label>
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-5 rounded-xl text-sm transition-colors shadow-sm"
