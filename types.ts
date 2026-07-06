@@ -107,8 +107,7 @@ export interface QuoteTransfer {
   duration_hours?: number;
   is_full_day?: boolean | number;
   is_round_trip?: boolean;
-  vehicle_type?: 'auto' | 'rav' | 'van' | 'van_rampa';
-  vehicle_count?: number;
+  vehicles?: ('auto' | 'rav' | 'van' | 'van_rampa')[];
   viaticos?: number;
   viaticos_items?: QuoteViatico[];
   base_cost_ars?: number;

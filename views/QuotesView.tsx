@@ -48,15 +48,15 @@ const VEHICLE_TYPES: { value: VehicleType; label: string; discount: boolean }[] 
 const vehicleHasDiscount = (vehicleType?: VehicleType) =>
   VEHICLE_TYPES.find(v => v.value === vehicleType)?.discount || false;
 
-function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings, viaticos = 0, vehicleType?: VehicleType, vehicleCount = 1) {
+function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings, viaticos = 0, vehicles: VehicleType[] = ['van']) {
   if (!distKm) return { baseCostArs: 0, finalCostArs: 0, isFullDay: false };
   const isFullDay = distKm > 150 || durHours >= 6;
-  let vehicleCostArs =
+  const perVehicleBase =
     (distKm * settings.costo_km) +
     (isFullDay ? settings.precio_full_day : settings.precio_medio_dia);
-  if (vehicleHasDiscount(vehicleType)) vehicleCostArs *= 0.7;
-  vehicleCostArs *= vehicleCount || 1;
-  const baseCostArs = vehicleCostArs + viaticos;
+  const multiplier = (vehicles.length ? vehicles : ['van'] as VehicleType[])
+    .reduce((sum, v) => sum + (vehicleHasDiscount(v) ? 0.7 : 1), 0);
+  const baseCostArs = (perVehicleBase * multiplier) + viaticos;
   return { baseCostArs, finalCostArs: baseCostArs, isFullDay };
 }
 
@@ -111,8 +111,7 @@ const emptyTransfer = (): QuoteTransfer => ({
   distance_km: 0,
   duration_hours: 0,
   is_full_day: false,
-  vehicle_type: 'van',
-  vehicle_count: 1,
+  vehicles: ['van'],
   base_cost_ars: 0,
   base_cost_usd: 0,
   final_cost_usd: 0,
@@ -261,21 +260,20 @@ const TransferRow: React.FC<{
   const handleOriginChange = (origin: string) => onChange(index, { ...transfer, origin, destination: '' });
 
   const effectiveKm = (distKm: number) => distKm * (transfer.is_round_trip ? 2 : 1);
-  const vehicleType = transfer.vehicle_type || 'van';
-  const vehicleCount = transfer.vehicle_count || 1;
+  const vehicles: VehicleType[] = (transfer.vehicles && transfer.vehicles.length ? transfer.vehicles : ['van']) as VehicleType[];
 
   const handleDestinationChange = (destination: string) => {
     const route = routes.find(r => r.origin === transfer.origin && r.destination === destination)
       || routes.find(r => r.origin === destination && r.destination === transfer.origin);
     const distKm = route?.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, vehicles);
     onChange(index, { ...transfer, destination, distance_km: distKm, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleDurationChange = (durHours: number) => {
     const distKm = transfer.distance_km || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, vehicles);
     onChange(index, { ...transfer, duration_hours: durHours, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
@@ -283,14 +281,14 @@ const TransferRow: React.FC<{
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
     const km = distKm * (isRoundTrip ? 2 : 1);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, durHours, settings, transfer.viaticos || 0, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, durHours, settings, transfer.viaticos || 0, vehicles);
     onChange(index, { ...transfer, is_round_trip: isRoundTrip, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleViaticosChange = (viaticos: number) => {
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, viaticos, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, viaticos, vehicles);
     onChange(index, { ...transfer, viaticos, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
@@ -298,29 +296,22 @@ const TransferRow: React.FC<{
     const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, total, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, total, vehicles);
     onChange(index, { ...transfer, viaticos: total, viaticos_items: items, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
-  const handleVehicleTypeChange = (newType: VehicleType) => {
+  const handleVehiclesChange = (newVehicles: VehicleType[]) => {
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, newType, vehicleCount);
-    onChange(index, { ...transfer, vehicle_type: newType, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
-  };
-
-  const handleVehicleCountChange = (newCount: number) => {
-    const distKm = transfer.distance_km || 0;
-    const durHours = transfer.duration_hours || 0;
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, vehicleType, newCount);
-    onChange(index, { ...transfer, vehicle_count: newCount, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, newVehicles);
+    onChange(index, { ...transfer, vehicles: newVehicles, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
   const handleMapSave = async (_origin: string, _destination: string, distanceKm: number, _routeId?: string | { label: string; lat: number; lon: number }[], waypoints?: { label: string; lat: number; lon: number }[]) => {
     const origin = waypoints ? waypoints[0].label : _origin;
     const destination = waypoints ? waypoints[waypoints.length - 1].label : _destination;
     const km = effectiveKm(distanceKm);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0, vehicles);
     onChange(index, { ...transfer, origin, destination, distance_km: distanceKm, map_waypoints: waypoints, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
     setMapMode(true);
     setShowMap(false);
@@ -330,7 +321,7 @@ const TransferRow: React.FC<{
   React.useEffect(() => {
     if (mode !== 'ruta' || !transfer.distance_km) return;
     const km = effectiveKm(transfer.distance_km);
-    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0, vehicleType, vehicleCount);
+    const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(km, transfer.duration_hours || 0, settings, transfer.viaticos || 0, vehicles);
     onChange(index, { ...transfer, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
@@ -459,26 +450,44 @@ const TransferRow: React.FC<{
               </>
             )}
 
-            {/* Vehículo y cantidad */}
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Vehículo</label>
-                <select value={vehicleType} onChange={e => handleVehicleTypeChange(e.target.value as VehicleType)} className={sel}>
-                  {VEHICLE_TYPES.map(v => (
-                    <option key={v.value} value={v.value}>{v.label}{v.discount ? ' (-30%)' : ''}</option>
-                  ))}
-                </select>
+            {/* Vehículos */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-marga-dark/50">Vehículos</label>
+                <button
+                  type="button"
+                  onClick={() => handleVehiclesChange([...vehicles, 'van'])}
+                  className="flex items-center gap-1 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-2 py-1 rounded-lg transition-colors"
+                >
+                  <Plus size={11} /> Agregar vehículo
+                </button>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Cantidad de vehículos</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={vehicleCount}
-                  onChange={e => handleVehicleCountChange(Math.max(1, parseInt(e.target.value) || 1))}
-                  className={inp}
-                />
-              </div>
+              {vehicles.map((v, vi) => (
+                <div key={vi} className="flex items-center gap-1.5 mb-1">
+                  <select
+                    value={v}
+                    onChange={e => {
+                      const arr = [...vehicles];
+                      arr[vi] = e.target.value as VehicleType;
+                      handleVehiclesChange(arr);
+                    }}
+                    className={sel + " flex-1"}
+                  >
+                    {VEHICLE_TYPES.map(vt => (
+                      <option key={vt.value} value={vt.value}>{vt.label}{vt.discount ? ' (-30%)' : ''}</option>
+                    ))}
+                  </select>
+                  {vehicles.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleVehiclesChange(vehicles.filter((_, j) => j !== vi))}
+                      className="text-marga-dark/30 hover:text-red-500 transition-colors shrink-0"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -496,12 +505,14 @@ const TransferRow: React.FC<{
                   {transfer.is_full_day ? 'Día completo' : 'Medio día'}
                 </span>
               )}
-              {mode === 'ruta' && (transfer.distance_km || 0) > 0 && (
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-marga-creamDark text-marga-dark/60">
-                  {vehicleCount > 1 ? `${vehicleCount}x ` : ''}{VEHICLE_TYPES.find(v => v.value === vehicleType)?.label}
-                  {vehicleHasDiscount(vehicleType) ? ' (-30%)' : ''}
+              {mode === 'ruta' && (transfer.distance_km || 0) > 0 && Object.entries(
+                vehicles.reduce((acc, v) => ({ ...acc, [v]: (acc[v] || 0) + 1 }), {} as Record<string, number>)
+              ).map(([v, n]) => (
+                <span key={v} className="text-xs font-bold px-2 py-0.5 rounded-full bg-marga-creamDark text-marga-dark/60">
+                  {n > 1 ? `${n}x ` : ''}{VEHICLE_TYPES.find(vt => vt.value === v)?.label}
+                  {vehicleHasDiscount(v as VehicleType) ? ' (-30%)' : ''}
                 </span>
-              )}
+              ))}
             </div>
             {/* Viáticos */}
             <div className="text-sm">

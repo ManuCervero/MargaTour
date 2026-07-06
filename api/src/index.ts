@@ -210,6 +210,7 @@ app.get('/api/quotes/:id', requireAuth, async (c) => {
     ...t,
     map_waypoints: t.map_waypoints ? JSON.parse(t.map_waypoints) : undefined,
     viaticos_items: t.viaticos_items ? JSON.parse(t.viaticos_items) : [],
+    vehicles: t.vehicles ? JSON.parse(t.vehicles) : ['van'],
   }));
   return c.json({ ...quote, transfers, services, extra_services: extraServices });
 });
@@ -265,14 +266,14 @@ app.post('/api/quotes', requireAuth, async (c) => {
     totalTransfers += finalCost;
     await c.env.DB.prepare(`
       INSERT INTO quote_transfers (id, quote_id, day, origin, destination, pax, hour,
-        distance_km, duration_hours, is_full_day, is_round_trip, vehicle_type, vehicle_count, viaticos,
+        distance_km, duration_hours, is_full_day, is_round_trip, vehicles, viaticos,
         base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, viaticos_items, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       tid, id, t.day, t.origin, t.destination, t.pax || 1, t.hour || null,
       t.distance_km || 0, t.duration_hours || 0,
       t.is_full_day ? 1 : 0, t.is_round_trip ? 1 : 0,
-      t.vehicle_type || 'van', t.vehicle_count || 1, t.viaticos || 0,
+      JSON.stringify(t.vehicles && t.vehicles.length ? t.vehicles : ['van']), t.viaticos || 0,
       t.base_cost_ars || 0, t.base_cost_usd || 0,
       t.margin_pct || 0, finalCost,
       t.map_waypoints ? JSON.stringify(t.map_waypoints) : null,
@@ -362,14 +363,14 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     totalTransfers += finalCost;
     await c.env.DB.prepare(`
       INSERT INTO quote_transfers (id, quote_id, day, origin, destination, pax, hour,
-        distance_km, duration_hours, is_full_day, is_round_trip, vehicle_type, vehicle_count, viaticos,
+        distance_km, duration_hours, is_full_day, is_round_trip, vehicles, viaticos,
         base_cost_ars, base_cost_usd, margin_pct, final_cost_usd, map_waypoints, viaticos_items, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       tid, id, t.day, t.origin, t.destination, t.pax || 1, t.hour || null,
       t.distance_km || 0, t.duration_hours || 0,
       t.is_full_day ? 1 : 0, t.is_round_trip ? 1 : 0,
-      t.vehicle_type || 'van', t.vehicle_count || 1, t.viaticos || 0,
+      JSON.stringify(t.vehicles && t.vehicles.length ? t.vehicles : ['van']), t.viaticos || 0,
       t.base_cost_ars || 0, t.base_cost_usd || 0,
       t.margin_pct || 0, finalCost,
       t.map_waypoints ? JSON.stringify(t.map_waypoints) : null,
