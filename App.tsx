@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, History, FileText, Truck, Map, MapPin, Globe, Star, Wine, Bed, Utensils, Settings, Search, Bell, ChevronDown, Users, UserCog, Compass, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, History, FileText, Truck, Map, MapPin, Globe, Star, Wine, Bed, Utensils, Settings, Search, Bell, ChevronDown, Users, UserCog, Compass, LogOut, Menu, X, MessageCircle, Calculator } from 'lucide-react';
 import { ViewState, Lead, LeadStatus } from './types';
 import { api, clearToken, getStoredUser, onAuthError, setStoredUser, setToken } from './lib/api';
 import { KanbanView } from './views/KanbanView';
@@ -206,10 +206,9 @@ const App: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto p-4">
           <SidebarSection title="Operación">
-            <SidebarItem view={ViewState.LEADS} icon={LayoutDashboard} label="Leads" />
-            <SidebarItem view={ViewState.HISTORY} icon={History} label="Historial" />
             <SidebarItem view={ViewState.QUOTES} icon={FileText} label="Cotizaciones" />
             <SidebarItem view={ViewState.CLIENTS} icon={Users} label="Clientes" />
+            <SidebarItem view={ViewState.ACCOUNTING} icon={Calculator} label="Contable" />
           </SidebarSection>
 
           <SidebarSection title="Servicios">
@@ -224,6 +223,11 @@ const App: React.FC = () => {
             <SidebarItem view={ViewState.HOTELS} icon={Bed} label="Hoteles" />
             <SidebarItem view={ViewState.ACTIVITIES} icon={Compass} label="Actividades" />
             <SidebarItem view={ViewState.EXPERIENCES} icon={Star} label="Experiencias" />
+          </SidebarSection>
+
+          <SidebarSection title="Comunicación">
+            <SidebarItem view={ViewState.LEADS} icon={LayoutDashboard} label="Leads" />
+            <SidebarItem view={ViewState.HISTORY} icon={History} label="Historial" />
           </SidebarSection>
 
         </div>
@@ -318,7 +322,8 @@ const App: React.FC = () => {
               title={
                 currentView === ViewState.HISTORY ? "Historial" :
                   currentView === ViewState.CONFIG ? "Configuración" :
-                    currentView
+                    currentView === ViewState.ACCOUNTING ? "Contable" :
+                      currentView
               }
               filter={activeRegionFilter}
             />

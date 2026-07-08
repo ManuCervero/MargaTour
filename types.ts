@@ -15,6 +15,7 @@ export enum ViewState {
   RESTAURANTS = 'RESTAURANTS',
   USERS = 'USERS',
   CONFIG = 'CONFIG',
+  ACCOUNTING = 'ACCOUNTING',
 }
 
 export enum LeadStatus {
