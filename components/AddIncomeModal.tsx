@@ -11,6 +11,8 @@ const fmtARS = (n: number) =>
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+const roundUp = (n: number) => Math.ceil(n || 0);
+
 // Replica el cálculo del total final de QuotesView.tsx: total_gross es un subtotal en ARS
 // sin ganancia ni comisión aplicada — no es el monto real que paga el cliente.
 function getQuoteFinalTotals(q: FullQuote): { totalArs: number; totalUsd: number } {
@@ -21,7 +23,7 @@ function getQuoteFinalTotals(q: FullQuote): { totalArs: number; totalUsd: number
     const totalArs = subtotalArs * (1 + r * (1 + r));
     const tc = q.exchange_rate || 0;
     const totalUsd = tc > 0 ? totalArs / tc : 0;
-    return { totalArs, totalUsd };
+    return { totalArs: roundUp(totalArs), totalUsd: roundUp(totalUsd) };
 }
 
 const SOURCE_OPTIONS: { value: IncomeSource; label: string }[] = [
@@ -93,8 +95,8 @@ const PaymentRow: React.FC<{
                     <input
                         type="number" min={0} value={payment.amount_usd || ''}
                         onChange={e => {
-                            const usd = parseFloat(e.target.value) || 0;
-                            onChange(index, { ...payment, amount_usd: usd, amount_ars: payment.exchange_rate ? usd * payment.exchange_rate : payment.amount_ars });
+                            const usd = roundUp(parseFloat(e.target.value));
+                            onChange(index, { ...payment, amount_usd: usd, amount_ars: payment.exchange_rate ? roundUp(usd * payment.exchange_rate) : payment.amount_ars });
                         }}
                         className={inp} placeholder="0"
                     />
@@ -103,7 +105,7 @@ const PaymentRow: React.FC<{
                     <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Monto ARS</label>
                     <input
                         type="number" min={0} value={payment.amount_ars || ''}
-                        onChange={e => onChange(index, { ...payment, amount_ars: parseFloat(e.target.value) || 0 })}
+                        onChange={e => onChange(index, { ...payment, amount_ars: roundUp(parseFloat(e.target.value)) })}
                         className={inp} placeholder="0"
                     />
                 </div>
@@ -113,7 +115,7 @@ const PaymentRow: React.FC<{
                         type="number" min={0} value={payment.exchange_rate || ''}
                         onChange={e => {
                             const tc = parseFloat(e.target.value) || 0;
-                            onChange(index, { ...payment, exchange_rate: tc, amount_ars: payment.amount_usd ? payment.amount_usd * tc : payment.amount_ars });
+                            onChange(index, { ...payment, exchange_rate: tc, amount_ars: payment.amount_usd ? roundUp(payment.amount_usd * tc) : payment.amount_ars });
                         }}
                         className={inp} placeholder="0"
                     />
@@ -358,8 +360,8 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             <input
                                 type="number" min={0} value={form.amount_usd || ''}
                                 onChange={e => {
-                                    const usd = parseFloat(e.target.value) || 0;
-                                    setForm(f => ({ ...f, amount_usd: usd, amount_ars: f.exchange_rate ? usd * f.exchange_rate : f.amount_ars }));
+                                    const usd = roundUp(parseFloat(e.target.value));
+                                    setForm(f => ({ ...f, amount_usd: usd, amount_ars: f.exchange_rate ? roundUp(usd * f.exchange_rate) : f.amount_ars }));
                                 }}
                                 className={inp} placeholder="0"
                             />
@@ -368,7 +370,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Monto ARS</label>
                             <input
                                 type="number" min={0} value={form.amount_ars || ''}
-                                onChange={e => setForm(f => ({ ...f, amount_ars: parseFloat(e.target.value) || 0 }))}
+                                onChange={e => setForm(f => ({ ...f, amount_ars: roundUp(parseFloat(e.target.value)) }))}
                                 className={inp} placeholder="0"
                             />
                         </div>
@@ -378,7 +380,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                                 type="number" min={0} value={form.exchange_rate || ''}
                                 onChange={e => {
                                     const tc = parseFloat(e.target.value) || 0;
-                                    setForm(f => ({ ...f, exchange_rate: tc, amount_ars: f.amount_usd ? f.amount_usd * tc : f.amount_ars }));
+                                    setForm(f => ({ ...f, exchange_rate: tc, amount_ars: f.amount_usd ? roundUp(f.amount_usd * tc) : f.amount_ars }));
                                 }}
                                 className={inp} placeholder="0"
                             />
