@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Wallet, Trash2 } from 'lucide-react';
+import { Search, Plus, Wallet, Trash2, DollarSign, Edit2, RefreshCw, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { FullIncome, IncomeSource } from '../types';
 import { AddIncomeModal } from '../components/AddIncomeModal';
@@ -38,6 +38,52 @@ function getStatus(income: FullIncome): StatusFilter {
     return 'Parcial';
 }
 
+// ── ExchangeRateModal ─────────────────────────────────────────────────────────
+
+const ExchangeRateModal: React.FC<{
+    current: number;
+    onSave: (val: number) => void;
+    onClose: () => void;
+}> = ({ current, onSave, onClose }) => {
+    const [val, setVal] = useState(String(current));
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        const n = parseFloat(val);
+        if (!n || n <= 0) return;
+        setSaving(true);
+        try {
+            await api.settings.updateExchangeRate(n);
+            onSave(n);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+                <h3 className="text-lg font-bold text-marga-wine mb-1">Tipo de cambio</h3>
+                <p className="text-sm text-marga-dark/50 mb-4">Pesos argentinos por USD</p>
+                <input
+                    type="number"
+                    value={val}
+                    onChange={e => setVal(e.target.value)}
+                    className="w-full border border-marga-creamDark rounded-xl px-4 py-2.5 text-lg font-bold text-marga-dark focus:outline-none focus:ring-2 focus:ring-marga-wine/30 mb-4"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && handleSave()}
+                />
+                <div className="flex gap-2">
+                    <button onClick={onClose} className="flex-1 py-2 rounded-xl border border-marga-creamDark text-marga-dark/60 font-semibold text-sm hover:bg-marga-creamDark transition-colors">Cancelar</button>
+                    <button onClick={handleSave} disabled={saving} className="flex-1 py-2 rounded-xl bg-marga-wine text-marga-cream font-bold text-sm hover:bg-marga-wineLight transition-colors disabled:opacity-50">
+                        {saving ? 'Guardando...' : 'Guardar'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const IncomesView: React.FC = () => {
     const [incomes, setIncomes] = useState<FullIncome[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -45,12 +91,37 @@ const IncomesView: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('Todos');
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | undefined>(undefined);
+    const [exchangeRate, setExchangeRate] = useState(1200);
+    const [showTCModal, setShowTCModal] = useState(false);
+    const [fetchingBna, setFetchingBna] = useState(false);
+    const [bnaUpdatedAt, setBnaUpdatedAt] = useState<string | null>(null);
 
     const fetchIncomes = () => {
         api.income.list().then((data: FullIncome[]) => setIncomes(data)).catch(() => {});
     };
 
     useEffect(() => { fetchIncomes(); }, []);
+
+    useEffect(() => {
+        api.settings.getExchangeRate().then(res => {
+            if (res?.value) setExchangeRate(Number(res.value));
+        }).catch(() => {});
+    }, []);
+
+    const fetchBnaRate = async () => {
+        setFetchingBna(true);
+        try {
+            const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
+            const data = await res.json();
+            const venta = Number(data.venta);
+            if (!venta || venta <= 0) return;
+            setExchangeRate(venta);
+            await api.settings.updateExchangeRate(venta);
+            const now = new Date();
+            setBnaUpdatedAt(`${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`);
+        } catch { /* red error silencioso */ }
+        setFetchingBna(false);
+    };
 
     const openCreate = () => { setEditingId(undefined); setShowModal(true); };
     const openEdit = (id: string) => { setEditingId(id); setShowModal(true); };
@@ -88,6 +159,25 @@ const IncomesView: React.FC = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2 border border-marga-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-marga-wine focus:border-transparent text-sm w-full"
                         />
+                    </div>
+                    <div className="flex items-center border border-marga-creamDark rounded-xl overflow-hidden bg-white shrink-0">
+                        <button
+                            onClick={() => setShowTCModal(true)}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-marga-dark/60 hover:text-marga-wine transition-colors border-r border-marga-creamDark"
+                        >
+                            <DollarSign size={14} />
+                            TC: ${exchangeRate.toLocaleString('es-AR')}
+                            <Edit2 size={12} />
+                        </button>
+                        <button
+                            onClick={fetchBnaRate}
+                            disabled={fetchingBna}
+                            title="Sincronizar con dólar BNA venta"
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                        >
+                            {fetchingBna ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                            BNA{bnaUpdatedAt && <span className="text-blue-400 font-normal ml-1">{bnaUpdatedAt}</span>}
+                        </button>
                     </div>
                     <button
                         onClick={openCreate}
@@ -179,9 +269,18 @@ const IncomesView: React.FC = () => {
             <AddIncomeModal
                 isOpen={showModal}
                 incomeId={editingId}
+                defaultExchangeRate={exchangeRate}
                 onClose={() => setShowModal(false)}
                 onSuccess={fetchIncomes}
             />
+
+            {showTCModal && (
+                <ExchangeRateModal
+                    current={exchangeRate}
+                    onSave={val => { setExchangeRate(val); setShowTCModal(false); }}
+                    onClose={() => setShowTCModal(false)}
+                />
+            )}
         </div>
     );
 };

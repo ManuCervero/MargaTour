@@ -47,14 +47,14 @@ const TRANSFER_ACCOUNTS: { value: TransferAccount; label: string }[] = [
     { value: 'galicia_belen', label: 'Galicia Belen' },
 ];
 
-const emptyIncome = (): FullIncome => ({
+const emptyIncome = (exchangeRate?: number): FullIncome => ({
     source: 'cotizacion',
     quote_id: undefined,
     client_name: '',
     concept: '',
     amount_usd: 0,
     amount_ars: 0,
-    exchange_rate: 1200,
+    exchange_rate: exchangeRate || 1200,
     date: todayISO(),
     notes: '',
     payments: [],
@@ -183,11 +183,12 @@ interface AddIncomeModalProps {
     onClose: () => void;
     onSuccess: () => void;
     incomeId?: string;
+    defaultExchangeRate?: number;
 }
 
-export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose, onSuccess, incomeId }) => {
+export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose, onSuccess, incomeId, defaultExchangeRate }) => {
     const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState<FullIncome>(emptyIncome());
+    const [form, setForm] = useState<FullIncome>(emptyIncome(defaultExchangeRate));
     const [quotes, setQuotes] = useState<FullQuote[]>([]);
     const [quoteSearch, setQuoteSearch] = useState('');
     const [showQuoteDropdown, setShowQuoteDropdown] = useState(false);
@@ -197,7 +198,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
         if (incomeId) {
             api.income.get(incomeId).then((data: FullIncome) => setForm(data));
         } else {
-            setForm(emptyIncome());
+            setForm(emptyIncome(defaultExchangeRate));
         }
         setQuoteSearch('');
     }, [isOpen, incomeId]);
