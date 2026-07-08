@@ -11,6 +11,19 @@ const fmtARS = (n: number) =>
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// Replica el cálculo del total final de QuotesView.tsx: total_gross es un subtotal en ARS
+// sin ganancia ni comisión aplicada — no es el monto real que paga el cliente.
+function getQuoteFinalTotals(q: FullQuote): { totalArs: number; totalUsd: number } {
+    const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
+        + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100)
+        + ((q as any).total_extras || 0);
+    const r = (q.comision || 0) / 100;
+    const totalArs = subtotalArs * (1 + r * (1 + r));
+    const tc = q.exchange_rate || 0;
+    const totalUsd = tc > 0 ? totalArs / tc : 0;
+    return { totalArs, totalUsd };
+}
+
 const SOURCE_OPTIONS: { value: IncomeSource; label: string }[] = [
     { value: 'cotizacion', label: 'Cotizaciones' },
     { value: 'mujeres_cumbre', label: 'Mujeres a la Cumbre' },
@@ -202,12 +215,13 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
     );
 
     const handleQuoteSelect = (q: FullQuote) => {
+        const { totalArs, totalUsd } = getQuoteFinalTotals(q);
         setForm(f => ({
             ...f,
             quote_id: q.id,
             client_name: q.client_name,
-            amount_usd: q.total_gross || 0,
-            amount_ars: (q.total_gross || 0) * (q.exchange_rate || f.exchange_rate || 0),
+            amount_usd: totalUsd,
+            amount_ars: totalArs,
             exchange_rate: q.exchange_rate || f.exchange_rate,
         }));
         setQuoteSearch(`${q.quote_number ? `#${q.quote_number} ` : ''}${q.client_name}`);
@@ -308,17 +322,20 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             </div>
                             {showQuoteDropdown && quoteSearch && filteredQuotes.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 z-20 bg-white border border-marga-creamDark rounded-xl shadow-xl mt-1 max-h-48 overflow-y-auto">
-                                    {filteredQuotes.slice(0, 8).map(q => (
-                                        <button
-                                            key={q.id}
-                                            type="button"
-                                            onClick={() => handleQuoteSelect(q)}
-                                            className="w-full text-left px-4 py-2.5 hover:bg-marga-cream text-sm transition-colors"
-                                        >
-                                            <span className="font-semibold text-marga-dark">{q.quote_number ? `#${q.quote_number} — ` : ''}{q.client_name}</span>
-                                            {q.total_gross ? <span className="text-marga-dark/40 ml-2 text-xs">{fmtUSD(q.total_gross)}</span> : null}
-                                        </button>
-                                    ))}
+                                    {filteredQuotes.slice(0, 8).map(q => {
+                                        const { totalUsd } = getQuoteFinalTotals(q);
+                                        return (
+                                            <button
+                                                key={q.id}
+                                                type="button"
+                                                onClick={() => handleQuoteSelect(q)}
+                                                className="w-full text-left px-4 py-2.5 hover:bg-marga-cream text-sm transition-colors"
+                                            >
+                                                <span className="font-semibold text-marga-dark">{q.quote_number ? `#${q.quote_number} — ` : ''}{q.client_name}</span>
+                                                {totalUsd ? <span className="text-marga-dark/40 ml-2 text-xs">{fmtUSD(totalUsd)}</span> : null}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
