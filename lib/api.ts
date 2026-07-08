@@ -83,6 +83,13 @@ export const api = {
     create: (data: unknown) => request('/api/income', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: unknown) => request(`/api/income/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => request(`/api/income/${id}`, { method: 'DELETE' }),
+    movements: (filters?: { date_from?: string; date_to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.date_from) params.set('date_from', filters.date_from);
+      if (filters?.date_to) params.set('date_to', filters.date_to);
+      const qs = params.toString();
+      return request(`/api/income/movements${qs ? `?${qs}` : ''}`);
+    },
   },
 
   settings: {

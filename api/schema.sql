@@ -322,13 +322,14 @@ CREATE TABLE IF NOT EXISTS quote_extra_services (
   sort_order INTEGER DEFAULT 0
 );
 
--- Contable: Ingresos
+-- Contable: Flujo de Caja
 CREATE TABLE IF NOT EXISTS income (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
   source TEXT NOT NULL,
   quote_id TEXT,
   client_name TEXT,
   concept TEXT,
+  reference TEXT,
   amount_usd REAL DEFAULT 0,
   amount_ars REAL DEFAULT 0,
   exchange_rate REAL,
@@ -338,9 +339,11 @@ CREATE TABLE IF NOT EXISTS income (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Movimientos de cada carga: pueden ser tipo 'ingreso' o 'egreso'
 CREATE TABLE IF NOT EXISTS income_payments (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
   income_id TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'ingreso',
   amount_usd REAL DEFAULT 0,
   amount_ars REAL DEFAULT 0,
   exchange_rate REAL,

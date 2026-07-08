@@ -432,11 +432,13 @@ app.delete('/api/quotes/:id', requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// ── INCOME (Contable → Ingresos) ───────────────────────────────────────────────
+// ── INCOME (Contable → Flujo de Caja) ──────────────────────────────────────────
 
 app.get('/api/income', requireAuth, async (c) => {
   const { source, quote_id, date_from, date_to } = c.req.query();
-  let sql = `SELECT i.*, COALESCE((SELECT SUM(amount_usd) FROM income_payments WHERE income_id = i.id), 0) as paid_usd
+  let sql = `SELECT i.*,
+               COALESCE((SELECT SUM(amount_usd) FROM income_payments WHERE income_id = i.id AND type = 'ingreso'), 0) as paid_usd,
+               COALESCE((SELECT SUM(amount_usd) FROM income_payments WHERE income_id = i.id AND type = 'egreso'), 0) as egresos_usd
              FROM income i WHERE 1=1`;
   const params: unknown[] = [];
   if (source) { sql += ' AND i.source = ?'; params.push(source); }
@@ -444,6 +446,17 @@ app.get('/api/income', requireAuth, async (c) => {
   if (date_from) { sql += ' AND i.date >= ?'; params.push(date_from); }
   if (date_to) { sql += ' AND i.date <= ?'; params.push(date_to); }
   sql += ' ORDER BY i.date DESC, i.created_at DESC';
+  const { results } = await c.env.DB.prepare(sql).bind(...params).all();
+  return c.json(results);
+});
+
+app.get('/api/income/movements', requireAuth, async (c) => {
+  const { date_from, date_to } = c.req.query();
+  let sql = 'SELECT date, amount_usd, amount_ars, type FROM income_payments WHERE 1=1';
+  const params: unknown[] = [];
+  if (date_from) { sql += ' AND date >= ?'; params.push(date_from); }
+  if (date_to) { sql += ' AND date <= ?'; params.push(date_to); }
+  sql += ' ORDER BY date ASC';
   const { results } = await c.env.DB.prepare(sql).bind(...params).all();
   return c.json(results);
 });
@@ -465,11 +478,11 @@ app.post('/api/income', requireAuth, async (c) => {
   const payments: any[] = body.payments || [];
 
   await c.env.DB.prepare(`
-    INSERT INTO income (id, source, quote_id, client_name, concept, amount_usd, amount_ars,
+    INSERT INTO income (id, source, quote_id, client_name, concept, reference, amount_usd, amount_ars,
       exchange_rate, date, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, body.source, body.quote_id || null, body.client_name || null, body.concept || null,
+    id, body.source, body.quote_id || null, body.client_name || null, body.concept || null, body.reference || null,
     body.amount_usd || 0, body.amount_ars || 0, body.exchange_rate || null,
     body.date, body.notes || null, now, now
   ).run();
@@ -478,11 +491,11 @@ app.post('/api/income', requireAuth, async (c) => {
     const p = payments[i];
     const pid = generateId();
     await c.env.DB.prepare(`
-      INSERT INTO income_payments (id, income_id, amount_usd, amount_ars, exchange_rate,
+      INSERT INTO income_payments (id, income_id, type, amount_usd, amount_ars, exchange_rate,
         payment_method, transfer_account, invoice_number, date, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      pid, id, p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
+      pid, id, p.type || 'ingreso', p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
       p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
       p.date, p.notes || null, i
     ).run();
@@ -497,11 +510,11 @@ app.put('/api/income/:id', requireAuth, async (c) => {
   const now = new Date().toISOString();
 
   await c.env.DB.prepare(`
-    UPDATE income SET source=?, quote_id=?, client_name=?, concept=?, amount_usd=?, amount_ars=?,
+    UPDATE income SET source=?, quote_id=?, client_name=?, concept=?, reference=?, amount_usd=?, amount_ars=?,
       exchange_rate=?, date=?, notes=?, updated_at=?
     WHERE id=?
   `).bind(
-    body.source, body.quote_id || null, body.client_name || null, body.concept || null,
+    body.source, body.quote_id || null, body.client_name || null, body.concept || null, body.reference || null,
     body.amount_usd || 0, body.amount_ars || 0, body.exchange_rate || null,
     body.date, body.notes || null, now, id
   ).run();
@@ -513,11 +526,11 @@ app.put('/api/income/:id', requireAuth, async (c) => {
     const p = payments[i];
     const pid = generateId();
     await c.env.DB.prepare(`
-      INSERT INTO income_payments (id, income_id, amount_usd, amount_ars, exchange_rate,
+      INSERT INTO income_payments (id, income_id, type, amount_usd, amount_ars, exchange_rate,
         payment_method, transfer_account, invoice_number, date, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      pid, id, p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
+      pid, id, p.type || 'ingreso', p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
       p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
       p.date, p.notes || null, i
     ).run();

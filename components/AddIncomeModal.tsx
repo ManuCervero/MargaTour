@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wallet, Plus, Search } from 'lucide-react';
+import { X, Wallet, Plus, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { api } from '../lib/api';
-import type { FullIncome, IncomePayment, IncomeSource, PaymentMethod, TransferAccount, FullQuote } from '../types';
+import type { FullIncome, IncomePayment, IncomeSource, PaymentMethod, TransferAccount, MovementType, FullQuote } from '../types';
 
 const fmtUSD = (n: number) =>
     `USD ${(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const fmtARS = (n: number) =>
-    `$${Math.round(n || 0).toLocaleString('es-AR')}`;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -30,6 +27,7 @@ const SOURCE_OPTIONS: { value: IncomeSource; label: string }[] = [
     { value: 'cotizacion', label: 'Cotizaciones' },
     { value: 'mujeres_cumbre', label: 'Mujeres a la Cumbre' },
     { value: 'celalla_experience', label: 'Celalla Experience' },
+    { value: 'general', label: 'General' },
 ];
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
@@ -52,6 +50,7 @@ const emptyIncome = (exchangeRate?: number): FullIncome => ({
     quote_id: undefined,
     client_name: '',
     concept: '',
+    reference: '',
     amount_usd: 0,
     amount_ars: 0,
     exchange_rate: exchangeRate || 1200,
@@ -60,7 +59,8 @@ const emptyIncome = (exchangeRate?: number): FullIncome => ({
     payments: [],
 });
 
-const emptyPayment = (exchangeRate?: number): IncomePayment => ({
+const emptyPayment = (type: MovementType, exchangeRate?: number): IncomePayment => ({
+    type,
     amount_usd: 0,
     amount_ars: 0,
     exchange_rate: exchangeRate || 1200,
@@ -83,12 +83,19 @@ const PaymentRow: React.FC<{
 }> = ({ payment, index, onChange, onRemove }) => {
     const isEfectivo = payment.payment_method === 'efectivo';
     const isTransferencia = payment.payment_method === 'transferencia';
+    const isEgreso = payment.type === 'egreso';
 
     return (
-        <div className="bg-marga-cream/60 border border-marga-creamDark rounded-xl p-4 mb-3 relative">
-            <button type="button" onClick={() => onRemove(index)} className="absolute top-3 right-3 p-1 text-marga-dark/30 hover:text-red-500 transition-colors">
-                <X size={16} />
-            </button>
+        <div className={`border rounded-xl p-4 mb-3 relative ${isEgreso ? 'bg-red-50/60 border-red-200' : 'bg-green-50/60 border-green-200'}`}>
+            <div className="flex items-center justify-between mb-3">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${isEgreso ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {isEgreso ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
+                    {isEgreso ? 'Egreso' : 'Ingreso'}
+                </span>
+                <button type="button" onClick={() => onRemove(index)} className="p-1 text-marga-dark/30 hover:text-red-500 transition-colors">
+                    <X size={16} />
+                </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <div>
                     <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Monto USD</label>
@@ -169,7 +176,7 @@ const PaymentRow: React.FC<{
                 <input
                     type="text" value={payment.notes || ''}
                     onChange={e => onChange(index, { ...payment, notes: e.target.value })}
-                    className={inp} placeholder="Observaciones del pago..."
+                    className={inp} placeholder="Observaciones del movimiento..."
                 />
             </div>
         </div>
@@ -232,12 +239,13 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
     };
 
     const payments = form.payments || [];
-    const paidUsd = payments.reduce((sum, p) => sum + (p.amount_usd || 0), 0);
-    const pendingUsd = Math.max((form.amount_usd || 0) - paidUsd, 0);
-    const status = paidUsd <= 0 ? 'Pendiente' : pendingUsd <= 0 ? 'Pagado' : 'Parcial';
+    const ingresosUsd = payments.filter(p => p.type !== 'egreso').reduce((sum, p) => sum + (p.amount_usd || 0), 0);
+    const egresosUsd = payments.filter(p => p.type === 'egreso').reduce((sum, p) => sum + (p.amount_usd || 0), 0);
+    const pendingUsd = Math.max((form.amount_usd || 0) - ingresosUsd, 0);
+    const status = ingresosUsd <= 0 ? 'Pendiente' : pendingUsd <= 0 ? 'Pagado' : 'Parcial';
 
-    const handleAddPayment = () => {
-        setForm(f => ({ ...f, payments: [...(f.payments || []), emptyPayment(f.exchange_rate)] }));
+    const handleAddPayment = (type: MovementType) => {
+        setForm(f => ({ ...f, payments: [...(f.payments || []), emptyPayment(type, f.exchange_rate)] }));
     };
 
     const handleChangePayment = (index: number, updated: IncomePayment) => {
@@ -264,8 +272,8 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
             onSuccess();
             onClose();
         } catch (err) {
-            console.error('Error guardando ingreso:', err);
-            alert('Hubo un error al guardar el ingreso.');
+            console.error('Error guardando carga:', err);
+            alert('Hubo un error al guardar la carga.');
         } finally {
             setLoading(false);
         }
@@ -282,8 +290,8 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             <Wallet size={20} className="text-marga-wine" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-800">{incomeId ? 'Editar Ingreso' : 'Nuevo Ingreso'}</h2>
-                            <p className="text-xs text-gray-500">Contable · Ingresos</p>
+                            <h2 className="text-lg font-bold text-gray-800">{incomeId ? 'Editar Carga' : 'Nueva Carga'}</h2>
+                            <p className="text-xs text-gray-500">Contable · Flujo de Caja</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-marga-creamDark rounded-lg transition-colors">
@@ -294,7 +302,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                 <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
                     {/* Origen */}
                     <div className="mb-4">
-                        <label className="block text-xs font-semibold text-marga-dark/50 mb-2">Origen del ingreso</label>
+                        <label className="block text-xs font-semibold text-marga-dark/50 mb-2">Origen</label>
                         <div className="flex flex-wrap gap-2">
                             {SOURCE_OPTIONS.map(s => (
                                 <button
@@ -343,7 +351,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             )}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Cliente</label>
                                 <input type="text" value={form.client_name || ''} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} className={inp} placeholder="Nombre del cliente" />
@@ -351,6 +359,10 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                             <div>
                                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Concepto</label>
                                 <input type="text" value={form.concept || ''} onChange={e => setForm(f => ({ ...f, concept: e.target.value }))} className={inp} placeholder="Descripción del servicio" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Referencia</label>
+                                <input type="text" value={form.reference || ''} onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} className={inp} placeholder="Opcional" />
                             </div>
                         </div>
                     )}
@@ -397,16 +409,21 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                         <textarea rows={2} value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={inp + " resize-y"} placeholder="Observaciones generales..." />
                     </div>
 
-                    {/* Pagos */}
+                    {/* Movimientos */}
                     <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Pagos</h3>
-                            <button type="button" onClick={handleAddPayment} className="flex items-center gap-1 text-xs font-bold text-marga-wine hover:underline">
-                                <Plus size={14} /> Agregar pago
-                            </button>
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                            <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Movimientos</h3>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => handleAddPayment('ingreso')} className="flex items-center gap-1 text-xs font-bold text-green-700 hover:underline">
+                                    <Plus size={14} /> Agregar ingreso
+                                </button>
+                                <button type="button" onClick={() => handleAddPayment('egreso')} className="flex items-center gap-1 text-xs font-bold text-red-600 hover:underline">
+                                    <Plus size={14} /> Agregar egreso
+                                </button>
+                            </div>
                         </div>
                         {payments.length === 0 && (
-                            <p className="text-sm text-gray-400 text-center py-4 border border-dashed border-marga-creamDark rounded-xl">Sin pagos cargados todavía.</p>
+                            <p className="text-sm text-gray-400 text-center py-4 border border-dashed border-marga-creamDark rounded-xl">Sin movimientos cargados todavía.</p>
                         )}
                         {payments.map((p, i) => (
                             <PaymentRow key={i} payment={p} index={i} onChange={handleChangePayment} onRemove={handleRemovePayment} />
@@ -421,12 +438,16 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                                 <p className="font-bold text-marga-dark">{fmtUSD(form.amount_usd || 0)}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-marga-dark/40 uppercase font-semibold">Pagado</p>
-                                <p className="font-bold text-green-700">{fmtUSD(paidUsd)}</p>
+                                <p className="text-xs text-marga-dark/40 uppercase font-semibold">Ingresos</p>
+                                <p className="font-bold text-green-700">{fmtUSD(ingresosUsd)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-marga-dark/40 uppercase font-semibold">Pendiente</p>
                                 <p className="font-bold text-red-600">{fmtUSD(pendingUsd)}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-marga-dark/40 uppercase font-semibold">Egresos</p>
+                                <p className="font-bold text-red-600">{fmtUSD(egresosUsd)}</p>
                             </div>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${status === 'Pagado' ? 'bg-green-100 text-green-700' : status === 'Parcial' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -449,7 +470,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
                                     Guardando...
                                 </>
                             ) : (
-                                'Guardar Ingreso'
+                                'Guardar Carga'
                             )}
                         </button>
                     </div>

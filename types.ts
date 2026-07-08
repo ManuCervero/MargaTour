@@ -176,15 +176,17 @@ export interface FullQuote {
   extra_services: QuoteExtraService[];
 }
 
-// ── SISTEMA CONTABLE: INGRESOS ────────────────────────────────────────────────
+// ── SISTEMA CONTABLE: FLUJO DE CAJA ───────────────────────────────────────────
 
-export type IncomeSource = 'cotizacion' | 'mujeres_cumbre' | 'celalla_experience';
+export type IncomeSource = 'cotizacion' | 'mujeres_cumbre' | 'celalla_experience' | 'general';
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'link_pago' | 'we_travel' | 'viator' | 'mercado_pago';
 export type TransferAccount = 'marga' | 'fer' | 'galicia_belen';
+export type MovementType = 'ingreso' | 'egreso';
 
 export interface IncomePayment {
   id?: string;
   income_id?: string;
+  type: MovementType;
   amount_usd: number;
   amount_ars: number;
   exchange_rate?: number;
@@ -202,6 +204,7 @@ export interface FullIncome {
   quote_id?: string;
   client_name?: string;
   concept?: string;
+  reference?: string;
   amount_usd: number;
   amount_ars: number;
   exchange_rate?: number;
@@ -209,8 +212,16 @@ export interface FullIncome {
   notes?: string;
   payments?: IncomePayment[];
   paid_usd?: number;
+  egresos_usd?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface CashFlowMovement {
+  date: string;
+  amount_usd: number;
+  amount_ars: number;
+  type: MovementType;
 }
 
 export interface Hotel {
