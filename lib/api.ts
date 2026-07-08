@@ -69,6 +69,22 @@ export const api = {
     nextNumber: () => request('/api/quotes/next-number'),
   },
 
+  income: {
+    list: (filters?: { source?: string; quote_id?: string; date_from?: string; date_to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.source) params.set('source', filters.source);
+      if (filters?.quote_id) params.set('quote_id', filters.quote_id);
+      if (filters?.date_from) params.set('date_from', filters.date_from);
+      if (filters?.date_to) params.set('date_to', filters.date_to);
+      const qs = params.toString();
+      return request(`/api/income${qs ? `?${qs}` : ''}`);
+    },
+    get: (id: string) => request(`/api/income/${id}`),
+    create: (data: unknown) => request('/api/income', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) => request(`/api/income/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => request(`/api/income/${id}`, { method: 'DELETE' }),
+  },
+
   settings: {
     getExchangeRate: (): Promise<{ value: number }> => request('/api/settings/exchange-rate'),
     updateExchangeRate: (value: number) =>

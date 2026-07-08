@@ -176,6 +176,43 @@ export interface FullQuote {
   extra_services: QuoteExtraService[];
 }
 
+// ── SISTEMA CONTABLE: INGRESOS ────────────────────────────────────────────────
+
+export type IncomeSource = 'cotizacion' | 'mujeres_cumbre' | 'celalla_experience';
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'link_pago' | 'we_travel' | 'viator' | 'mercado_pago';
+export type TransferAccount = 'marga' | 'fer' | 'galicia_belen';
+
+export interface IncomePayment {
+  id?: string;
+  income_id?: string;
+  amount_usd: number;
+  amount_ars: number;
+  exchange_rate?: number;
+  payment_method: PaymentMethod;
+  transfer_account?: TransferAccount;
+  invoice_number?: string;
+  date: string;
+  notes?: string;
+  sort_order?: number;
+}
+
+export interface FullIncome {
+  id?: string;
+  source: IncomeSource;
+  quote_id?: string;
+  client_name?: string;
+  concept?: string;
+  amount_usd: number;
+  amount_ars: number;
+  exchange_rate?: number;
+  date: string;
+  notes?: string;
+  payments?: IncomePayment[];
+  paid_usd?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Hotel {
   id: string;
   name: string;

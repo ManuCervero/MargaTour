@@ -432,6 +432,107 @@ app.delete('/api/quotes/:id', requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// ── INCOME (Contable → Ingresos) ───────────────────────────────────────────────
+
+app.get('/api/income', requireAuth, async (c) => {
+  const { source, quote_id, date_from, date_to } = c.req.query();
+  let sql = `SELECT i.*, COALESCE((SELECT SUM(amount_usd) FROM income_payments WHERE income_id = i.id), 0) as paid_usd
+             FROM income i WHERE 1=1`;
+  const params: unknown[] = [];
+  if (source) { sql += ' AND i.source = ?'; params.push(source); }
+  if (quote_id) { sql += ' AND i.quote_id = ?'; params.push(quote_id); }
+  if (date_from) { sql += ' AND i.date >= ?'; params.push(date_from); }
+  if (date_to) { sql += ' AND i.date <= ?'; params.push(date_to); }
+  sql += ' ORDER BY i.date DESC, i.created_at DESC';
+  const { results } = await c.env.DB.prepare(sql).bind(...params).all();
+  return c.json(results);
+});
+
+app.get('/api/income/:id', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  const income = await c.env.DB.prepare('SELECT * FROM income WHERE id = ?').bind(id).first();
+  if (!income) return c.json({ error: 'No encontrado' }, 404);
+  const { results: payments } = await c.env.DB.prepare(
+    'SELECT * FROM income_payments WHERE income_id = ? ORDER BY sort_order ASC'
+  ).bind(id).all();
+  return c.json({ ...income, payments });
+});
+
+app.post('/api/income', requireAuth, async (c) => {
+  const body = await c.req.json();
+  const id = generateId();
+  const now = new Date().toISOString();
+  const payments: any[] = body.payments || [];
+
+  await c.env.DB.prepare(`
+    INSERT INTO income (id, source, quote_id, client_name, concept, amount_usd, amount_ars,
+      exchange_rate, date, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, body.source, body.quote_id || null, body.client_name || null, body.concept || null,
+    body.amount_usd || 0, body.amount_ars || 0, body.exchange_rate || null,
+    body.date, body.notes || null, now, now
+  ).run();
+
+  for (let i = 0; i < payments.length; i++) {
+    const p = payments[i];
+    const pid = generateId();
+    await c.env.DB.prepare(`
+      INSERT INTO income_payments (id, income_id, amount_usd, amount_ars, exchange_rate,
+        payment_method, transfer_account, invoice_number, date, notes, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      pid, id, p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
+      p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
+      p.date, p.notes || null, i
+    ).run();
+  }
+
+  return c.json({ ok: true, id });
+});
+
+app.put('/api/income/:id', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  const now = new Date().toISOString();
+
+  await c.env.DB.prepare(`
+    UPDATE income SET source=?, quote_id=?, client_name=?, concept=?, amount_usd=?, amount_ars=?,
+      exchange_rate=?, date=?, notes=?, updated_at=?
+    WHERE id=?
+  `).bind(
+    body.source, body.quote_id || null, body.client_name || null, body.concept || null,
+    body.amount_usd || 0, body.amount_ars || 0, body.exchange_rate || null,
+    body.date, body.notes || null, now, id
+  ).run();
+
+  await c.env.DB.prepare('DELETE FROM income_payments WHERE income_id = ?').bind(id).run();
+
+  const payments: any[] = body.payments || [];
+  for (let i = 0; i < payments.length; i++) {
+    const p = payments[i];
+    const pid = generateId();
+    await c.env.DB.prepare(`
+      INSERT INTO income_payments (id, income_id, amount_usd, amount_ars, exchange_rate,
+        payment_method, transfer_account, invoice_number, date, notes, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      pid, id, p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
+      p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
+      p.date, p.notes || null, i
+    ).run();
+  }
+
+  return c.json({ ok: true });
+});
+
+app.delete('/api/income/:id', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  await c.env.DB.prepare('DELETE FROM income WHERE id = ?').bind(id).run();
+  await c.env.DB.prepare('DELETE FROM income_payments WHERE income_id = ?').bind(id).run();
+  return c.json({ ok: true });
+});
+
 // ── RUTAS CRUD ────────────────────────────────────────────────────────────────
 crudRoutes(app, 'leads');
 crudRoutes(app, 'clients');

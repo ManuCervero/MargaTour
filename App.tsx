@@ -8,6 +8,7 @@ import { LoginPage } from './components/LoginPage';
 import { GlobalSearch } from './components/GlobalSearch';
 import { TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, ExperiencesView, RoutesView } from './views/DataViews';
 import { QuotesView } from './views/QuotesView';
+import { AccountingView } from './views/AccountingView';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<Record<string, string> | null>(() => getStoredUser());
@@ -315,15 +316,15 @@ const App: React.FC = () => {
           {currentView === ViewState.ACTIVITIES && <ActivitiesView filter={activeRegionFilter} />}
           {currentView === ViewState.EXPERIENCES && <ExperiencesView filter={activeRegionFilter} />}
           {currentView === ViewState.ROUTES && <RoutesView />}
+          {currentView === ViewState.ACCOUNTING && <AccountingView />}
 
           {/* Fallback for other views */}
-          {![ViewState.LEADS, ViewState.QUOTES, ViewState.TRANSFERS, ViewState.CLIENTS, ViewState.USERS, ViewState.REGIONS, ViewState.WINERIES, ViewState.HOTELS, ViewState.RESTAURANTS, ViewState.ACTIVITIES, ViewState.EXPERIENCES, ViewState.ROUTES].includes(currentView) && (
+          {![ViewState.LEADS, ViewState.QUOTES, ViewState.TRANSFERS, ViewState.CLIENTS, ViewState.USERS, ViewState.REGIONS, ViewState.WINERIES, ViewState.HOTELS, ViewState.RESTAURANTS, ViewState.ACTIVITIES, ViewState.EXPERIENCES, ViewState.ROUTES, ViewState.ACCOUNTING].includes(currentView) && (
             <GenericPlaceholderView
               title={
                 currentView === ViewState.HISTORY ? "Historial" :
                   currentView === ViewState.CONFIG ? "Configuración" :
-                    currentView === ViewState.ACCOUNTING ? "Contable" :
-                      currentView
+                    currentView
               }
               filter={activeRegionFilter}
             />

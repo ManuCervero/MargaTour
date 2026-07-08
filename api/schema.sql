@@ -321,3 +321,33 @@ CREATE TABLE IF NOT EXISTS quote_extra_services (
   price REAL DEFAULT 0,
   sort_order INTEGER DEFAULT 0
 );
+
+-- Contable: Ingresos
+CREATE TABLE IF NOT EXISTS income (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  source TEXT NOT NULL,
+  quote_id TEXT,
+  client_name TEXT,
+  concept TEXT,
+  amount_usd REAL DEFAULT 0,
+  amount_ars REAL DEFAULT 0,
+  exchange_rate REAL,
+  date TEXT NOT NULL,
+  notes TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS income_payments (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  income_id TEXT NOT NULL,
+  amount_usd REAL DEFAULT 0,
+  amount_ars REAL DEFAULT 0,
+  exchange_rate REAL,
+  payment_method TEXT,
+  transfer_account TEXT,
+  invoice_number TEXT,
+  date TEXT NOT NULL,
+  notes TEXT,
+  sort_order INTEGER DEFAULT 0
+);
