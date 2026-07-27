@@ -1638,11 +1638,18 @@ const QuoteForm: React.FC<{
                   value={form.pax ?? ''}
                   onChange={e => {
                     const newPax = e.target.value === '' ? undefined : parseInt(e.target.value);
+                    const paxVal = newPax || 1;
                     setForm(f => ({
                       ...f,
                       pax: newPax,
-                      transfers: f.transfers.map(t => ({ ...t, pax: newPax || 1 })),
-                      services: f.services.map(s => ({ ...s, pax: newPax || 1 })),
+                      transfers: f.transfers.map(t => ({ ...t, pax: paxVal })),
+                      services: f.services.map(s => ({
+                        ...s,
+                        pax: paxVal,
+                        final_cost_usd: s.service_type === 'hotel'
+                          ? s.final_cost_usd
+                          : calcServiceFinal(s.unit_price_usd, paxVal),
+                      })),
                     }));
                   }}
                   className={inp}
