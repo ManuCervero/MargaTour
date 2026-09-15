@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { X, Plus, Trash2, Loader2, Save, Navigation, Search, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+  APIProvider,
+  Map,
+  Marker,
+  useMap,
+  useMapsLibrary,
+  useApiLoadingStatus,
+  APILoadingStatus,
+} from '@vis.gl/react-google-maps';
+import { X, Plus, Trash2, Loader2, Save, Navigation, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import type { Route } from '../types';
 
-// Fix Leaflet default icon broken by Vite bundling
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
+const MENDOZA_CENTER = { lat: -32.8908, lng: -68.8272 };
 
 interface Waypoint {
   label: string;
@@ -18,29 +20,63 @@ interface Waypoint {
   lon: number;
 }
 
-interface NominatimResult {
-  display_name: string;
-  lat: string;
-  lon: string;
+interface Suggestion {
+  prediction: google.maps.places.PlacePrediction;
+  mainText: string;
+  secondaryText: string;
 }
 
-// Component that auto-fits map bounds when waypoints change
-const MapFitter: React.FC<{ waypoints: Waypoint[] }> = ({ waypoints }) => {
+// Auto-fits map bounds to the waypoints before a route has been drawn
+// (once a route is drawn, DirectionsRenderer fits bounds on its own).
+const BoundsFitter: React.FC<{ waypoints: Waypoint[]; hasRoute: boolean }> = ({ waypoints, hasRoute }) => {
   const map = useMap();
   useEffect(() => {
+    if (!map || hasRoute) return;
     const valid = waypoints.filter(w => w.lat && w.lon);
     if (valid.length === 0) return;
     if (valid.length === 1) {
-      map.setView([valid[0].lat, valid[0].lon], 13);
+      map.setCenter({ lat: valid[0].lat, lng: valid[0].lon });
+      map.setZoom(13);
     } else {
-      const bounds = L.latLngBounds(valid.map(w => [w.lat, w.lon] as [number, number]));
-      map.fitBounds(bounds, { padding: [40, 40] });
+      const bounds = new google.maps.LatLngBounds();
+      valid.forEach(w => bounds.extend({ lat: w.lat, lng: w.lon }));
+      map.fitBounds(bounds, 40);
     }
-  }, [waypoints, map]);
+  }, [waypoints, hasRoute, map]);
   return null;
 };
 
-// Individual waypoint row with search
+// Draws the calculated route as a polyline on the map.
+const DirectionsLayer: React.FC<{ result: google.maps.DirectionsResult | null }> = ({ result }) => {
+  const map = useMap();
+  const routesLib = useMapsLibrary('routes');
+  const rendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+
+  useEffect(() => {
+    if (!map || !routesLib) return;
+    const renderer = new routesLib.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+      polylineOptions: { strokeColor: '#4A1C2D', strokeWeight: 4, strokeOpacity: 0.8 },
+    });
+    rendererRef.current = renderer;
+    return () => {
+      renderer.setMap(null);
+      rendererRef.current = null;
+    };
+  }, [map, routesLib]);
+
+  // Re-runs whenever the renderer is (re)created OR the result changes, so a
+  // renderer created after the route was already calculated still gets it.
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    rendererRef.current.setDirections(result ?? ({ routes: [] } as unknown as google.maps.DirectionsResult));
+  }, [result, map, routesLib]);
+
+  return null;
+};
+
+// Individual waypoint row with Google Places search
 const WaypointRow: React.FC<{
   index: number;
   total: number;
@@ -50,12 +86,14 @@ const WaypointRow: React.FC<{
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
 }> = ({ index, total, waypoint, onChange, onRemove, onMoveUp, onMoveDown }) => {
+  const placesLib = useMapsLibrary('places');
   const [query, setQuery] = useState(waypoint.label);
-  const [results, setResults] = useState<NominatimResult[]>([]);
+  const [results, setResults] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
   useEffect(() => {
     setQuery(waypoint.label);
@@ -74,31 +112,50 @@ const WaypointRow: React.FC<{
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (value.length < 3) { setResults([]); return; }
+    if (!placesLib || value.length < 3) { setResults([]); return; }
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ' Mendoza Argentina')}&format=json&limit=5&countrycodes=ar`,
-          { headers: { 'Accept-Language': 'es' } }
+        if (!sessionTokenRef.current) {
+          sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
+        }
+        const { suggestions } = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: value,
+          includedRegionCodes: ['ar'],
+          locationBias: { center: MENDOZA_CENTER, radius: 50000 },
+          sessionToken: sessionTokenRef.current,
+          language: 'es',
+        });
+        setResults(
+          suggestions
+            .filter(s => s.placePrediction)
+            .map(s => ({
+              prediction: s.placePrediction!,
+              mainText: s.placePrediction!.mainText?.text ?? '',
+              secondaryText: s.placePrediction!.secondaryText?.text ?? '',
+            }))
         );
-        const data: NominatimResult[] = await res.json();
-        setResults(data);
         setShowDropdown(true);
       } catch { /* ignore */ }
       setLoading(false);
     }, 500);
   };
 
-  const handleSelect = (result: NominatimResult) => {
-    const label = result.display_name.split(',').slice(0, 2).join(',').trim();
-    setQuery(label);
+  const handleSelect = async (item: Suggestion) => {
     setShowDropdown(false);
     setResults([]);
-    onChange(index, { label, lat: parseFloat(result.lat), lon: parseFloat(result.lon) });
+    try {
+      const place = item.prediction.toPlace();
+      await place.fetchFields({ fields: ['displayName', 'location'] });
+      const label = place.displayName || item.mainText;
+      setQuery(label);
+      sessionTokenRef.current = null;
+      if (place.location) {
+        onChange(index, { label, lat: place.location.lat(), lon: place.location.lng() });
+      }
+    } catch { /* ignore */ }
   };
 
-  const labels = ['Origen', 'Parada', 'Destino'];
   const rowLabel = index === 0 ? 'Origen' : index === total - 1 ? 'Destino' : `Parada ${index}`;
   const dotColor = index === 0 ? 'bg-green-500' : index === total - 1 ? 'bg-red-500' : 'bg-blue-500';
 
@@ -131,8 +188,8 @@ const WaypointRow: React.FC<{
                 onMouseDown={() => handleSelect(r)}
                 className="w-full text-left px-3 py-2.5 hover:bg-marga-cream text-xs transition-colors border-b border-marga-creamDark last:border-0"
               >
-                <span className="font-semibold text-gray-800">{r.display_name.split(',').slice(0, 2).join(',')}</span>
-                <span className="text-gray-400 block truncate">{r.display_name.split(',').slice(2, 4).join(',')}</span>
+                <span className="font-semibold text-gray-800">{r.mainText}</span>
+                <span className="text-gray-400 block truncate">{r.secondaryText}</span>
               </button>
             ))}
           </div>
@@ -155,6 +212,57 @@ const WaypointRow: React.FC<{
   );
 };
 
+// ── Map panel (mounted inside <APIProvider>, needs useApiLoadingStatus) ────────
+
+const MapInner: React.FC<{
+  validWaypoints: Waypoint[];
+  directionsResult: google.maps.DirectionsResult | null;
+}> = ({ validWaypoints, directionsResult }) => {
+  const status = useApiLoadingStatus();
+
+  if (status === APILoadingStatus.FAILED) {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-center text-sm text-red-500 p-6">
+        No se pudo cargar Google Maps. Verificá tu conexión o la clave de API configurada.
+      </div>
+    );
+  }
+
+  if (status !== APILoadingStatus.LOADED) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-marga-wine" />
+      </div>
+    );
+  }
+
+  return (
+    <Map
+      defaultCenter={validWaypoints.length > 0 ? { lat: validWaypoints[0].lat, lng: validWaypoints[0].lon } : MENDOZA_CENTER}
+      defaultZoom={validWaypoints.length > 0 ? 11 : 9}
+      gestureHandling="greedy"
+      disableDefaultUI={false}
+    >
+      <BoundsFitter waypoints={validWaypoints} hasRoute={!!directionsResult} />
+      {validWaypoints.map((wp, i) => (
+        <Marker
+          key={i}
+          position={{ lat: wp.lat, lng: wp.lon }}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: i === 0 ? '#22c55e' : i === validWaypoints.length - 1 ? '#ef4444' : '#3b82f6',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          }}
+        />
+      ))}
+      <DirectionsLayer result={directionsResult} />
+    </Map>
+  );
+};
+
 // ── Main Modal ────────────────────────────────────────────────────────────────
 
 interface RouteMapModalProps {
@@ -165,7 +273,13 @@ interface RouteMapModalProps {
   saveLabel?: string;
 }
 
-export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWaypoints, onClose, onSave, saveLabel = 'Guardar ruta' }) => {
+export const RouteMapModal: React.FC<RouteMapModalProps> = (props) => (
+  <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['places', 'routes']} language="es" region="AR">
+    <RouteMapModalContent {...props} />
+  </APIProvider>
+);
+
+const RouteMapModalContent: React.FC<RouteMapModalProps> = ({ route, initialWaypoints, onClose, onSave, saveLabel = 'Guardar ruta' }) => {
   const emptyWaypoint = (): Waypoint => ({ label: '', lat: 0, lon: 0 });
 
   const [waypoints, setWaypoints] = useState<Waypoint[]>(() => {
@@ -181,7 +295,7 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
     return [emptyWaypoint(), emptyWaypoint()];
   });
 
-  const [routeLine, setRouteLine] = useState<[number, number][]>([]);
+  const [directionsResult, setDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
   const [totalKm, setTotalKm] = useState<number | null>(route?.distance_km ?? null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -191,16 +305,27 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
   const canCalculate = validWaypoints.length >= 2;
   const canSave = totalKm !== null && waypoints[0].label && waypoints[waypoints.length - 1].label;
 
+  const routesLib = useMapsLibrary('routes');
+  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
+  useEffect(() => {
+    if (routesLib && !directionsServiceRef.current) {
+      directionsServiceRef.current = new routesLib.DirectionsService();
+    }
+  }, [routesLib]);
+
+  const resetCalculation = () => {
+    setTotalKm(null);
+    setDirectionsResult(null);
+  };
+
   const handleWaypointChange = (index: number, wp: Waypoint) => {
     setWaypoints(prev => prev.map((w, i) => i === index ? wp : w));
-    setTotalKm(null);
-    setRouteLine([]);
+    resetCalculation();
   };
 
   const handleRemove = (index: number) => {
     setWaypoints(prev => prev.filter((_, i) => i !== index));
-    setTotalKm(null);
-    setRouteLine([]);
+    resetCalculation();
   };
 
   const handleMoveUp = (index: number) => {
@@ -210,8 +335,7 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
       [next[index - 1], next[index]] = [next[index], next[index - 1]];
       return next;
     });
-    setTotalKm(null);
-    setRouteLine([]);
+    resetCalculation();
   };
 
   const handleMoveDown = (index: number) => {
@@ -221,33 +345,34 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
       [next[index], next[index + 1]] = [next[index + 1], next[index]];
       return next;
     });
-    setTotalKm(null);
-    setRouteLine([]);
+    resetCalculation();
   };
 
   const calculateRoute = useCallback(async () => {
-    if (!canCalculate) return;
+    if (!canCalculate || !directionsServiceRef.current) return;
     setCalculating(true);
     setCalcError('');
     try {
-      const coords = validWaypoints.map(w => `${w.lon},${w.lat}`).join(';');
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
+      const pts = [...validWaypoints];
+      const first = pts.shift()!;
+      const last = pts.pop()!;
+      const result = await directionsServiceRef.current.route({
+        origin: { lat: first.lat, lng: first.lon },
+        destination: { lat: last.lat, lng: last.lon },
+        waypoints: pts.map(w => ({ location: { lat: w.lat, lng: w.lon }, stopover: true })),
+        travelMode: google.maps.TravelMode.DRIVING,
+        region: 'ar',
+      });
+      const meters = result.routes[0].legs.reduce((sum, leg) => sum + (leg.distance?.value ?? 0), 0);
+      setTotalKm(Math.round(meters / 100) / 10);
+      setDirectionsResult(result);
+    } catch (err: any) {
+      const status = err?.code ?? err?.status;
+      setCalcError(
+        status === 'ZERO_RESULTS' || status === 'NOT_FOUND'
+          ? 'No se pudo calcular la ruta. Verificá los puntos.'
+          : 'Error de conexión con el servicio de rutas.'
       );
-      const data = await res.json();
-      if (data.code !== 'Ok' || !data.routes?.length) {
-        setCalcError('No se pudo calcular la ruta. Verificá los puntos.');
-        return;
-      }
-      const route = data.routes[0];
-      const km = Math.round(route.distance / 100) / 10;
-      setTotalKm(km);
-      const line: [number, number][] = route.geometry.coordinates.map(
-        ([lon, lat]: [number, number]) => [lat, lon]
-      );
-      setRouteLine(line);
-    } catch {
-      setCalcError('Error de conexión con el servicio de rutas.');
     } finally {
       setCalculating(false);
     }
@@ -265,10 +390,6 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
       setSaving(false);
     }
   };
-
-  const mapCenter: [number, number] = validWaypoints.length > 0
-    ? [validWaypoints[0].lat, validWaypoints[0].lon]
-    : [-32.8908, -68.8272]; // Mendoza por defecto
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -340,25 +461,9 @@ export const RouteMapModal: React.FC<RouteMapModalProps> = ({ route, initialWayp
 
           {/* Right panel — map */}
           <div className="flex-1 relative" style={{ minHeight: '300px' }}>
-            <MapContainer
-              center={mapCenter}
-              zoom={validWaypoints.length > 0 ? 11 : 9}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapFitter waypoints={validWaypoints} />
-              {validWaypoints.map((wp, i) => (
-                <Marker key={i} position={[wp.lat, wp.lon]} />
-              ))}
-              {routeLine.length > 0 && (
-                <Polyline positions={routeLine} color="#4A1C2D" weight={4} opacity={0.8} />
-              )}
-            </MapContainer>
+            <MapInner validWaypoints={validWaypoints} directionsResult={directionsResult} />
           </div>
+
         </div>
 
         {/* Footer */}
