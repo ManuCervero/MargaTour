@@ -1103,7 +1103,7 @@ const QuoteDetailView: React.FC<{
 
   const useUSD = showUSD && tc > 0;
   const displayFormatted = useUSD ? fmt(totalFinalUsdDisplay) : fmtARS(totalFinalDisplay);
-  const displayWords = numToES(useUSD ? totalFinalUsdDisplay : totalFinalDisplay) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos') + (showPerPax ? ' por persona' : '');
+  const displayWords = numToES(useUSD ? totalFinalUsdDisplay : totalFinalDisplay) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos') + (showPerPax ? ` por persona, en base a ${paxCount} pax` : '');
 
   const commissionMultiplier = subtotal > 0 ? totalFinal / subtotal : 1;
   const fmtItemFinal = (baseArs: number, ganancia: number) => {
