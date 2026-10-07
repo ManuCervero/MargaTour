@@ -1074,6 +1074,7 @@ const QuoteDetailView: React.FC<{
 }> = ({ quote, onBack }) => {
   const [showUSD, setShowUSD] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
+  const [showPerPax, setShowPerPax] = useState(false);
 
   const transfers = quote.transfers || [];
   const allServices = quote.services || [];
@@ -1096,9 +1097,13 @@ const QuoteDetailView: React.FC<{
   const totalFinal = subtotal + montoComision;
   const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
 
+  const paxCount = quote.pax && quote.pax > 0 ? quote.pax : 1;
+  const totalFinalDisplay = showPerPax ? totalFinal / paxCount : totalFinal;
+  const totalFinalUsdDisplay = showPerPax ? totalFinalUsd / paxCount : totalFinalUsd;
+
   const useUSD = showUSD && tc > 0;
-  const displayFormatted = useUSD ? fmt(totalFinalUsd) : fmtARS(totalFinal);
-  const displayWords = numToES(useUSD ? totalFinalUsd : totalFinal) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos');
+  const displayFormatted = useUSD ? fmt(totalFinalUsdDisplay) : fmtARS(totalFinalDisplay);
+  const displayWords = numToES(useUSD ? totalFinalUsdDisplay : totalFinalDisplay) + (useUSD ? ' dólares estadounidenses' : ' pesos argentinos') + (showPerPax ? ' por persona' : '');
 
   const commissionMultiplier = subtotal > 0 ? totalFinal / subtotal : 1;
   const fmtItemFinal = (baseArs: number, ganancia: number) => {
@@ -1308,9 +1313,9 @@ const QuoteDetailView: React.FC<{
               <span>Total comisión</span><span>+{fmtARS(montoComision)}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}><span>Total con comisión</span><span>{fmtARS(totalFinal)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#c47a00', borderTop: '1px solid #f0d090', paddingTop: '4px' }}><span>Total con comisión{showPerPax ? ` (por pax, x${paxCount})` : ''}</span><span>{fmtARS(totalFinalDisplay)}</span></div>
         </>)}
-        {tc > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}><span>Total USD (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsd)}</span></div>}
+        {tc > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px', borderTop: '1px dashed #ddd', paddingTop: '4px' }}><span>Total USD{showPerPax ? ' por pax' : ''} (TC ${tc.toLocaleString('es-AR')})</span><span>{fmt(totalFinalUsdDisplay)}</span></div>}
       </div>
 
       {/* Notas y Aclaraciones */}
@@ -1368,9 +1373,23 @@ const QuoteDetailView: React.FC<{
           <ChevronLeft size={18} /> Volver
         </button>
         <span className="text-xs text-marga-dark/30">Cotización #{String(quote.quote_number || 0).padStart(4, '0')} — {quote.client_name}</span>
+        <div className="ml-auto flex bg-gray-200 rounded-xl p-1 shadow-inner">
+          <button
+            onClick={() => setShowPerPax(false)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${!showPerPax ? 'bg-marga-wine text-marga-cream shadow-sm' : 'text-marga-dark/50 hover:text-marga-wine'}`}
+          >
+            Total
+          </button>
+          <button
+            onClick={() => setShowPerPax(true)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${showPerPax ? 'bg-marga-wine text-marga-cream shadow-sm' : 'text-marga-dark/50 hover:text-marga-wine'}`}
+          >
+            Por pax
+          </button>
+        </div>
         <button
           onClick={() => setShowUSD(v => !v)}
-          className={`ml-auto flex items-center gap-2 font-bold py-2 px-4 rounded-xl text-sm transition-colors border ${useUSD ? 'bg-marga-wine text-marga-cream border-marga-wine' : 'bg-white text-marga-wine border-marga-wine/40 hover:border-marga-wine'}`}
+          className={`flex items-center gap-2 font-bold py-2 px-4 rounded-xl text-sm transition-colors border ${useUSD ? 'bg-marga-wine text-marga-cream border-marga-wine' : 'bg-white text-marga-wine border-marga-wine/40 hover:border-marga-wine'}`}
         >
           <DollarSign size={14} /> {useUSD ? 'Ver en ARS' : 'Ver en USD'}
         </button>
