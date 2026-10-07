@@ -7,7 +7,7 @@ import {
   AlertCircle, RefreshCw, PenLine, Loader2, UserCheck
 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { FullQuote, QuoteTransfer, QuoteViatico, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client } from '../types';
+import type { FullQuote, QuoteTransfer, QuoteViatico, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client, QuoteVehicleType, QuoteVehicleEntry } from '../types';
 import { RouteMapModal } from '../components/RouteMapModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -36,27 +36,42 @@ const DEFAULT_TARIFA: TarifaSettings = {
   usd_exchange_rate: 1200,
 };
 
-type VehicleType = 'auto' | 'rav' | 'van' | 'van_rampa';
+type VehicleType = QuoteVehicleType;
 
 const VEHICLE_TYPES: { value: VehicleType; label: string; discount: boolean }[] = [
   { value: 'auto', label: 'Auto', discount: true },
   { value: 'rav', label: 'Camioneta RAV', discount: true },
   { value: 'van', label: 'Camioneta tipo VAN', discount: false },
   { value: 'van_rampa', label: 'Camioneta tipo VAN con rampa', discount: false },
+  { value: 'minibus', label: 'Minibus', discount: false },
+];
+
+// Tipos habilitados para vehículos contratados (precio manual, sin cálculo automático)
+const CONTRACTED_VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
+  { value: 'van', label: 'Camioneta tipo VAN' },
+  { value: 'auto', label: 'Auto' },
+  { value: 'minibus', label: 'Minibus' },
 ];
 
 const vehicleHasDiscount = (vehicleType?: VehicleType) =>
   VEHICLE_TYPES.find(v => v.value === vehicleType)?.discount || false;
 
-function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings, viaticos = 0, vehicles: VehicleType[] = ['van']) {
+// Normaliza vehículos legacy (array de strings) al formato objeto actual
+const normalizeVehicles = (vehicles?: any[]): QuoteVehicleEntry[] => {
+  if (!vehicles || !vehicles.length) return [{ type: 'van' }];
+  return vehicles.map(v => (typeof v === 'string' ? { type: v as VehicleType } : v));
+};
+
+function calcTransferCosts(distKm: number, durHours: number, settings: TarifaSettings, viaticos = 0, vehicles: QuoteVehicleEntry[] = [{ type: 'van' }]) {
   if (!distKm) return { baseCostArs: 0, finalCostArs: 0, isFullDay: false };
   const isFullDay = distKm > 150 || durHours >= 6;
   const perVehicleBase =
     (distKm * settings.costo_km) +
     (isFullDay ? settings.precio_full_day : settings.precio_medio_dia);
-  const multiplier = (vehicles.length ? vehicles : ['van'] as VehicleType[])
-    .reduce((sum, v) => sum + (vehicleHasDiscount(v) ? 0.7 : 1), 0);
-  const baseCostArs = (perVehicleBase * multiplier) + viaticos;
+  const autoVehicles = vehicles.filter(v => !v.contracted);
+  const contractedTotal = vehicles.filter(v => v.contracted).reduce((sum, v) => sum + (v.manual_price || 0), 0);
+  const multiplier = autoVehicles.reduce((sum, v) => sum + (vehicleHasDiscount(v.type) ? 0.7 : 1), 0);
+  const baseCostArs = (perVehicleBase * multiplier) + viaticos + contractedTotal;
   return { baseCostArs, finalCostArs: baseCostArs, isFullDay };
 }
 
@@ -111,7 +126,7 @@ const emptyTransfer = (): QuoteTransfer => ({
   distance_km: 0,
   duration_hours: 0,
   is_full_day: false,
-  vehicles: ['van'],
+  vehicles: [{ type: 'van' }],
   base_cost_ars: 0,
   base_cost_usd: 0,
   final_cost_usd: 0,
@@ -260,7 +275,7 @@ const TransferRow: React.FC<{
   const handleOriginChange = (origin: string) => onChange(index, { ...transfer, origin, destination: '' });
 
   const effectiveKm = (distKm: number) => distKm * (transfer.is_round_trip ? 2 : 1);
-  const vehicles: VehicleType[] = (transfer.vehicles && transfer.vehicles.length ? transfer.vehicles : ['van']) as VehicleType[];
+  const vehicles: QuoteVehicleEntry[] = normalizeVehicles(transfer.vehicles);
 
   const handleDestinationChange = (destination: string) => {
     const route = routes.find(r => r.origin === transfer.origin && r.destination === destination)
@@ -300,7 +315,7 @@ const TransferRow: React.FC<{
     onChange(index, { ...transfer, viaticos: total, viaticos_items: items, base_cost_ars: baseCostArs, is_full_day: isFullDay, final_cost_usd: finalCostArs });
   };
 
-  const handleVehiclesChange = (newVehicles: VehicleType[]) => {
+  const handleVehiclesChange = (newVehicles: QuoteVehicleEntry[]) => {
     const distKm = transfer.distance_km || 0;
     const durHours = transfer.duration_hours || 0;
     const { baseCostArs, finalCostArs, isFullDay } = calcTransferCosts(effectiveKm(distKm), durHours, settings, transfer.viaticos || 0, newVehicles);
@@ -452,31 +467,62 @@ const TransferRow: React.FC<{
 
             {/* Vehículos */}
             <div className="mt-2">
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1.5">
                 <label className="text-xs font-semibold text-marga-dark/50">Vehículos</label>
-                <button
-                  type="button"
-                  onClick={() => handleVehiclesChange([...vehicles, 'van'])}
-                  className="flex items-center gap-1 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-2 py-1 rounded-lg transition-colors"
-                >
-                  <Plus size={11} /> Agregar vehículo
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleVehiclesChange([...vehicles, { type: 'van' }])}
+                    className="flex items-center gap-1 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-2 py-1 rounded-lg transition-colors"
+                  >
+                    <Plus size={11} /> Agregar vehículo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVehiclesChange([...vehicles, { type: 'van', contracted: true, manual_price: 0 }])}
+                    className="flex items-center gap-1 text-xs font-bold text-amber-700 border border-amber-300 hover:bg-amber-50 px-2 py-1 rounded-lg transition-colors"
+                  >
+                    <Plus size={11} /> Agregar vehículo contratado
+                  </button>
+                </div>
               </div>
               {vehicles.map((v, vi) => (
                 <div key={vi} className="flex items-center gap-1.5 mb-1">
                   <select
-                    value={v}
+                    value={v.type}
                     onChange={e => {
                       const arr = [...vehicles];
-                      arr[vi] = e.target.value as VehicleType;
+                      arr[vi] = { ...arr[vi], type: e.target.value as VehicleType };
                       handleVehiclesChange(arr);
                     }}
                     className={sel + " flex-1"}
                   >
-                    {VEHICLE_TYPES.map(vt => (
-                      <option key={vt.value} value={vt.value}>{vt.label}{vt.discount ? ' (-30%)' : ''}</option>
+                    {(v.contracted ? CONTRACTED_VEHICLE_TYPES : VEHICLE_TYPES).map(vt => (
+                      <option key={vt.value} value={vt.value}>
+                        {vt.label}{!v.contracted && vehicleHasDiscount(vt.value) ? ' (-30%)' : ''}
+                      </option>
                     ))}
                   </select>
+                  {v.contracted && (
+                    <>
+                      <div className="relative w-28 shrink-0">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-marga-dark/40 text-xs">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={v.manual_price || ''}
+                          onChange={e => {
+                            const arr = [...vehicles];
+                            arr[vi] = { ...arr[vi], manual_price: e.target.value === '' ? 0 : Number(e.target.value) };
+                            handleVehiclesChange(arr);
+                          }}
+                          placeholder="0"
+                          className="w-full pl-5 pr-2 py-1 border border-amber-300 rounded-lg text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-amber-300"
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-1 rounded bg-amber-100 text-amber-700 shrink-0 whitespace-nowrap">Contratado</span>
+                    </>
+                  )}
                   {vehicles.length > 1 && (
                     <button
                       type="button"
@@ -506,11 +552,16 @@ const TransferRow: React.FC<{
                 </span>
               )}
               {mode === 'ruta' && (transfer.distance_km || 0) > 0 && Object.entries(
-                vehicles.reduce((acc, v) => ({ ...acc, [v]: (acc[v] || 0) + 1 }), {} as Record<string, number>)
-              ).map(([v, n]) => (
-                <span key={v} className="text-xs font-bold px-2 py-0.5 rounded-full bg-marga-creamDark text-marga-dark/60">
-                  {n > 1 ? `${n}x ` : ''}{VEHICLE_TYPES.find(vt => vt.value === v)?.label}
-                  {vehicleHasDiscount(v as VehicleType) ? ' (-30%)' : ''}
+                vehicles.filter(v => !v.contracted).reduce((acc, v) => ({ ...acc, [v.type]: (acc[v.type] || 0) + 1 }), {} as Record<string, number>)
+              ).map(([vt, n]) => (
+                <span key={vt} className="text-xs font-bold px-2 py-0.5 rounded-full bg-marga-creamDark text-marga-dark/60">
+                  {n > 1 ? `${n}x ` : ''}{VEHICLE_TYPES.find(x => x.value === vt)?.label}
+                  {vehicleHasDiscount(vt as VehicleType) ? ' (-30%)' : ''}
+                </span>
+              ))}
+              {mode === 'ruta' && vehicles.filter(v => v.contracted).map((v, vi) => (
+                <span key={`contracted-${vi}`} className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  Contratado: {VEHICLE_TYPES.find(x => x.value === v.type)?.label} — {fmtARS(v.manual_price || 0)}
                 </span>
               ))}
             </div>

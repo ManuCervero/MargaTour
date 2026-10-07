@@ -95,6 +95,14 @@ export interface QuoteViatico {
   price: number;
 }
 
+export type QuoteVehicleType = 'auto' | 'rav' | 'van' | 'van_rampa' | 'minibus';
+
+export interface QuoteVehicleEntry {
+  type: QuoteVehicleType;
+  contracted?: boolean;
+  manual_price?: number;
+}
+
 export interface QuoteTransfer {
   id?: string;
   quote_id?: string;
@@ -108,7 +116,7 @@ export interface QuoteTransfer {
   duration_hours?: number;
   is_full_day?: boolean | number;
   is_round_trip?: boolean;
-  vehicles?: ('auto' | 'rav' | 'van' | 'van_rampa')[];
+  vehicles?: QuoteVehicleEntry[];
   viaticos?: number;
   viaticos_items?: QuoteViatico[];
   base_cost_ars?: number;
