@@ -30,7 +30,7 @@ const SOURCE_OPTIONS: { value: IncomeSource; label: string }[] = [
     { value: 'general', label: 'General' },
 ];
 
-const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
     { value: 'efectivo', label: 'Efectivo' },
     { value: 'transferencia', label: 'Transferencia' },
     { value: 'link_pago', label: 'Link de Pago' },
@@ -39,7 +39,7 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
     { value: 'mercado_pago', label: 'Mercado Pago' },
 ];
 
-const TRANSFER_ACCOUNTS: { value: TransferAccount; label: string }[] = [
+export const TRANSFER_ACCOUNTS: { value: TransferAccount; label: string }[] = [
     { value: 'marga', label: 'Marga' },
     { value: 'fer', label: 'Fer' },
     { value: 'galicia_belen', label: 'Galicia Belen' },

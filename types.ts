@@ -225,6 +225,44 @@ export interface FullIncome {
   updated_at?: string;
 }
 
+// ── SISTEMA CONTABLE: VIAJES (hoja VIAJES) ─────────────────────────────────────
+
+export type TripCostCategory = 'transfer' | 'viaticos' | 'terceros' | 'actividad' | 'comision' | 'extra';
+
+export interface TripCost {
+  id?: string;
+  income_id?: string;
+  category: TripCostCategory;
+  description: string;
+  amount_ars: number;
+  sort_order?: number;
+}
+
+export interface TripPayment extends IncomePayment {
+  cost_id?: string | null;
+}
+
+export interface Trip {
+  id: string;
+  quote_id?: string;
+  quote_number?: number;
+  quote_status?: string;
+  client_name?: string;
+  concept?: string;
+  reference?: string;
+  date: string;
+  exchange_rate?: number;
+  amount_ars: number;
+  notes?: string;
+  quote_changed?: number;
+  costs_edited?: number;
+  cobrado_ars?: number;
+  pagado_ars?: number;
+  costs_by_category?: Partial<Record<TripCostCategory, number>>;
+  costs?: TripCost[];
+  payments?: TripPayment[];
+}
+
 export interface CashFlowMovement {
   date: string;
   amount_usd: number;

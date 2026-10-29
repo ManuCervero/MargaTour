@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import type { FullIncome, IncomeSource, CashFlowMovement } from '../types';
 import { AddIncomeModal } from '../components/AddIncomeModal';
 import { CashFlowChart } from '../components/CashFlowChart';
+import { TripsView } from './TripsView';
 
 const fmtUSD = (n: number) =>
     `USD ${(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -89,7 +90,7 @@ const ExchangeRateModal: React.FC<{
     );
 };
 
-export const AccountingView: React.FC = () => {
+const CashFlowView: React.FC = () => {
     const now = new Date();
     const [incomes, setIncomes] = useState<FullIncome[]>([]);
     const [movements, setMovements] = useState<CashFlowMovement[]>([]);
@@ -169,12 +170,9 @@ export const AccountingView: React.FC = () => {
     const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 3 + i);
 
     return (
-        <div className="p-4 sm:p-6 h-full overflow-y-auto">
+        <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Flujo de Caja</h2>
-                    <p className="text-sm text-gray-500 mt-1">Cotizaciones, Mujeres a la Cumbre, Celalla Experience y General.</p>
-                </div>
+                <p className="text-sm text-gray-500">Cotizaciones, Mujeres a la Cumbre, Celalla Experience y General.</p>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative w-full sm:flex-1 sm:min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -332,6 +330,39 @@ export const AccountingView: React.FC = () => {
                     onClose={() => setShowTCModal(false)}
                 />
             )}
+        </div>
+    );
+};
+
+type AccountingTab = 'viajes' | 'flujo';
+
+export const AccountingView: React.FC = () => {
+    const [tab, setTab] = useState<AccountingTab>('viajes');
+
+    return (
+        <div className="p-4 sm:p-6 h-full overflow-y-auto">
+            <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+                <div>
+                    <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Contable</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {tab === 'viajes'
+                            ? 'Cada cotización aprobada se carga sola como viaje. Los cobros y pagos se registran cuando suceden.'
+                            : 'Cargas y movimientos de caja.'}
+                    </p>
+                </div>
+                <div className="flex bg-white border border-marga-creamDark rounded-xl p-1">
+                    {([['viajes', 'Viajes'], ['flujo', 'Flujo de caja']] as const).map(([value, label]) => (
+                        <button
+                            key={value}
+                            onClick={() => setTab(value)}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${tab === value ? 'bg-marga-wine text-marga-cream' : 'text-marga-dark/60 hover:text-marga-wine'}`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            {tab === 'viajes' ? <TripsView /> : <CashFlowView />}
         </div>
     );
 };

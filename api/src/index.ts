@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { hashPassword, verifyPassword, createJWT, generateId } from './auth';
 import { requireAuth } from './middleware';
+import { tripRoutes, syncTripForQuote, ensureTripSchema } from './trips';
 
 type Bindings = {
   DB: D1Database;
@@ -314,6 +315,7 @@ app.post('/api/quotes', requireAuth, async (c) => {
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
   `).bind(totalTransfers, totalServices, totalGross, id).run();
 
+  await syncTripForQuote(c.env.DB, id!);
   return c.json({ ok: true, id, quote_number: quoteNumber });
 });
 
@@ -412,6 +414,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
   `).bind(totalTransfers, totalServices, totalGross, id).run();
 
+  await syncTripForQuote(c.env.DB, id!);
   return c.json({ ok: true });
 });
 
@@ -422,6 +425,7 @@ app.patch('/api/quotes/:id/status', requireAuth, async (c) => {
   await c.env.DB.prepare('UPDATE quotes SET status = ?, updated_at = ? WHERE id = ?')
     .bind(status, new Date().toISOString(), c.req.param('id'))
     .run();
+  await syncTripForQuote(c.env.DB, c.req.param('id')!);
   return c.json({ ok: true });
 });
 
@@ -429,6 +433,7 @@ app.delete('/api/quotes/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
   await c.env.DB.prepare('DELETE FROM quotes WHERE id = ?').bind(id).run();
   try { await c.env.DB.prepare('DELETE FROM quote_extra_services WHERE quote_id = ?').bind(id).run(); } catch {}
+  await syncTripForQuote(c.env.DB, id!);
   return c.json({ ok: true });
 });
 
@@ -472,6 +477,7 @@ app.get('/api/income/:id', requireAuth, async (c) => {
 });
 
 app.post('/api/income', requireAuth, async (c) => {
+  await ensureTripSchema(c.env.DB);
   const body = await c.req.json();
   const id = generateId();
   const now = new Date().toISOString();
@@ -492,12 +498,12 @@ app.post('/api/income', requireAuth, async (c) => {
     const pid = generateId();
     await c.env.DB.prepare(`
       INSERT INTO income_payments (id, income_id, type, amount_usd, amount_ars, exchange_rate,
-        payment_method, transfer_account, invoice_number, date, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        payment_method, transfer_account, invoice_number, date, notes, sort_order, cost_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       pid, id, p.type || 'ingreso', p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
       p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
-      p.date, p.notes || null, i
+      p.date, p.notes || null, i, p.cost_id || null
     ).run();
   }
 
@@ -505,6 +511,7 @@ app.post('/api/income', requireAuth, async (c) => {
 });
 
 app.put('/api/income/:id', requireAuth, async (c) => {
+  await ensureTripSchema(c.env.DB);
   const id = c.req.param('id');
   const body = await c.req.json();
   const now = new Date().toISOString();
@@ -527,12 +534,12 @@ app.put('/api/income/:id', requireAuth, async (c) => {
     const pid = generateId();
     await c.env.DB.prepare(`
       INSERT INTO income_payments (id, income_id, type, amount_usd, amount_ars, exchange_rate,
-        payment_method, transfer_account, invoice_number, date, notes, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        payment_method, transfer_account, invoice_number, date, notes, sort_order, cost_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       pid, id, p.type || 'ingreso', p.amount_usd || 0, p.amount_ars || 0, p.exchange_rate || null,
       p.payment_method || null, p.transfer_account || null, p.invoice_number || null,
-      p.date, p.notes || null, i
+      p.date, p.notes || null, i, p.cost_id || null
     ).run();
   }
 
@@ -543,8 +550,12 @@ app.delete('/api/income/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
   await c.env.DB.prepare('DELETE FROM income WHERE id = ?').bind(id).run();
   await c.env.DB.prepare('DELETE FROM income_payments WHERE income_id = ?').bind(id).run();
+  await ensureTripSchema(c.env.DB);
+  await c.env.DB.prepare('DELETE FROM income_costs WHERE income_id = ?').bind(id).run();
   return c.json({ ok: true });
 });
+
+tripRoutes(app);
 
 // ── RUTAS CRUD ────────────────────────────────────────────────────────────────
 crudRoutes(app, 'leads');

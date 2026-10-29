@@ -69,6 +69,23 @@ export const api = {
     nextNumber: () => request('/api/quotes/next-number'),
   },
 
+  trips: {
+    list: (filters?: { date_from?: string; date_to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.date_from) params.set('date_from', filters.date_from);
+      if (filters?.date_to) params.set('date_to', filters.date_to);
+      const qs = params.toString();
+      return request(`/api/trips${qs ? `?${qs}` : ''}`);
+    },
+    get: (id: string) => request(`/api/trips/${id}`),
+    saveCosts: (id: string, data: { costs: unknown[]; amount_ars?: number }) =>
+      request(`/api/trips/${id}/costs`, { method: 'PUT', body: JSON.stringify(data) }),
+    resync: (id: string) => request(`/api/trips/${id}/resync`, { method: 'POST' }),
+    addPayment: (id: string, data: unknown) =>
+      request(`/api/trips/${id}/payments`, { method: 'POST', body: JSON.stringify(data) }),
+    deletePayment: (id: string, paymentId: string) =>
+      request(`/api/trips/${id}/payments/${paymentId}`, { method: 'DELETE' }),
+  },
   income: {
     list: (filters?: { source?: string; quote_id?: string; date_from?: string; date_to?: string }) => {
       const params = new URLSearchParams();
