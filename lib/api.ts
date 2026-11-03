@@ -51,8 +51,9 @@ async function request(path: string, options: RequestInit = {}) {
 
 export const api = {
   quotes: {
-    list: (filters?: { status?: string; client_id?: string; date_from?: string; date_to?: string }) => {
+    list: (filters?: { status?: string; client_id?: string; date_from?: string; date_to?: string; kind?: string }) => {
       const params = new URLSearchParams();
+      if (filters?.kind) params.set('kind', filters.kind);
       if (filters?.status) params.set('status', filters.status);
       if (filters?.client_id) params.set('client_id', filters.client_id);
       if (filters?.date_from) params.set('date_from', filters.date_from);

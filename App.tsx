@@ -6,7 +6,7 @@ import { KanbanView } from './views/KanbanView';
 import { LeadDrawer } from './components/LeadDrawer';
 import { LoginPage } from './components/LoginPage';
 import { GlobalSearch } from './components/GlobalSearch';
-import { TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, ExperiencesView, RoutesView } from './views/DataViews';
+import { TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, RoutesView } from './views/DataViews';
 import { QuotesView } from './views/QuotesView';
 import { AccountingView } from './views/AccountingView';
 
@@ -208,6 +208,7 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4">
           <SidebarSection title="Operación">
             <SidebarItem view={ViewState.QUOTES} icon={FileText} label="Cotizaciones" />
+            <SidebarItem view={ViewState.EXPERIENCES} icon={Star} label="Experiencias" />
             <SidebarItem view={ViewState.CLIENTS} icon={Users} label="Clientes" />
             <SidebarItem view={ViewState.ACCOUNTING} icon={Calculator} label="Contable" />
           </SidebarSection>
@@ -223,7 +224,6 @@ const App: React.FC = () => {
             <SidebarItem view={ViewState.RESTAURANTS} icon={Utensils} label="Restaurantes" />
             <SidebarItem view={ViewState.HOTELS} icon={Bed} label="Hoteles" />
             <SidebarItem view={ViewState.ACTIVITIES} icon={Compass} label="Actividades" />
-            <SidebarItem view={ViewState.EXPERIENCES} icon={Star} label="Experiencias" />
           </SidebarSection>
 
           <SidebarSection title="Comunicación">
@@ -305,7 +305,7 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {currentView === ViewState.QUOTES && <QuotesView />}
+          {currentView === ViewState.QUOTES && <QuotesView key="quotes" />}
           {currentView === ViewState.TRANSFERS && <TransfersView />}
           {currentView === ViewState.CLIENTS && <ClientsView />}
           {currentView === ViewState.USERS && <UsersView />}
@@ -314,7 +314,7 @@ const App: React.FC = () => {
           {currentView === ViewState.HOTELS && <HotelsView filter={activeRegionFilter} />}
           {currentView === ViewState.RESTAURANTS && <RestaurantsView filter={activeRegionFilter} />}
           {currentView === ViewState.ACTIVITIES && <ActivitiesView filter={activeRegionFilter} />}
-          {currentView === ViewState.EXPERIENCES && <ExperiencesView filter={activeRegionFilter} />}
+          {currentView === ViewState.EXPERIENCES && <QuotesView key="experiences" kind="experience" />}
           {currentView === ViewState.ROUTES && <RoutesView />}
           {currentView === ViewState.ACCOUNTING && <AccountingView />}
 

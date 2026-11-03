@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Wine, Bed, Utensils, Compass, Star, Users, Truck, X } from 'lucide-react';
+import { Search, Wine, Bed, Utensils, Compass, Users, Truck, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { ViewState } from '../types';
 
@@ -29,7 +29,6 @@ const ENTITY_CONFIG: Array<{
   { table: 'hotels',       label: 'Hotel',        view: ViewState.HOTELS,       icon: Bed,     iconColor: 'text-blue-500',   subtitleKey: 'region' },
   { table: 'restaurants',  label: 'Restaurante',  view: ViewState.RESTAURANTS,  icon: Utensils,iconColor: 'text-orange-500', subtitleKey: 'region' },
   { table: 'activities',   label: 'Actividad',    view: ViewState.ACTIVITIES,   icon: Compass, iconColor: 'text-green-500',  subtitleKey: 'region' },
-  { table: 'experiences',  label: 'Experiencia',  view: ViewState.EXPERIENCES,  icon: Star,    iconColor: 'text-marga-olive', subtitleKey: 'region' },
   { table: 'clients',      label: 'Cliente',      view: ViewState.CLIENTS,      icon: Users,   iconColor: 'text-teal-500',   subtitleKey: 'email' },
   { table: 'transfers',    label: 'Transfer',     view: ViewState.TRANSFERS,    icon: Truck,   iconColor: 'text-gray-500',   subtitleKey: 'type' },
 ];

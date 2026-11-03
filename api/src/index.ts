@@ -177,10 +177,27 @@ app.get('/api/quotes/next-number', requireAuth, async (c) => {
   return c.json({ next_number: (row?.last_number ?? 0) + 1 });
 });
 
+// Las experiencias (Operación → Experiencias) se guardan en quotes con kind = 'experience':
+// sin cliente, pax = pax mínimo, sin número de cotización y sin sincronizar con Contable.
+let quoteSchemaReady = false;
+async function ensureQuoteSchema(db: D1Database) {
+  if (quoteSchemaReady) return;
+  for (const sql of [
+    "ALTER TABLE quotes ADD COLUMN kind TEXT DEFAULT 'quote'",
+    'ALTER TABLE quotes ADD COLUMN name TEXT',
+  ]) {
+    try { await db.prepare(sql).run(); } catch { /* la columna ya existe */ }
+  }
+  quoteSchemaReady = true;
+}
+
 app.get('/api/quotes', requireAuth, async (c) => {
-  const { status, client_id, date_from, date_to } = c.req.query();
+  await ensureQuoteSchema(c.env.DB);
+  const { status, client_id, date_from, date_to, kind } = c.req.query();
   let sql = 'SELECT q.*, COALESCE((SELECT SUM(price) FROM quote_extra_services WHERE quote_id = q.id), 0) as total_extras FROM quotes q WHERE 1=1';
   const params: unknown[] = [];
+  if (kind === 'experience') sql += " AND q.kind = 'experience'";
+  else sql += " AND COALESCE(q.kind, 'quote') <> 'experience'";
   if (status) { sql += ' AND q.status = ?'; params.push(status); }
   if (client_id) { sql += ' AND q.client_id = ?'; params.push(client_id); }
   if (date_from) { sql += ' AND q.date >= ?'; params.push(date_from); }
@@ -218,16 +235,22 @@ app.get('/api/quotes/:id', requireAuth, async (c) => {
 
 app.post('/api/quotes', requireAuth, async (c) => {
   const body = await c.req.json();
+  await ensureQuoteSchema(c.env.DB);
+  const isExperience = body.kind === 'experience';
 
   const settings = await fetchSettings(c.env.DB);
 
-  // Get next quote number
-  await c.env.DB.prepare('UPDATE quote_sequence SET last_number = last_number + 1').run();
-  const seqRow = await c.env.DB.prepare('SELECT last_number FROM quote_sequence').first<{ last_number: number }>();
-  const quoteNumber = seqRow?.last_number ?? 1;
+  // Get next quote number (las experiencias no consumen numeración)
+  let quoteNumber = 0;
+  if (!isExperience) {
+    await c.env.DB.prepare('UPDATE quote_sequence SET last_number = last_number + 1').run();
+    const seqRow = await c.env.DB.prepare('SELECT last_number FROM quote_sequence').first<{ last_number: number }>();
+    quoteNumber = seqRow?.last_number ?? 1;
+  }
 
   const id = generateId();
   const now = new Date().toISOString();
+  const date = isExperience ? now.slice(0, 10) : body.date;
 
   const transfers: any[] = body.transfers || [];
   const services: any[] = body.services || [];
@@ -237,12 +260,14 @@ app.post('/api/quotes', requireAuth, async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO quotes (id, quote_number, client_id, client_name, client_phone, client_email,
       description, pax, date, status, type, experience_id, exchange_rate, ganancia_transfer,
-      ganancia_servicio, comision, validity_date, notes, costo_km, precio_full_day, precio_medio_dia, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ganancia_servicio, comision, validity_date, notes, costo_km, precio_full_day, precio_medio_dia, created_at, updated_at,
+      kind, name)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, quoteNumber,
-    body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
-    body.description || null, body.pax || 1, body.date, body.status || 'draft', body.type || 'custom',
+    isExperience ? null : body.client_id || null, isExperience ? '' : body.client_name,
+    isExperience ? null : body.client_phone || null, isExperience ? null : body.client_email || null,
+    body.description || null, body.pax || 1, date, isExperience ? 'draft' : body.status || 'draft', body.type || 'custom',
     body.experience_id || null,
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
@@ -253,7 +278,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
     body.costo_km || null,
     body.precio_full_day || null,
     body.precio_medio_dia || null,
-    now, now
+    now, now,
+    isExperience ? 'experience' : 'quote', isExperience ? body.name || '' : null
   ).run();
 
   let totalTransfers = 0;
@@ -315,13 +341,16 @@ app.post('/api/quotes', requireAuth, async (c) => {
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
   `).bind(totalTransfers, totalServices, totalGross, id).run();
 
-  await syncTripForQuote(c.env.DB, id!);
+  if (!isExperience) await syncTripForQuote(c.env.DB, id!);
   return c.json({ ok: true, id, quote_number: quoteNumber });
 });
 
 app.put('/api/quotes/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
+  await ensureQuoteSchema(c.env.DB);
+  const existing = await c.env.DB.prepare('SELECT kind FROM quotes WHERE id = ?').bind(id).first<{ kind: string | null }>();
+  const isExperience = existing?.kind === 'experience';
 
   const settings = await fetchSettings(c.env.DB);
   const now = new Date().toISOString();
@@ -330,11 +359,13 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     UPDATE quotes SET client_id=?, client_name=?, client_phone=?, client_email=?,
       description=?, pax=?, date=?, status=?, type=?, experience_id=?, notes=?,
       exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, comision=?, validity_date=?,
-      costo_km=?, precio_full_day=?, precio_medio_dia=?, updated_at=?
+      costo_km=?, precio_full_day=?, precio_medio_dia=?, updated_at=?, name=?
     WHERE id=?
   `).bind(
-    body.client_id || null, body.client_name, body.client_phone || null, body.client_email || null,
-    body.description || null, body.pax || 1, body.date, body.status || 'draft', body.type || 'custom',
+    isExperience ? null : body.client_id || null, isExperience ? '' : body.client_name,
+    isExperience ? null : body.client_phone || null, isExperience ? null : body.client_email || null,
+    body.description || null, body.pax || 1, isExperience ? now.slice(0, 10) : body.date,
+    isExperience ? 'draft' : body.status || 'draft', body.type || 'custom',
     body.experience_id || null, body.notes || null,
     body.exchange_rate || settings.usd_exchange_rate,
     body.ganancia_transfer || 0,
@@ -344,7 +375,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     body.costo_km || null,
     body.precio_full_day || null,
     body.precio_medio_dia || null,
-    now, id
+    now, isExperience ? body.name || '' : null, id
   ).run();
 
   // Replace transfers, services and extra_services
@@ -414,7 +445,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     UPDATE quotes SET total_transfers = ?, total_services = ?, total_gross = ? WHERE id = ?
   `).bind(totalTransfers, totalServices, totalGross, id).run();
 
-  await syncTripForQuote(c.env.DB, id!);
+  if (!isExperience) await syncTripForQuote(c.env.DB, id!);
   return c.json({ ok: true });
 });
 
@@ -564,7 +595,6 @@ crudRoutes(app, 'hotels');
 crudRoutes(app, 'activities');
 crudRoutes(app, 'restaurants');
 crudRoutes(app, 'wineries');
-crudRoutes(app, 'experiences');
 crudRoutes(app, 'messages');
 crudRoutes(app, 'airport_transfers');
 crudRoutes(app, 'routes');

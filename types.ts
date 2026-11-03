@@ -164,6 +164,8 @@ export interface FullQuote {
   date: string;
   status: QuoteStatus;
   type: QuoteType;
+  kind?: 'quote' | 'experience';
+  name?: string;
   experience_id?: string;
   exchange_rate?: number;
   ganancia_transfer?: number;
@@ -320,18 +322,6 @@ export interface Tour {
   duration?: string;
   description?: string;
   notes?: string;
-  is_active?: boolean;
-}
-
-export interface Experience {
-  id: string;
-  name: string;
-  region?: string;
-  price?: number;
-  duration?: string;
-  description?: string;
-  notes?: string;
-  image_url?: string;
   is_active?: boolean;
 }
 

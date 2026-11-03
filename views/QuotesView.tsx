@@ -1072,6 +1072,7 @@ const QuoteDetailView: React.FC<{
   quote: FullQuote;
   onBack: () => void;
 }> = ({ quote, onBack }) => {
+  const isExperience = quote.kind === 'experience';
   const [showUSD, setShowUSD] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
   const [showPerPax, setShowPerPax] = useState(false);
@@ -1140,21 +1141,30 @@ const QuoteDetailView: React.FC<{
       {/* Número y fecha */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '28px' }}>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Cotización</p>
-          <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>
+          <p style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{isExperience ? 'Experiencia' : 'Cotización'}</p>
+          {!isExperience && <p style={{ fontSize: '26px', fontWeight: 900, color: '#4a1c2d', margin: 0 }}>#{String(quote.quote_number || 0).padStart(4, '0')}</p>}
           <p style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>{fmtDate(quote.date)}</p>
         </div>
       </div>
 
+      {/* Datos de la experiencia */}
+      {isExperience && (
+        <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
+          <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.name}</p>
+          {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>Pax mínimo:</strong> {quote.pax}</p>}
+          {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', whiteSpace: 'pre-line' }}>{quote.description}</p>}
+        </div>
+      )}
+
       {/* Datos del cliente */}
-      <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
+      {!isExperience && <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
         <p style={{ fontSize: '10px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Para</p>
         <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.client_name}</p>
         {quote.client_phone && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_phone}</p>}
         {quote.client_email && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}>{quote.client_email}</p>}
         {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>PAX:</strong> {quote.pax}</p>}
         {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', fontStyle: 'italic' }}>"{quote.description}"</p>}
-      </div>
+      </div>}
 
       {/* Itinerario por día (excluye hoteles) */}
       {allDays.map(day => {
@@ -1372,7 +1382,7 @@ const QuoteDetailView: React.FC<{
         <button onClick={onBack} className="flex items-center gap-2 text-marga-dark/60 hover:text-marga-wine font-semibold text-sm transition-colors">
           <ChevronLeft size={18} /> Volver
         </button>
-        <span className="text-xs text-marga-dark/30">Cotización #{String(quote.quote_number || 0).padStart(4, '0')} — {quote.client_name}</span>
+        <span className="text-xs text-marga-dark/30">{isExperience ? `Experiencia — ${quote.name}` : `Cotización #${String(quote.quote_number || 0).padStart(4, '0')} — ${quote.client_name}`}</span>
         <div className="ml-auto flex bg-gray-200 rounded-xl p-1 shadow-inner">
           <button
             onClick={() => setShowPerPax(false)}
@@ -1466,7 +1476,6 @@ interface CatalogData {
   restaurants: any[];
   activities: any[];
   tours: any[];
-  experiences: any[];
   airportTransfers: any[];
   guides: any[];
 }
@@ -1486,10 +1495,13 @@ const QuoteForm: React.FC<{
   fetchingBna: boolean;
   bnaUpdatedAt: string | null;
   onCatalogRefresh: () => void;
-}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt, onCatalogRefresh }) => {
+  isExperience?: boolean;
+}> = ({ initial, settings, routes, clients, catalogData, onSave, onCancel, onOpenTC, onFetchBna, fetchingBna, bnaUpdatedAt, onCatalogRefresh, isExperience }) => {
   const exchangeRate = settings.usd_exchange_rate || 1200;
 
-  const [form, setForm] = useState<FullQuote>(initial ? { ...initial, transfers: initial.transfers || [], services: initial.services || [], extra_services: initial.extra_services || [] } : emptyQuote());
+  const [form, setForm] = useState<FullQuote>(initial ? { ...initial, transfers: initial.transfers || [], services: initial.services || [], extra_services: initial.extra_services || [] } : { ...emptyQuote(), ...(isExperience ? { kind: 'experience' as const, name: '' } : {}) });
+  // Una experiencia se identifica por su nombre; una cotización por cliente y fecha
+  const canSave = isExperience ? !!form.name?.trim() : !!form.client_name.trim() && !!form.date;
   const [saving, setSaving] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -1509,37 +1521,6 @@ const QuoteForm: React.FC<{
   const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
   const [comision, setComision] = useState<number>(initial?.comision || 0);
   const [validityDate, setValidityDate] = useState<string>(initial?.validity_date || '');
-
-  // Estado para experiencia: PAX y precio unitario en USD
-  const [expPax, setExpPax] = useState<number>(() => {
-    if (initial?.type === 'experience' && initial.services?.length > 0) return initial.services[0].pax || 1;
-    return initial?.pax || 1;
-  });
-  const [expPriceUsd, setExpPriceUsd] = useState<number>(() => {
-    if (initial?.type === 'experience' && initial.services?.length > 0) return initial.services[0].unit_price_usd || 0;
-    return 0;
-  });
-
-  // Sincroniza PAX y precio con form.services cuando cambia cualquiera de los dos
-  const syncExpService = (pax: number, priceUsd: number, experienceId?: string) => {
-    const expId = experienceId ?? form.experience_id;
-    const exp = catalogData.experiences.find((e: any) => e.id === expId);
-    const name = exp ? exp.name : 'Experiencia';
-    const finalCost = calcServiceFinal(priceUsd, pax);
-    setForm(f => ({
-      ...f,
-      services: [{
-        day: f.date,
-        service_type: 'activity' as QuoteServiceType,
-        service_id: expId || undefined,
-        service_name: name,
-        pax,
-        unit_price_usd: priceUsd,
-        margin_pct: 10,
-        final_cost_usd: finalCost,
-      }],
-    }));
-  };
 
   const filteredClients = clients.filter(c =>
     c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
@@ -1569,7 +1550,7 @@ const QuoteForm: React.FC<{
   };
 
   const handleSave = async (status: QuoteStatus) => {
-    if (!form.client_name.trim() || !form.date) return;
+    if (!canSave) return;
     setSaving(true);
     try {
       await onSave({
@@ -1585,7 +1566,7 @@ const QuoteForm: React.FC<{
         validity_date: validityDate || undefined,
       }, status);
     } catch (err) {
-      alert(`Error al guardar la cotización: ${err instanceof Error ? err.message : 'Error desconocido'}. Por favor intentá de nuevo.`);
+      alert(`Error al guardar la ${isExperience ? 'experiencia' : 'cotización'}: ${err instanceof Error ? err.message : 'Error desconocido'}. Por favor intentá de nuevo.`);
     } finally {
       setSaving(false);
     }
@@ -1602,7 +1583,9 @@ const QuoteForm: React.FC<{
             <ChevronLeft size={20} />
           </button>
           <h2 className="text-xl font-extrabold text-marga-wine uppercase tracking-tight">
-            {initial?.id ? `Editar Cotización #${String(initial.quote_number || 0).padStart(4, '0')}` : 'Nueva Cotización'}
+            {isExperience
+              ? (initial?.id ? 'Editar Experiencia' : 'Nueva Experiencia')
+              : (initial?.id ? `Editar Cotización #${String(initial.quote_number || 0).padStart(4, '0')}` : 'Nueva Cotización')}
           </h2>
         </div>
         <div className="flex items-center border border-marga-creamDark rounded-xl overflow-hidden bg-white shadow-sm">
@@ -1633,7 +1616,15 @@ const QuoteForm: React.FC<{
           <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
             <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider mb-4">Datos generales</h3>
 
+            {isExperience && (
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Nombre de la experiencia</label>
+                <input type="text" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Ej: Valle de Uco full day" className={inp} />
+              </div>
+            )}
+
             {/* Cliente */}
+            {!isExperience && <>
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-marga-dark/50">Cliente</label>
@@ -1685,22 +1676,25 @@ const QuoteForm: React.FC<{
                 <input type="email" value={form.client_email || ''} onChange={e => setForm(f => ({ ...f, client_email: e.target.value }))} className={inp} placeholder="correo@email.com" />
               </div>
             </div>
+            </>}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción</label>
-                <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp + " resize-y"} placeholder="Ej: Tour Valle de Uco 3 días" />
+                <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp + " resize-y"} placeholder={isExperience ? 'Qué incluye, recorrido, duración...' : 'Ej: Tour Valle de Uco 3 días'} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Fecha</label>
-                <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inp} />
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isExperience ? 'Última modificación' : 'Fecha'}</label>
+                {isExperience
+                  ? <p className="px-1 py-2.5 text-sm text-marga-dark/60">{form.updated_at ? fmtDate(form.updated_at.slice(0, 10)) : 'Se completa al guardar'}</p>
+                  : <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inp} />}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1 flex items-center gap-1">
-                  <Users size={12} /> PAX (personas)
+                  <Users size={12} /> {isExperience ? 'PAX mínimo' : 'PAX (personas)'}
                 </label>
                 <input
                   type="number"
@@ -1727,25 +1721,6 @@ const QuoteForm: React.FC<{
               </div>
             </div>
 
-            {/* Tipo */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-marga-dark/50 mb-2">Tipo de cotización</label>
-              <div className="flex gap-3">
-                {(['custom', 'experience'] as QuoteType[]).map(t => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, type: t }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-colors ${form.type === t
-                      ? 'bg-marga-wine text-marga-cream border-marga-wine'
-                      : 'bg-white text-marga-dark/60 border-marga-creamDark hover:border-marga-wine/30'}`}
-                  >
-                    {t === 'custom' ? 'A medida' : 'Experiencia'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div>
               <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Notas internas</label>
               <textarea
@@ -1758,79 +1733,7 @@ const QuoteForm: React.FC<{
             </div>
           </div>
 
-          {/* Sección 2A: Experiencia */}
-          {form.type === 'experience' && (
-            <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider mb-4">Experiencia</h3>
-
-              {/* Cards de experiencias */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                {catalogData.experiences.map((exp: any) => (
-                  <button
-                    key={exp.id}
-                    type="button"
-                    onClick={() => {
-                      const refPrice = exp.price && exchangeRate > 0 ? Math.round(exp.price / exchangeRate) : 0;
-                      setForm(f => ({ ...f, experience_id: exp.id }));
-                      setExpPriceUsd(refPrice);
-                      syncExpService(expPax, refPrice, exp.id);
-                    }}
-                    className={`text-left p-4 rounded-xl border transition-all ${form.experience_id === exp.id
-                      ? 'border-marga-wine bg-marga-wine/5 ring-2 ring-marga-wine/20'
-                      : 'border-marga-creamDark hover:border-marga-wine/30'}`}
-                  >
-                    <p className="font-bold text-sm text-marga-dark">{exp.name}</p>
-                    {exp.region && <p className="text-xs text-marga-dark/50 mt-0.5">{exp.region}</p>}
-                    {exp.price && exchangeRate > 0 && (
-                      <p className="text-xs text-marga-wine font-semibold mt-1">
-                        Ref: USD {Math.round(exp.price / exchangeRate)} /pp
-                      </p>
-                    )}
-                    {exp.description && <p className="text-xs text-marga-dark/40 mt-1 line-clamp-2">{exp.description}</p>}
-                  </button>
-                ))}
-              </div>
-
-              {/* PAX */}
-              <div className="border-t border-marga-creamDark pt-4">
-                <div className="flex items-end gap-4">
-                  <div className="w-32">
-                    <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Cantidad de personas (PAX)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={expPax}
-                      onChange={e => {
-                        const pax = parseInt(e.target.value) || 1;
-                        setExpPax(pax);
-                        syncExpService(pax, expPriceUsd);
-                      }}
-                      className={inp}
-                    />
-                  </div>
-                  {form.experience_id && (
-                    <div className="flex-1 bg-marga-cream/60 rounded-xl px-4 py-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-marga-dark/50 font-semibold">
-                          {catalogData.experiences.find((e: any) => e.id === form.experience_id)?.name || ''}
-                        </p>
-                        <p className="text-xs text-marga-dark/40 mt-0.5">
-                          {expPax} {expPax === 1 ? 'persona' : 'personas'}
-                          {expPriceUsd > 0 ? ` × USD ${expPriceUsd.toFixed(2)} (+10%)` : ''}
-                        </p>
-                      </div>
-                      <p className="text-lg font-extrabold text-marga-wine">
-                        {expPriceUsd > 0 ? fmt(calcServiceFinal(expPriceUsd, expPax)) : '—'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sección 2B: Transfers y Servicios */}
-          {form.type === 'custom' && (
+          {/* Sección 2: Transfers y Servicios */}
             <>
               {/* Transfers */}
               <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
@@ -2082,7 +1985,6 @@ const QuoteForm: React.FC<{
               })()}
             </div>
             </>
-          )}
         </div>
 
         {/* Columna derecha: Totales + Acciones */}
@@ -2106,20 +2008,30 @@ const QuoteForm: React.FC<{
           </div>
 
           <div className="bg-white rounded-2xl border border-marga-creamDark p-4 shadow-sm space-y-2">
+            {isExperience ? (
             <button
               onClick={() => handleSave('draft')}
-              disabled={saving || !form.client_name.trim() || !form.date}
+              disabled={saving || !canSave}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold text-sm transition-colors disabled:opacity-40"
+            >
+              <PenLine size={16} /> Guardar experiencia
+            </button>
+            ) : <>
+            <button
+              onClick={() => handleSave('draft')}
+              disabled={saving || !canSave}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-marga-creamDark text-marga-dark font-bold text-sm hover:bg-marga-creamDark transition-colors disabled:opacity-40"
             >
               <PenLine size={16} /> Guardar borrador
             </button>
             <button
               onClick={() => handleSave('sent')}
-              disabled={saving || !form.client_name.trim() || !form.date}
+              disabled={saving || !canSave}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold text-sm transition-colors disabled:opacity-40"
             >
               <SendHorizontal size={16} /> Guardar y enviar
             </button>
+            </>}
             <button
               onClick={onCancel}
               className="w-full py-2.5 rounded-xl text-marga-dark/40 font-semibold text-sm hover:text-marga-dark transition-colors"
@@ -2169,7 +2081,8 @@ const StatusChangeModal: React.FC<{
 
 type ViewMode = 'list' | 'form' | 'detail';
 
-export const QuotesView: React.FC = () => {
+export const QuotesView: React.FC<{ kind?: 'quote' | 'experience' }> = ({ kind = 'quote' }) => {
+  const isExperience = kind === 'experience';
   const [mode, setMode] = useState<ViewMode>('list');
   const [quotes, setQuotes] = useState<FullQuote[]>([]);
   const [selectedQuote, setSelectedQuote] = useState<FullQuote | null>(null);
@@ -2192,7 +2105,7 @@ export const QuotesView: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [catalogData, setCatalogData] = useState<CatalogData>({
-    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], experiences: [], airportTransfers: [], guides: [],
+    wineries: [], hotels: [], restaurants: [], activities: [], tours: [], airportTransfers: [], guides: [],
   });
 
   const loadQuotes = useCallback(async () => {
@@ -2200,20 +2113,21 @@ export const QuotesView: React.FC = () => {
     setError('');
     try {
       const filters: any = {};
+      if (isExperience) filters.kind = 'experience';
       if (filterStatus) filters.status = filterStatus;
       if (filterDateFrom) filters.date_from = filterDateFrom;
       if (filterDateTo) filters.date_to = filterDateTo;
       const data = await api.quotes.list(filters);
       setQuotes(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      setError(e.message || 'Error al cargar cotizaciones');
+      setError(e.message || `Error al cargar ${isExperience ? 'experiencias' : 'cotizaciones'}`);
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterDateFrom, filterDateTo]);
+  }, [filterStatus, filterDateFrom, filterDateTo, isExperience]);
 
   const loadCatalog = useCallback(async () => {
-    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, experiencesData, airportTransfersData, guidesData] = await Promise.allSettled([
+    const [routesData, clientsData, rateData, wineriesData, hotelsData, restaurantsData, activitiesData, toursData, airportTransfersData, guidesData] = await Promise.allSettled([
       api.from('routes').select('*'),
       api.from('clients').select('*'),
       api.settings.getExchangeRate(),
@@ -2222,7 +2136,6 @@ export const QuotesView: React.FC = () => {
       api.from('restaurants').select('*'),
       api.from('activities').select('*'),
       api.from('tours').select('*'),
-      api.from('experiences').select('*'),
       api.from('airport_transfers').select('*'),
       api.from('guides').select('*'),
     ]);
@@ -2267,7 +2180,6 @@ export const QuotesView: React.FC = () => {
       restaurants: get(restaurantsData),
       activities: get(activitiesData),
       tours: get(toursData),
-      experiences: get(experiencesData),
       airportTransfers: get(airportTransfersData),
       guides: get(guidesData),
     });
@@ -2314,7 +2226,8 @@ export const QuotesView: React.FC = () => {
   };
 
   const handleDeleteQuote = async (q: FullQuote) => {
-    if (!confirm(`¿Eliminar la cotización #${String(q.quote_number || 0).padStart(4, '0')}? Esta acción no se puede deshacer.`)) return;
+    const label = isExperience ? `la experiencia "${q.name}"` : `la cotización #${String(q.quote_number || 0).padStart(4, '0')}`;
+    if (!confirm(`¿Eliminar ${label}? Esta acción no se puede deshacer.`)) return;
     await api.quotes.delete(q.id!);
     await loadQuotes();
   };
@@ -2346,6 +2259,7 @@ export const QuotesView: React.FC = () => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
+      q.name?.toLowerCase().includes(term) ||
       q.client_name?.toLowerCase().includes(term) ||
       q.description?.toLowerCase().includes(term) ||
       String(q.quote_number).includes(term)
@@ -2378,6 +2292,7 @@ export const QuotesView: React.FC = () => {
           fetchingBna={fetchingBna}
           bnaUpdatedAt={bnaUpdatedAt}
           onCatalogRefresh={loadCatalog}
+          isExperience={isExperience}
         />
       </div>
     );
@@ -2389,8 +2304,8 @@ export const QuotesView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Cotizaciones</h2>
-          <p className="text-sm text-marga-dark/50 mt-0.5">Gestión de presupuestos en USD</p>
+          <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">{isExperience ? 'Experiencias' : 'Cotizaciones'}</h2>
+          <p className="text-sm text-marga-dark/50 mt-0.5">{isExperience ? 'Experiencias armadas, listas para ofrecer' : 'Gestión de presupuestos en USD'}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center border border-marga-creamDark rounded-xl overflow-hidden bg-white">
@@ -2416,7 +2331,7 @@ export const QuotesView: React.FC = () => {
             onClick={handleNewQuote}
             className="flex items-center gap-2 bg-marga-wine hover:bg-marga-wineLight text-marga-cream font-bold py-2 px-4 rounded-xl text-sm shadow-sm transition-colors"
           >
-            <Plus size={16} /> Nueva cotización
+            <Plus size={16} /> {isExperience ? 'Nueva experiencia' : 'Nueva cotización'}
           </button>
         </div>
       </div>
@@ -2427,13 +2342,14 @@ export const QuotesView: React.FC = () => {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-marga-dark/30" />
           <input
             type="text"
-            placeholder="Buscar cliente, descripción..."
+            placeholder={isExperience ? 'Buscar experiencia...' : 'Buscar cliente, descripción...'}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-4 py-2 bg-white border border-marga-creamDark rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-marga-wine/30"
           />
         </div>
 
+        {!isExperience && <>
         <div className="flex gap-1.5 flex-wrap">
           {[{ value: '', label: 'Todas' }, { value: 'draft', label: 'Borrador' }, { value: 'sent', label: 'Enviadas' }, { value: 'approved', label: 'Aprobadas' }, { value: 'rejected', label: 'Rechazadas' }].map(f => (
             <button
@@ -2464,6 +2380,7 @@ export const QuotesView: React.FC = () => {
             <RefreshCw size={14} />
           </button>
         </div>
+        </>}
       </div>
 
       {/* Error */}
@@ -2478,13 +2395,14 @@ export const QuotesView: React.FC = () => {
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-500 font-semibold uppercase text-xs tracking-wider border-b border-marga-creamDark">
             <tr>
-              <th className="px-5 py-3">Nº</th>
-              <th className="px-5 py-3">Cliente</th>
+              {!isExperience && <th className="px-5 py-3">Nº</th>}
+              <th className="px-5 py-3">{isExperience ? 'Experiencia' : 'Cliente'}</th>
+              {isExperience && <th className="px-5 py-3">Pax mín.</th>}
               <th className="px-5 py-3 hidden sm:table-cell">Descripción</th>
-              <th className="px-5 py-3 hidden md:table-cell">Fecha</th>
+              <th className="px-5 py-3 hidden md:table-cell">{isExperience ? 'Modificada' : 'Fecha'}</th>
               <th className="px-5 py-3 hidden lg:table-cell">Válido hasta</th>
               <th className="px-5 py-3 text-right">Total</th>
-              <th className="px-5 py-3">Estado</th>
+              {!isExperience && <th className="px-5 py-3">Estado</th>}
               <th className="px-5 py-3 text-right">Acciones</th>
             </tr>
           </thead>
@@ -2500,7 +2418,7 @@ export const QuotesView: React.FC = () => {
               <tr>
                 <td colSpan={7} className="py-12 text-center text-marga-dark/30 text-sm">
                   <FileText size={32} className="mx-auto mb-2 opacity-20" />
-                  No hay cotizaciones{filterStatus ? ` con estado "${STATUS_LABELS[filterStatus as QuoteStatus]}"` : ''}
+                  No hay {isExperience ? 'experiencias' : 'cotizaciones'}{filterStatus ? ` con estado "${STATUS_LABELS[filterStatus as QuoteStatus]}"` : ''}
                 </td>
               </tr>
             ) : (
@@ -2513,16 +2431,19 @@ export const QuotesView: React.FC = () => {
                 const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;
                 return (
                 <tr key={q.id} className="hover:bg-marga-cream/40 transition-colors group">
+                  {!isExperience && (
                   <td className="px-5 py-3.5">
                     <span className="font-mono text-xs font-bold text-marga-dark/40">
                       #{String(q.quote_number || 0).padStart(4, '0')}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 font-semibold text-marga-dark">{q.client_name}</td>
+                  )}
+                  <td className="px-5 py-3.5 font-semibold text-marga-dark">{isExperience ? q.name : q.client_name}</td>
+                  {isExperience && <td className="px-5 py-3.5 text-marga-dark/60">{q.pax || '—'}</td>}
                   <td className="px-5 py-3.5 text-marga-dark/50 hidden sm:table-cell max-w-[200px] truncate">
                     {q.description || '—'}
                   </td>
-                  <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{fmtDate(q.date)}</td>
+                  <td className="px-5 py-3.5 text-marga-dark/50 hidden md:table-cell">{fmtDate(isExperience && q.updated_at ? q.updated_at.slice(0, 10) : q.date)}</td>
                   <td className="px-5 py-3.5 hidden lg:table-cell">
                     {q.validity_date ? (
                       (() => {
@@ -2546,9 +2467,11 @@ export const QuotesView: React.FC = () => {
                       <div className="font-mono text-xs text-marga-dark/40">{fmt(totalFinalUsd)} · TC ${tc.toLocaleString('es-AR')}</div>
                     )}
                   </td>
+                  {!isExperience && (
                   <td className="px-5 py-3.5">
                     <StatusBadge status={(q.status as QuoteStatus) || 'draft'} />
                   </td>
+                  )}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -2565,6 +2488,7 @@ export const QuotesView: React.FC = () => {
                       >
                         <Edit2 size={15} />
                       </button>
+                      {!isExperience && (
                       <button
                         onClick={() => setShowStatusModal(q)}
                         title="Cambiar estado"
@@ -2572,6 +2496,7 @@ export const QuotesView: React.FC = () => {
                       >
                         <Clock size={15} />
                       </button>
+                      )}
                       <button
                         onClick={() => handleDeleteQuote(q)}
                         title="Eliminar"
@@ -2608,5 +2533,3 @@ export const QuotesView: React.FC = () => {
   );
 };
 
-// Helper types for QuoteType
-type QuoteType = 'experience' | 'custom';
