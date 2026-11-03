@@ -78,6 +78,13 @@ function collectStatus(t: TripTotals): { label: string; cls: string } {
     return { label: 'Parcial', cls: 'bg-amber-100 text-amber-700' };
 }
 
+function payStatus(t: TripTotals): { label: string; cls: string } | null {
+    if (t.costos <= 0 && t.pagado <= 0) return null;
+    if (t.pagado <= 0) return { label: 'Sin pagar', cls: 'bg-gray-100 text-gray-500' };
+    if (t.pagado >= t.costos) return { label: 'Pagado', cls: 'bg-green-100 text-green-700' };
+    return { label: 'Parcial', cls: 'bg-amber-100 text-amber-700' };
+}
+
 // ── Formulario de movimiento (cobro o pago) ───────────────────────────────────
 
 const MovementForm: React.FC<{
@@ -562,6 +569,7 @@ export const TripsView: React.FC = () => {
                             <th className="px-3 py-3 text-right">Comisión</th>
                             <th className="px-3 py-3 text-right">Ganancia</th>
                             <th className="px-3 py-3 text-center">Cobro</th>
+                            <th className="px-3 py-3 text-center">Pago</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -571,11 +579,12 @@ export const TripsView: React.FC = () => {
                             return (
                                 <React.Fragment key={key}>
                                     <tr className="bg-marga-cream/70 border-t border-marga-creamDark">
-                                        <td colSpan={10} className="px-3 py-2 text-xs font-bold text-marga-wine uppercase tracking-wider">{MONTH_NAMES[Number(m) - 1]} {y}</td>
+                                        <td colSpan={11} className="px-3 py-2 text-xs font-bold text-marga-wine uppercase tracking-wider">{MONTH_NAMES[Number(m) - 1]} {y}</td>
                                     </tr>
                                     {list.map(t => {
                                         const tt = tripTotals(t);
                                         const st = collectStatus(tt);
+                                        const ps = payStatus(tt);
                                         return (
                                             <tr key={t.id} onClick={() => setOpenId(t.id)} className="border-t border-gray-100 hover:bg-marga-cream cursor-pointer group">
                                                 <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{fmtDate(t.date)}</td>
@@ -598,6 +607,9 @@ export const TripsView: React.FC = () => {
                                                 <td className="px-3 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${st.cls}`}>{st.label}</span>
                                                 </td>
+                                                <td className="px-3 py-3 text-center">
+                                                    {ps ? <span className={`px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${ps.cls}`}>{ps.label}</span> : <span className="text-gray-300">-</span>}
+                                                </td>
                                             </tr>
                                         );
                                     })}
@@ -611,15 +623,16 @@ export const TripsView: React.FC = () => {
                                         {numCell(totals.comision, 'text-gray-600 font-semibold')}
                                         {numCell(totals.ganancia, 'text-marga-wine font-bold')}
                                         <td />
+                                        <td />
                                     </tr>
                                 </React.Fragment>
                             );
                         })}
                         {!loading && groups.length === 0 && (
-                            <tr><td colSpan={10} className="px-6 py-12 text-center text-gray-400 text-sm">No hay viajes en este período. Se cargan solos al aprobar una cotización.</td></tr>
+                            <tr><td colSpan={11} className="px-6 py-12 text-center text-gray-400 text-sm">No hay viajes en este período. Se cargan solos al aprobar una cotización.</td></tr>
                         )}
                         {loading && (
-                            <tr><td colSpan={10} className="px-6 py-12 text-center text-gray-400 text-sm">Cargando...</td></tr>
+                            <tr><td colSpan={11} className="px-6 py-12 text-center text-gray-400 text-sm">Cargando...</td></tr>
                         )}
                     </tbody>
                 </table>
