@@ -166,6 +166,8 @@ export interface FullQuote {
   type: QuoteType;
   kind?: 'quote' | 'experience';
   name?: string;
+  features?: string[];
+  ganancia_general?: number;
   experience_id?: string;
   exchange_rate?: number;
   ganancia_transfer?: number;

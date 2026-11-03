@@ -79,6 +79,24 @@ function calcServiceFinal(unitPrice: number, pax: number) {
   return unitPrice * pax;
 }
 
+// Las experiencias usan una sola ganancia general sobre todo (incluidos los extras);
+// las cotizaciones, ganancias separadas de transfers y servicios.
+function quoteGanancias(q: Pick<FullQuote, 'kind' | 'ganancia_general' | 'ganancia_transfer' | 'ganancia_servicio'>) {
+  if (q.kind === 'experience') {
+    const g = q.ganancia_general || 0;
+    return { transfer: g, servicio: g, extras: g };
+  }
+  return { transfer: q.ganancia_transfer || 0, servicio: q.ganancia_servicio || 0, extras: 0 };
+}
+
+const EXPERIENCE_FEATURES = ['Pet friendly', 'Accesible', 'Almuerzo', 'Degustación', 'Traslados', 'Apto para menores', 'Apto para mayores'];
+
+const addDays = (iso: string, n: number) => {
+  const d = new Date((iso || new Date().toISOString()).slice(0, 10) + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: 'Borrador',
   sent: 'Enviada',
@@ -232,7 +250,8 @@ const TransferRow: React.FC<{
   catalogData: CatalogData;
   onChange: (index: number, updated: QuoteTransfer) => void;
   onRemove: (index: number) => void;
-}> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove }) => {
+  isExperience?: boolean;
+}> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove, isExperience }) => {
 
   const [mode, setMode] = useState<TransferMode>('ruta');
   const [showMap, setShowMap] = useState(false);
@@ -353,17 +372,18 @@ const TransferRow: React.FC<{
           <X size={16} />
         </button>
 
-        {/* Selector de tipo + Ida/Vuelta */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        {/* Selector de tipo + Ida/Vuelta (las experiencias solo usan ruta) */}
+        {!isExperience && <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <button className={modeBtn('aeropuerto', 'Aeropuerto')} onClick={() => handleModeChange('aeropuerto')}>✈ Aeropuerto</button>
             <button className={modeBtn('tour', 'Tour')} onClick={() => handleModeChange('tour')}>🗺 Tour</button>
             <button className={modeBtn('ruta', 'Ruta')} onClick={() => handleModeChange('ruta')}>📍 Ruta</button>
           </div>
-        </div>
+        </div>}
 
         {/* Día / Hora / Duración */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+          {!isExperience && <>
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
             <input type="date" value={transfer.day} onChange={e => onChange(index, { ...transfer, day: e.target.value })} className={inp} />
@@ -372,6 +392,7 @@ const TransferRow: React.FC<{
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Hora</label>
             <input type="time" value={transfer.hour || ''} onChange={e => onChange(index, { ...transfer, hour: e.target.value })} className={inp} />
           </div>
+          </>}
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Duración (hs)</label>
             <input type="number" min={0} step={0.5} value={transfer.duration_hours || ''} onChange={e => handleDurationChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
@@ -465,8 +486,8 @@ const TransferRow: React.FC<{
               </>
             )}
 
-            {/* Vehículos */}
-            <div className="mt-2">
+            {/* Vehículos (las experiencias van siempre en una VAN) */}
+            {!isExperience && <div className="mt-2">
               <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1.5">
                 <label className="text-xs font-semibold text-marga-dark/50">Vehículos</label>
                 <div className="flex items-center gap-1.5">
@@ -534,7 +555,7 @@ const TransferRow: React.FC<{
                   )}
                 </div>
               ))}
-            </div>
+            </div>}
           </div>
         )}
 
@@ -657,7 +678,8 @@ const ServiceRow: React.FC<{
   onChange: (index: number, updated: QuoteService) => void;
   onRemove: (index: number) => void;
   onCatalogRefresh: () => void;
-}> = ({ service, index, settings, catalogData, onChange, onRemove, onCatalogRefresh }) => {
+  isExperience?: boolean;
+}> = ({ service, index, settings, catalogData, onChange, onRemove, onCatalogRefresh, isExperience }) => {
 
   const [showAddNew, setShowAddNew] = React.useState(false);
   const [newName, setNewName] = React.useState('');
@@ -715,6 +737,12 @@ const ServiceRow: React.FC<{
     onChange(index, { ...service, checkout_day: val, final_cost_usd: service.unit_price_usd * (n || 0) });
   };
 
+  // En experiencias no hay fechas: el hotel se carga por cantidad de noches
+  const handleNightsChange = (n: number) => {
+    const day = service.day || new Date().toISOString().slice(0, 10);
+    onChange(index, { ...service, day, checkout_day: addDays(day, n), final_cost_usd: service.unit_price_usd * n });
+  };
+
   const handleAddNew = async () => {
     if (!newName.trim()) return;
     const table = CATALOG_TABLE[service.service_type];
@@ -749,8 +777,15 @@ const ServiceRow: React.FC<{
       </button>
 
       {/* Fila 1: fechas + tipo */}
-      <div className={`grid gap-3 mb-3 ${isHotel ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
-        {isHotel ? (
+      <div className={`grid gap-3 mb-3 ${isHotel && !isExperience ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
+        {isExperience ? (
+          isHotel && (
+            <div>
+              <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Noches</label>
+              <input type="number" min={0} value={nights || ''} onChange={e => handleNightsChange(parseInt(e.target.value) || 0)} className={inp} placeholder="0" />
+            </div>
+          )
+        ) : isHotel ? (
           <>
             <div>
               <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Llegada</label>
@@ -918,20 +953,34 @@ const TotalsPanel: React.FC<{
   gananciaTransfer?: number;
   gananciaServicio?: number;
   comision?: number;
-}> = ({ transfers, services, extraServices = [], exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0, comision = 0 }) => {
+  // Solo experiencias: ganancia general editable y precio por persona
+  gananciaGeneral?: number;
+  onChangeGananciaGeneral?: (val: number) => void;
+  paxMinimo?: number;
+}> = ({ transfers, services, extraServices = [], exchangeRate, onChangeExchangeRate, gananciaTransfer = 0, gananciaServicio = 0, comision = 0, gananciaGeneral = 0, onChangeGananciaGeneral, paxMinimo }) => {
+  const isExperience = !!onChangeGananciaGeneral;
   const totalTransfersArs = transfers.reduce((acc, t) => acc + (t.final_cost_usd || 0), 0);
   const totalServicesUsd = services.reduce((acc, s) => acc + (s.final_cost_usd || 0), 0);
   const totalExtrasArs = extraServices.reduce((acc, e) => acc + (e.price || 0), 0);
   const totalTransfersConGanancia = totalTransfersArs * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesUsd * (1 + gananciaServicio / 100);
-  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasArs;
+  const costoTotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasArs;
+  const subtotal = costoTotal * (1 + gananciaGeneral / 100);
   const montoComision = subtotal * (comision / 100) * (1 + comision / 100);
   const totalFinal = subtotal + montoComision;
   const hasItems = totalTransfersArs > 0 || totalServicesUsd > 0 || totalExtrasArs > 0;
+  const pax = paxMinimo && paxMinimo > 0 ? paxMinimo : 1;
 
   return (
     <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
       <h4 className="text-xs font-bold text-marga-dark/50 uppercase tracking-wider mb-3">Totales</h4>
+      {isExperience && hasItems && (
+        <div className="mb-3 p-3 rounded-xl bg-marga-wine text-marga-cream">
+          <p className="text-xs font-semibold opacity-70">Precio por persona (base {pax} pax)</p>
+          <p className="text-2xl font-extrabold font-mono">{fmtARS(totalFinal / pax)}</p>
+          {exchangeRate > 0 && <p className="text-sm font-mono opacity-80">{fmt(totalFinal / pax / exchangeRate)}</p>}
+        </div>
+      )}
       <div className="space-y-1.5 text-sm">
         {totalTransfersArs > 0 && (
           <div className="flex justify-between text-marga-dark/70">
@@ -974,6 +1023,36 @@ const TotalsPanel: React.FC<{
             <span>Servicios extra</span>
             <span className="font-mono font-semibold">{fmtARS(totalExtrasArs)}</span>
           </div>
+        )}
+        {isExperience && (
+          <>
+            {hasItems && (
+              <div className="flex justify-between font-semibold text-marga-dark/70 border-t border-marga-creamDark pt-2 mt-2">
+                <span>Costo total</span>
+                <span className="font-mono">{fmtARS(costoTotal)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-2 p-2.5 mt-1 bg-marga-wine/5 border border-marga-wine/20 rounded-lg">
+              <span className="text-sm font-bold text-marga-wine">Ganancia</span>
+              <div className="relative w-24">
+                <input
+                  type="number"
+                  min={0}
+                  value={gananciaGeneral || ''}
+                  onChange={e => onChangeGananciaGeneral!(e.target.value === '' ? 0 : Number(e.target.value))}
+                  placeholder="0"
+                  className="w-full pr-7 pl-2 py-1.5 border border-marga-wine/30 rounded-lg text-sm text-right font-bold focus:outline-none focus:ring-2 focus:ring-marga-wine/30 bg-white"
+                />
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-marga-wine font-bold text-sm">%</span>
+              </div>
+            </div>
+            {gananciaGeneral > 0 && hasItems && (
+              <div className="flex justify-between text-marga-dark/50 text-xs">
+                <span>Ganancia ({gananciaGeneral}%)</span>
+                <span className="font-mono">+{fmtARS(costoTotal * gananciaGeneral / 100)}</span>
+              </div>
+            )}
+          </>
         )}
         {hasItems && (
           <div className="flex justify-between font-bold text-marga-dark border-t-2 border-marga-dark/20 pt-2 mt-2 text-base">
@@ -1022,6 +1101,12 @@ const TotalsPanel: React.FC<{
               <div className="flex justify-between text-xs text-marga-dark/50">
                 <span>Total USD</span>
                 <span className="font-mono font-semibold">{fmt(totalFinal / exchangeRate)}</span>
+              </div>
+            )}
+            {isExperience && hasItems && (
+              <div className="flex justify-between text-xs text-marga-dark/50">
+                <span>Total ARS</span>
+                <span className="font-mono font-semibold">{fmtARS(totalFinal)}</span>
               </div>
             )}
           </div>
@@ -1083,8 +1168,7 @@ const QuoteDetailView: React.FC<{
   const hotelServices = allServices.filter(s => s.service_type === 'hotel');
   const extraServices = quote.extra_services || [];
 
-  const gananciaTransfer = quote.ganancia_transfer || 0;
-  const gananciaServicio = quote.ganancia_servicio || 0;
+  const { transfer: gananciaTransfer, servicio: gananciaServicio, extras: gananciaExtras } = quoteGanancias(quote);
   const comision = quote.comision || 0;
   const tc = quote.exchange_rate || 0;
 
@@ -1093,7 +1177,8 @@ const QuoteDetailView: React.FC<{
   const totalExtrasBase = extraServices.reduce((a, e) => a + (e.price || 0), 0);
   const totalTransfersConGanancia = totalTransfersBase * (1 + gananciaTransfer / 100);
   const totalServiciosConGanancia = totalServicesBase * (1 + gananciaServicio / 100);
-  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasBase;
+  const totalExtrasConGanancia = totalExtrasBase * (1 + gananciaExtras / 100);
+  const subtotal = totalTransfersConGanancia + totalServiciosConGanancia + totalExtrasConGanancia;
   const montoComision = subtotal * (comision / 100) * (1 + comision / 100);
   const totalFinal = subtotal + montoComision;
   const totalFinalUsd = tc > 0 ? totalFinal / tc : 0;
@@ -1114,7 +1199,8 @@ const QuoteDetailView: React.FC<{
 
   const validityFormatted = quote.validity_date ? fmtDate(quote.validity_date) : null;
 
-  const allDays = Array.from(new Set([
+  // Las experiencias no tienen fechas: todo va en un único bloque sin encabezado de día
+  const allDays = isExperience ? [''] : Array.from(new Set([
     ...transfers.map(t => t.day),
     ...nonHotelServices.map(s => s.day),
   ])).sort();
@@ -1153,6 +1239,13 @@ const QuoteDetailView: React.FC<{
           <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.name}</p>
           {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>Pax mínimo:</strong> {quote.pax}</p>}
           {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', whiteSpace: 'pre-line' }}>{quote.description}</p>}
+          {(quote.features || []).length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+              {(quote.features || []).map(f => (
+                <span key={f} style={{ fontSize: '11px', fontWeight: 700, color: '#4a1c2d', border: '1px solid #4a1c2d55', borderRadius: '999px', padding: '2px 10px' }}>✓ {f}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1168,21 +1261,21 @@ const QuoteDetailView: React.FC<{
 
       {/* Itinerario por día (excluye hoteles) */}
       {allDays.map(day => {
-        const dayTransfers = transfers.filter(t => t.day === day);
-        const dayServices = nonHotelServices.filter(s => s.day === day);
+        const dayTransfers = isExperience ? transfers : transfers.filter(t => t.day === day);
+        const dayServices = isExperience ? nonHotelServices : nonHotelServices.filter(s => s.day === day);
         if (dayTransfers.length === 0 && dayServices.length === 0) return null;
         return (
           <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            {!isExperience && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{fmtDate(day)}</p>
               <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
-            </div>
+            </div>}
 
             {dayTransfers.length > 0 && (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: dayServices.length > 0 ? '8px' : 0 }}>
                 <thead>
                   <tr>
-                    <th style={{ ...thStyle, width: '60px' }}>Hora</th>
+                    {!isExperience && <th style={{ ...thStyle, width: '60px' }}>Hora</th>}
                     <th style={thStyle}>Transfer</th>
                     <th className="screen-only" style={thRight}>Precio base</th>
                     <th className="screen-only" style={thRight}>Con ganancia</th>
@@ -1192,7 +1285,7 @@ const QuoteDetailView: React.FC<{
                 <tbody>
                   {dayTransfers.map((t, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid #ede8df' }}>
-                      <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>
+                      {!isExperience && <td style={{ padding: '5px 6px', color: '#666' }}>{t.hour || '—'}</td>}
                       <td style={{ padding: '5px 6px', fontWeight: 600, color: '#1a1a1a' }}>
                         {t.notes || `${t.origin} → ${t.destination}`}
                       </td>
@@ -1251,9 +1344,11 @@ const QuoteDetailView: React.FC<{
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
                     <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
+                      {isExperience ? (nights !== null && <><strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>) : <>
                       Check-in: <strong>{fmtDate(h.day)}</strong>
                       {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{fmtDate(h.checkout_day)}</strong></>}
                       {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
+                      </>}
                     </p>
                     {h.notes && <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic', whiteSpace: 'pre-line' }}>{h.notes}</p>}
                   </div>
@@ -1284,7 +1379,7 @@ const QuoteDetailView: React.FC<{
             <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>{es.description}</p>
               {showPrices
-                ? <p style={{ fontSize: '13px', fontWeight: 700, color: '#4a1c2d', margin: 0 }}>{fmtItemFinal(es.price || 0, 0)}</p>
+                ? <p style={{ fontSize: '13px', fontWeight: 700, color: '#4a1c2d', margin: 0 }}>{fmtItemFinal(es.price || 0, gananciaExtras)}</p>
                 : <p className="screen-only" style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{fmtARS(es.price || 0)}</p>
               }
             </div>
@@ -1307,7 +1402,7 @@ const QuoteDetailView: React.FC<{
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: '#4a1c2d', marginBottom: '8px' }}><span>Total servicios</span><span>{fmtARS(totalServiciosConGanancia)}</span></div>
         </>)}
         {totalExtrasBase > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '8px' }}><span>Servicios extra</span><span style={{ fontWeight: 600 }}>{fmtARS(totalExtrasBase)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '8px' }}><span>Servicios extra{gananciaExtras > 0 ? ` (+${gananciaExtras}% ganancia)` : ''}</span><span style={{ fontWeight: 600 }}>{fmtARS(totalExtrasConGanancia)}</span></div>
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#1a1a1a', borderTop: '1px solid #ddd', paddingTop: '6px', marginBottom: '2px' }}><span>Subtotal</span><span>{fmtARS(subtotal)}</span></div>
         {comision > 0 && (<>
@@ -1520,6 +1615,7 @@ const QuoteForm: React.FC<{
   const [gananciaTransfer, setGananciaTransfer] = useState<number>(initial?.ganancia_transfer || 0);
   const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
   const [comision, setComision] = useState<number>(initial?.comision || 0);
+  const [gananciaGeneral, setGananciaGeneral] = useState<number>(initial?.ganancia_general || 0);
   const [validityDate, setValidityDate] = useState<string>(initial?.validity_date || '');
 
   const filteredClients = clients.filter(c =>
@@ -1562,6 +1658,7 @@ const QuoteForm: React.FC<{
         precio_medio_dia: localSettings.precio_medio_dia,
         ganancia_transfer: gananciaTransfer,
         ganancia_servicio: gananciaServicio,
+        ganancia_general: isExperience ? gananciaGeneral : 0,
         comision,
         validity_date: validityDate || undefined,
       }, status);
@@ -1679,17 +1776,49 @@ const QuoteForm: React.FC<{
             </>}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              <div className="sm:col-span-2">
+              <div className={isExperience ? 'sm:col-span-3' : 'sm:col-span-2'}>
                 <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Descripción</label>
-                <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp + " resize-y"} placeholder={isExperience ? 'Qué incluye, recorrido, duración...' : 'Ej: Tour Valle de Uco 3 días'} />
+                <textarea rows={isExperience ? 10 : 3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={inp + " resize-y"} placeholder={isExperience ? 'Qué incluye, recorrido, duración...' : 'Ej: Tour Valle de Uco 3 días'} />
               </div>
+              {!isExperience && (
               <div>
-                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isExperience ? 'Última modificación' : 'Fecha'}</label>
-                {isExperience
-                  ? <p className="px-1 py-2.5 text-sm text-marga-dark/60">{form.updated_at ? fmtDate(form.updated_at.slice(0, 10)) : 'Se completa al guardar'}</p>
-                  : <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inp} />}
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Fecha</label>
+                <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inp} />
               </div>
+              )}
             </div>
+
+            {isExperience && (
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-2">Características</label>
+                <div className="flex flex-wrap gap-2">
+                  {EXPERIENCE_FEATURES.map(feat => {
+                    const checked = (form.features || []).includes(feat);
+                    return (
+                      <label
+                        key={feat}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold cursor-pointer select-none transition-colors ${checked
+                          ? 'bg-marga-wine text-marga-cream border-marga-wine'
+                          : 'bg-white text-marga-dark/60 border-marga-creamDark hover:border-marga-wine/30'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setForm(f => ({
+                            ...f,
+                            features: checked
+                              ? (f.features || []).filter(x => x !== feat)
+                              : EXPERIENCE_FEATURES.filter(x => x === feat || (f.features || []).includes(x)),
+                          }))}
+                          className="accent-marga-wine"
+                        />
+                        {feat}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
@@ -1719,6 +1848,12 @@ const QuoteForm: React.FC<{
                   className={inp}
                 />
               </div>
+              {isExperience && (
+                <div>
+                  <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Última modificación</label>
+                  <p className="px-1 py-2.5 text-sm text-marga-dark/60">{form.updated_at ? fmtDate(form.updated_at.slice(0, 10)) : 'Se completa al guardar'}</p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -1797,11 +1932,12 @@ const QuoteForm: React.FC<{
                     catalogData={catalogData}
                     onChange={handleTransferChange}
                     onRemove={idx => setForm(f => ({ ...f, transfers: f.transfers.filter((_, j) => j !== idx) }))}
+                    isExperience={isExperience}
                   />
                 ))}
 
-                {/* Ganancia Transfer */}
-                <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
+                {/* Ganancia Transfer (en experiencias va una ganancia general en Totales) */}
+                {!isExperience && <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-marga-wine">Ganancia transfers</p>
@@ -1832,7 +1968,7 @@ const QuoteForm: React.FC<{
                       </div>
                     );
                   })()}
-                </div>
+                </div>}
               </div>
 
               {/* Servicios */}
@@ -1860,11 +1996,12 @@ const QuoteForm: React.FC<{
                     onChange={handleServiceChange}
                     onRemove={idx => setForm(f => ({ ...f, services: f.services.filter((_, j) => j !== idx) }))}
                     onCatalogRefresh={onCatalogRefresh}
+                    isExperience={isExperience}
                   />
                 ))}
 
               {/* Ganancia Servicio */}
-              <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
+              {!isExperience && <div className="mt-4 p-4 bg-marga-wine/5 border border-marga-wine/20 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-bold text-marga-wine">Ganancia servicios</p>
@@ -1895,7 +2032,7 @@ const QuoteForm: React.FC<{
                     </div>
                   );
                 })()}
-              </div>
+              </div>}
             </div>
 
             {/* Servicios Extra */}
@@ -1903,7 +2040,7 @@ const QuoteForm: React.FC<{
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Servicios Extra</h3>
-                  <p className="text-xs text-marga-dark/40 mt-0.5">Sin ganancia — incluidos en base de comisión</p>
+                  <p className="text-xs text-marga-dark/40 mt-0.5">{isExperience ? 'Incluidos en la ganancia y en la base de comisión' : 'Sin ganancia — incluidos en base de comisión'}</p>
                 </div>
                 <button
                   type="button"
@@ -1959,7 +2096,7 @@ const QuoteForm: React.FC<{
                 const baseTransfers = form.transfers.reduce((a, t) => a + (t.final_cost_usd || 0), 0) * (1 + gananciaTransfer / 100);
                 const baseServices = form.services.reduce((a, s) => a + (s.final_cost_usd || 0), 0) * (1 + gananciaServicio / 100);
                 const baseExtras = (form.extra_services || []).reduce((a, e) => a + (e.price || 0), 0);
-                const base = baseTransfers + baseServices + baseExtras;
+                const base = (baseTransfers + baseServices + baseExtras) * (1 + (isExperience ? gananciaGeneral : 0) / 100);
                 const montoComision = base * (comision / 100) * (1 + comision / 100);
                 return (
                   <div className="mt-2 border-t border-amber-200 pt-2 space-y-0.5">
@@ -1989,7 +2126,8 @@ const QuoteForm: React.FC<{
 
         {/* Columna derecha: Totales + Acciones */}
         <div className="space-y-4">
-          <TotalsPanel transfers={form.transfers} services={form.services} extraServices={form.extra_services || []} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision} />
+          <TotalsPanel transfers={form.transfers} services={form.services} extraServices={form.extra_services || []} exchangeRate={localSettings.usd_exchange_rate} onChangeExchangeRate={val => setLocalSettings(s => ({ ...s, usd_exchange_rate: val }))} gananciaTransfer={gananciaTransfer} gananciaServicio={gananciaServicio} comision={comision}
+            {...(isExperience ? { gananciaGeneral, onChangeGananciaGeneral: setGananciaGeneral, paxMinimo: form.pax } : {})} />
 
           {/* Validez de presupuesto */}
           <div className="bg-white border border-marga-creamDark rounded-xl p-4 shadow-sm">
@@ -2423,9 +2561,10 @@ export const QuotesView: React.FC<{ kind?: 'quote' | 'experience' }> = ({ kind =
               </tr>
             ) : (
               filteredQuotes.map(q => {
-                const subtotalArs = (q.total_transfers || 0) * (1 + (q.ganancia_transfer || 0) / 100)
-                  + (q.total_services || 0) * (1 + (q.ganancia_servicio || 0) / 100)
-                  + ((q as any).total_extras || 0);
+                const g = quoteGanancias(q);
+                const subtotalArs = (q.total_transfers || 0) * (1 + g.transfer / 100)
+                  + (q.total_services || 0) * (1 + g.servicio / 100)
+                  + ((q as any).total_extras || 0) * (1 + g.extras / 100);
                 const r = (q.comision || 0) / 100; const totalFinalArs = subtotalArs * (1 + r * (1 + r));
                 const tc = q.exchange_rate || 0;
                 const totalFinalUsd = tc > 0 ? totalFinalArs / tc : null;
@@ -2465,6 +2604,9 @@ export const QuotesView: React.FC<{ kind?: 'quote' | 'experience' }> = ({ kind =
                     <div className="font-mono font-bold text-marga-dark">{fmtARS(totalFinalArs)}</div>
                     {totalFinalUsd !== null && (
                       <div className="font-mono text-xs text-marga-dark/40">{fmt(totalFinalUsd)} · TC ${tc.toLocaleString('es-AR')}</div>
+                    )}
+                    {isExperience && (q.pax || 0) > 0 && (
+                      <div className="font-mono text-xs font-bold text-marga-wine">{fmtARS(totalFinalArs / q.pax!)} por persona</div>
                     )}
                   </td>
                   {!isExperience && (

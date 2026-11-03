@@ -185,6 +185,8 @@ async function ensureQuoteSchema(db: D1Database) {
   for (const sql of [
     "ALTER TABLE quotes ADD COLUMN kind TEXT DEFAULT 'quote'",
     'ALTER TABLE quotes ADD COLUMN name TEXT',
+    'ALTER TABLE quotes ADD COLUMN features TEXT',
+    'ALTER TABLE quotes ADD COLUMN ganancia_general REAL DEFAULT 0',
   ]) {
     try { await db.prepare(sql).run(); } catch { /* la columna ya existe */ }
   }
@@ -209,8 +211,11 @@ app.get('/api/quotes', requireAuth, async (c) => {
 
 app.get('/api/quotes/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
-  const quote = await c.env.DB.prepare('SELECT * FROM quotes WHERE id = ?').bind(id).first();
+  await ensureQuoteSchema(c.env.DB);
+  const quote = await c.env.DB.prepare('SELECT * FROM quotes WHERE id = ?').bind(id).first<any>();
   if (!quote) return c.json({ error: 'No encontrado' }, 404);
+  let features: string[] = [];
+  try { features = quote.features ? JSON.parse(quote.features) : []; } catch {}
   const { results: rawTransfers } = await c.env.DB.prepare(
     'SELECT * FROM quote_transfers WHERE quote_id = ? ORDER BY sort_order ASC'
   ).bind(id).all();
@@ -230,7 +235,7 @@ app.get('/api/quotes/:id', requireAuth, async (c) => {
     viaticos_items: t.viaticos_items ? JSON.parse(t.viaticos_items) : [],
     vehicles: t.vehicles ? JSON.parse(t.vehicles) : ['van'],
   }));
-  return c.json({ ...quote, transfers, services, extra_services: extraServices });
+  return c.json({ ...quote, features, transfers, services, extra_services: extraServices });
 });
 
 app.post('/api/quotes', requireAuth, async (c) => {
@@ -261,8 +266,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
     INSERT INTO quotes (id, quote_number, client_id, client_name, client_phone, client_email,
       description, pax, date, status, type, experience_id, exchange_rate, ganancia_transfer,
       ganancia_servicio, comision, validity_date, notes, costo_km, precio_full_day, precio_medio_dia, created_at, updated_at,
-      kind, name)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      kind, name, features, ganancia_general)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, quoteNumber,
     isExperience ? null : body.client_id || null, isExperience ? '' : body.client_name,
@@ -279,7 +284,8 @@ app.post('/api/quotes', requireAuth, async (c) => {
     body.precio_full_day || null,
     body.precio_medio_dia || null,
     now, now,
-    isExperience ? 'experience' : 'quote', isExperience ? body.name || '' : null
+    isExperience ? 'experience' : 'quote', isExperience ? body.name || '' : null,
+    isExperience ? JSON.stringify(body.features || []) : null, isExperience ? body.ganancia_general || 0 : 0
   ).run();
 
   let totalTransfers = 0;
@@ -359,7 +365,7 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     UPDATE quotes SET client_id=?, client_name=?, client_phone=?, client_email=?,
       description=?, pax=?, date=?, status=?, type=?, experience_id=?, notes=?,
       exchange_rate=?, ganancia_transfer=?, ganancia_servicio=?, comision=?, validity_date=?,
-      costo_km=?, precio_full_day=?, precio_medio_dia=?, updated_at=?, name=?
+      costo_km=?, precio_full_day=?, precio_medio_dia=?, updated_at=?, name=?, features=?, ganancia_general=?
     WHERE id=?
   `).bind(
     isExperience ? null : body.client_id || null, isExperience ? '' : body.client_name,
@@ -375,7 +381,8 @@ app.put('/api/quotes/:id', requireAuth, async (c) => {
     body.costo_km || null,
     body.precio_full_day || null,
     body.precio_medio_dia || null,
-    now, isExperience ? body.name || '' : null, id
+    now, isExperience ? body.name || '' : null,
+    isExperience ? JSON.stringify(body.features || []) : null, isExperience ? body.ganancia_general || 0 : 0, id
   ).run();
 
   // Replace transfers, services and extra_services
