@@ -16,6 +16,7 @@ export enum ViewState {
   USERS = 'USERS',
   CONFIG = 'CONFIG',
   ACCOUNTING = 'ACCOUNTING',
+  CALENDAR = 'CALENDAR',
 }
 
 export enum LeadStatus {
@@ -413,4 +414,63 @@ export interface Winery {
   description?: string;
   notes?: string;
   requiresReservation?: boolean;
+}
+
+// ── Calendario ────────────────────────────────────────────────────────────────
+
+export type FleetVehicleStatus = 'operativo' | 'taller' | 'fuera_de_servicio';
+
+export interface FleetVehicle {
+  id: string;
+  plate: string;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  capacity?: number | null;
+  vehicle_type?: QuoteVehicleType | null;
+  accessible?: number;
+  status?: FleetVehicleStatus | null;
+  notes?: string | null;
+  is_active?: number;
+}
+
+export interface Driver {
+  id: string;
+  first_name: string;
+  last_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+  is_active?: number;
+}
+
+export interface CalendarAssignment {
+  slot: number;
+  vehicle_id?: string | null;
+  driver_id?: string | null;
+  external_provider?: string | null;
+  notes?: string | null;
+}
+
+export interface CalendarEvent {
+  id: string;
+  quote_id: string;
+  quote_number: number;
+  client_name: string;
+  client_phone?: string | null;
+  quote_description?: string | null;
+  quote_notes?: string | null;
+  transfer_key: string;
+  day: string;
+  hour?: string | null;
+  origin: string;
+  destination: string;
+  pax: number;
+  duration_hours: number;
+  is_full_day: boolean;
+  is_round_trip: boolean;
+  distance_km: number;
+  notes?: string | null;
+  vehicles: { type: QuoteVehicleType; contracted: boolean }[];
+  assignments: CalendarAssignment[];
 }

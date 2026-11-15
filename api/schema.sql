@@ -354,3 +354,45 @@ CREATE TABLE IF NOT EXISTS income_payments (
   notes TEXT,
   sort_order INTEGER DEFAULT 0
 );
+
+-- Calendario (también se crean solas desde api/src/calendar.ts)
+CREATE TABLE IF NOT EXISTS fleet_vehicles (
+  id TEXT PRIMARY KEY,
+  plate TEXT NOT NULL,
+  brand TEXT,
+  model TEXT,
+  year INTEGER,
+  capacity INTEGER DEFAULT 0,
+  vehicle_type TEXT DEFAULT 'van',
+  accessible INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'operativo',
+  notes TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS drivers (
+  id TEXT PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT,
+  phone TEXT,
+  email TEXT,
+  notes TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Un registro por vehículo pedido en un transfer de una cotización aprobada.
+-- transfer_key = día|origen|destino|n (estable aunque la cotización se edite)
+CREATE TABLE IF NOT EXISTS transfer_assignments (
+  id TEXT PRIMARY KEY,
+  quote_id TEXT NOT NULL,
+  transfer_key TEXT NOT NULL,
+  day TEXT,
+  slot INTEGER DEFAULT 0,
+  vehicle_id TEXT,
+  driver_id TEXT,
+  external_provider TEXT,
+  notes TEXT,
+  updated_at TEXT
+);

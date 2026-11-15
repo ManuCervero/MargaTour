@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, History, FileText, Truck, Map, MapPin, Globe, Star, Wine, Bed, Utensils, Settings, Search, Bell, ChevronDown, Users, UserCog, Compass, LogOut, Menu, X, MessageCircle, Calculator } from 'lucide-react';
+import { LayoutDashboard, History, FileText, Truck, Map, MapPin, Globe, Star, Wine, Bed, Utensils, Settings, Search, Bell, ChevronDown, Users, UserCog, Compass, LogOut, Menu, X, MessageCircle, Calculator, CalendarDays } from 'lucide-react';
 import { ViewState, Lead, LeadStatus } from './types';
 import { api, clearToken, getStoredUser, onAuthError, setStoredUser, setToken } from './lib/api';
 import { KanbanView } from './views/KanbanView';
@@ -9,6 +9,7 @@ import { GlobalSearch } from './components/GlobalSearch';
 import { TransfersView, UsersView, ClientsView, GenericPlaceholderView, RegionsView, WineriesView, HotelsView, RestaurantsView, ActivitiesView, RoutesView } from './views/DataViews';
 import { QuotesView } from './views/QuotesView';
 import { AccountingView } from './views/AccountingView';
+import { CalendarView } from './views/CalendarView';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<Record<string, string> | null>(() => getStoredUser());
@@ -208,6 +209,7 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4">
           <SidebarSection title="Operación">
             <SidebarItem view={ViewState.QUOTES} icon={FileText} label="Cotizaciones" />
+            <SidebarItem view={ViewState.CALENDAR} icon={CalendarDays} label="Calendario" />
             <SidebarItem view={ViewState.EXPERIENCES} icon={Star} label="Experiencias" />
             <SidebarItem view={ViewState.CLIENTS} icon={Users} label="Clientes" />
             <SidebarItem view={ViewState.ACCOUNTING} icon={Calculator} label="Contable" />
@@ -317,9 +319,10 @@ const App: React.FC = () => {
           {currentView === ViewState.EXPERIENCES && <QuotesView key="experiences" kind="experience" />}
           {currentView === ViewState.ROUTES && <RoutesView />}
           {currentView === ViewState.ACCOUNTING && <AccountingView />}
+          {currentView === ViewState.CALENDAR && <CalendarView />}
 
           {/* Fallback for other views */}
-          {![ViewState.LEADS, ViewState.QUOTES, ViewState.TRANSFERS, ViewState.CLIENTS, ViewState.USERS, ViewState.REGIONS, ViewState.WINERIES, ViewState.HOTELS, ViewState.RESTAURANTS, ViewState.ACTIVITIES, ViewState.EXPERIENCES, ViewState.ROUTES, ViewState.ACCOUNTING].includes(currentView) && (
+          {![ViewState.LEADS, ViewState.QUOTES, ViewState.TRANSFERS, ViewState.CLIENTS, ViewState.USERS, ViewState.REGIONS, ViewState.WINERIES, ViewState.HOTELS, ViewState.RESTAURANTS, ViewState.ACTIVITIES, ViewState.EXPERIENCES, ViewState.ROUTES, ViewState.ACCOUNTING, ViewState.CALENDAR].includes(currentView) && (
             <GenericPlaceholderView
               title={
                 currentView === ViewState.HISTORY ? "Historial" :

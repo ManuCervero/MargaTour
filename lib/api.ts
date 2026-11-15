@@ -110,6 +110,23 @@ export const api = {
     },
   },
 
+  calendar: {
+    list: (date_from: string, date_to: string) =>
+      request(`/api/calendar?date_from=${date_from}&date_to=${date_to}`),
+    assign: (data: { quote_id: string; transfer_key: string; slots: unknown[] }) =>
+      request('/api/calendar/assignments', { method: 'PUT', body: JSON.stringify(data) }),
+  },
+  fleet: {
+    list: () => request('/api/fleet'),
+    create: (data: unknown) => request('/api/fleet', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) => request(`/api/fleet/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  },
+  drivers: {
+    list: () => request('/api/drivers'),
+    create: (data: unknown) => request('/api/drivers', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) => request(`/api/drivers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  },
+
   settings: {
     getExchangeRate: (): Promise<{ value: number }> => request('/api/settings/exchange-rate'),
     updateExchangeRate: (value: number) =>

@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { hashPassword, verifyPassword, createJWT, generateId } from './auth';
 import { requireAuth } from './middleware';
 import { tripRoutes, syncTripForQuote, ensureTripSchema } from './trips';
+import { calendarRoutes } from './calendar';
 
 type Bindings = {
   DB: D1Database;
@@ -594,6 +595,7 @@ app.delete('/api/income/:id', requireAuth, async (c) => {
 });
 
 tripRoutes(app);
+calendarRoutes(app);
 
 // ── RUTAS CRUD ────────────────────────────────────────────────────────────────
 crudRoutes(app, 'leads');
