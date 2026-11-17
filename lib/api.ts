@@ -113,8 +113,14 @@ export const api = {
   calendar: {
     list: (date_from: string, date_to: string) =>
       request(`/api/calendar?date_from=${date_from}&date_to=${date_to}`),
-    assign: (data: { quote_id: string; transfer_key: string; slots: unknown[] }) =>
-      request('/api/calendar/assignments', { method: 'PUT', body: JSON.stringify(data) }),
+    assign: (items: { quote_id: string; transfer_key: string; origin?: string; destination?: string; slots: unknown[] }[]) =>
+      request('/api/calendar/assignments', { method: 'PUT', body: JSON.stringify({ items }) }),
+  },
+  thirdParties: {
+    list: () => request('/api/third-parties'),
+    create: (data: unknown) => request('/api/third-parties', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) => request(`/api/third-parties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    jobs: (id: string) => request(`/api/third-parties/${id}/jobs`),
   },
   fleet: {
     list: () => request('/api/fleet'),

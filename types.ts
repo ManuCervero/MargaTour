@@ -448,8 +448,32 @@ export interface CalendarAssignment {
   slot: number;
   vehicle_id?: string | null;
   driver_id?: string | null;
+  third_party_id?: string | null;
   external_provider?: string | null;
   notes?: string | null;
+}
+
+export interface ThirdParty {
+  id: string;
+  name: string;
+  phone?: string | null;
+  notes?: string | null;
+  is_active?: number;
+  jobs?: number;
+  last_job_day?: string | null;
+  next_job_day?: string | null;
+}
+
+export interface ThirdPartyJob {
+  quote_id: string;
+  transfer_key: string;
+  day: string;
+  origin?: string | null;
+  destination?: string | null;
+  vehicles: number;
+  quote_number: number;
+  client_name?: string | null;
+  pax?: number | null;
 }
 
 export interface CalendarEvent {

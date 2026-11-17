@@ -54,6 +54,23 @@ export async function ensureCalendarSchema(db: D1Database) {
     updated_at TEXT
   )`).run();
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_transfer_assignments_quote ON transfer_assignments (quote_id, transfer_key)').run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS third_parties (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT,
+    notes TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`).run();
+  // third_party_id: el transfer lo hace un tercero (pone vehículo y chofer).
+  // origin/destination: copia legible para el historial de trabajos de cada tercero.
+  for (const sql of [
+    'ALTER TABLE transfer_assignments ADD COLUMN third_party_id TEXT',
+    'ALTER TABLE transfer_assignments ADD COLUMN origin TEXT',
+    'ALTER TABLE transfer_assignments ADD COLUMN destination TEXT',
+  ]) {
+    try { await db.prepare(sql).run(); } catch { /* la columna ya existe */ }
+  }
   calendarSchemaReady = true;
 }
 
@@ -77,6 +94,7 @@ const normalizeVehicles = (raw: unknown) => {
 
 const VEHICLE_FIELDS = ['plate', 'brand', 'model', 'year', 'capacity', 'vehicle_type', 'accessible', 'status', 'notes', 'is_active'];
 const DRIVER_FIELDS = ['first_name', 'last_name', 'phone', 'email', 'notes', 'is_active'];
+const THIRD_PARTY_FIELDS = ['name', 'phone', 'notes', 'is_active'];
 
 const pick = (body: Record<string, unknown>, fields: string[]) => {
   const out: Record<string, unknown> = {};
@@ -84,10 +102,10 @@ const pick = (body: Record<string, unknown>, fields: string[]) => {
   return out;
 };
 
-function catalogRoutes(app: Hono<Env>, path: string, table: string, fields: string[], required: string, order: string) {
+function catalogRoutes(app: Hono<Env>, path: string, table: string, fields: string[], required: string, order: string, listSql?: string) {
   app.get(`/api/${path}`, requireAuth, async (c) => {
     await ensureCalendarSchema(c.env.DB);
-    const { results } = await c.env.DB.prepare(`SELECT * FROM ${table} ORDER BY is_active DESC, ${order}`).all();
+    const { results } = await c.env.DB.prepare(listSql || `SELECT * FROM ${table} ORDER BY is_active DESC, ${order}`).all();
     return c.json(results);
   });
 
@@ -119,6 +137,29 @@ export function calendarRoutes(app: Hono<Env>) {
   // perder el historial de asignaciones.
   catalogRoutes(app, 'fleet', 'fleet_vehicles', VEHICLE_FIELDS, 'plate', 'plate ASC');
   catalogRoutes(app, 'drivers', 'drivers', DRIVER_FIELDS, 'first_name', 'first_name ASC, last_name ASC');
+
+  // Un trabajo = un transfer (de una cotización que sigue aprobada) asignado al tercero,
+  // aunque ponga más de un vehículo.
+  const JOBS_FROM = `FROM transfer_assignments a JOIN quotes q ON q.id = a.quote_id AND q.status = 'approved'`;
+  catalogRoutes(app, 'third-parties', 'third_parties', THIRD_PARTY_FIELDS, 'name', 'name ASC', `
+    SELECT tp.*,
+      (SELECT COUNT(DISTINCT a.quote_id || '::' || a.transfer_key) ${JOBS_FROM} WHERE a.third_party_id = tp.id) AS jobs,
+      (SELECT MAX(a.day) ${JOBS_FROM} WHERE a.third_party_id = tp.id AND a.day <= date('now')) AS last_job_day,
+      (SELECT MIN(a.day) ${JOBS_FROM} WHERE a.third_party_id = tp.id AND a.day > date('now')) AS next_job_day
+    FROM third_parties tp ORDER BY tp.is_active DESC, tp.name ASC`);
+
+  app.get('/api/third-parties/:id/jobs', requireAuth, async (c) => {
+    await ensureCalendarSchema(c.env.DB);
+    const { results } = await c.env.DB.prepare(`
+      SELECT a.quote_id, a.transfer_key, a.day, MAX(a.origin) AS origin, MAX(a.destination) AS destination,
+        COUNT(*) AS vehicles, q.quote_number, q.client_name, q.pax
+      ${JOBS_FROM}
+      WHERE a.third_party_id = ?
+      GROUP BY a.quote_id, a.transfer_key
+      ORDER BY a.day DESC
+    `).bind(c.req.param('id')).all();
+    return c.json(results);
+  });
 
   app.get('/api/calendar', requireAuth, async (c) => {
     await ensureCalendarSchema(c.env.DB);
@@ -186,6 +227,7 @@ export function calendarRoutes(app: Hono<Env>) {
           slot: a.slot,
           vehicle_id: a.vehicle_id,
           driver_id: a.driver_id,
+          third_party_id: a.third_party_id,
           external_provider: a.external_provider,
           notes: a.notes,
         })),
@@ -195,30 +237,36 @@ export function calendarRoutes(app: Hono<Env>) {
     return c.json(events);
   });
 
-  // Reemplaza las asignaciones de un transfer (un registro por vehículo pedido)
+  // Reemplaza las asignaciones de uno o varios transfers (un registro por vehículo pedido).
+  // Body: { items: [{ quote_id, transfer_key, origin, destination, slots }] } o un solo item suelto.
   app.put('/api/calendar/assignments', requireAuth, async (c) => {
     await ensureCalendarSchema(c.env.DB);
     const body = await c.req.json();
-    const quoteId = String(body.quote_id || '');
-    const transferKey = String(body.transfer_key || '');
-    if (!quoteId || !transferKey) return c.json({ error: 'Faltan datos del transfer' }, 400);
-    const slots: any[] = Array.isArray(body.slots) ? body.slots : [];
+    const items: any[] = Array.isArray(body.items) ? body.items : [body];
     const now = new Date().toISOString();
-
-    const stmts = [
-      c.env.DB.prepare('DELETE FROM transfer_assignments WHERE quote_id = ? AND transfer_key = ?').bind(quoteId, transferKey),
-    ];
-    for (const s of slots) {
-      const vehicleId = s.vehicle_id || null;
-      const driverId = s.driver_id || null;
-      const provider = String(s.external_provider || '').trim() || null;
-      if (!vehicleId && !driverId && !provider) continue;
-      stmts.push(c.env.DB.prepare(`
-        INSERT INTO transfer_assignments (id, quote_id, transfer_key, day, slot, vehicle_id, driver_id, external_provider, notes, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(generateId(), quoteId, transferKey, transferKey.slice(0, 10), Number(s.slot) || 0, vehicleId, driverId, provider, s.notes || null, now));
+    const stmts: D1PreparedStatement[] = [];
+    for (const item of items) {
+      const quoteId = String(item.quote_id || '');
+      const transferKey = String(item.transfer_key || '');
+      if (!quoteId || !transferKey) return c.json({ error: 'Faltan datos del transfer' }, 400);
+      const slots: any[] = Array.isArray(item.slots) ? item.slots : [];
+      stmts.push(c.env.DB.prepare('DELETE FROM transfer_assignments WHERE quote_id = ? AND transfer_key = ?').bind(quoteId, transferKey));
+      for (const s of slots) {
+        const thirdPartyId = s.third_party_id || null;
+        // Si lo hace un tercero, el vehículo y el chofer son de ellos
+        const vehicleId = thirdPartyId ? null : s.vehicle_id || null;
+        const driverId = thirdPartyId ? null : s.driver_id || null;
+        const provider = thirdPartyId ? null : String(s.external_provider || '').trim() || null;
+        if (!vehicleId && !driverId && !provider && !thirdPartyId) continue;
+        stmts.push(c.env.DB.prepare(`
+          INSERT INTO transfer_assignments (id, quote_id, transfer_key, day, slot, vehicle_id, driver_id, third_party_id,
+            external_provider, origin, destination, notes, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(generateId(), quoteId, transferKey, transferKey.slice(0, 10), Number(s.slot) || 0, vehicleId, driverId,
+          thirdPartyId, provider, item.origin || null, item.destination || null, s.notes || null, now));
+      }
     }
-    await c.env.DB.batch(stmts);
+    if (stmts.length) await c.env.DB.batch(stmts);
     return c.json({ ok: true });
   });
 }

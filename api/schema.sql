@@ -393,6 +393,19 @@ CREATE TABLE IF NOT EXISTS transfer_assignments (
   vehicle_id TEXT,
   driver_id TEXT,
   external_provider TEXT,
+  third_party_id TEXT,
+  origin TEXT,
+  destination TEXT,
   notes TEXT,
   updated_at TEXT
+);
+
+-- Terceros contratados: ponen su propio vehículo y chofer
+CREATE TABLE IF NOT EXISTS third_parties (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT,
+  notes TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
 );
