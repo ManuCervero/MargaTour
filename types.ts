@@ -153,6 +153,12 @@ export interface QuoteExtraService {
   sort_order?: number;
 }
 
+// Servicios que una experiencia no incluye (ej: la cena en el restaurante), con precio de referencia opcional
+export interface QuoteNotIncluded {
+  description: string;
+  price?: number;
+}
+
 export interface FullQuote {
   id?: string;
   quote_number?: number;
@@ -168,6 +174,7 @@ export interface FullQuote {
   kind?: 'quote' | 'experience';
   name?: string;
   features?: string[];
+  not_included?: QuoteNotIncluded[];
   ganancia_general?: number;
   experience_id?: string;
   exchange_rate?: number;

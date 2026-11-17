@@ -1434,6 +1434,22 @@ const QuoteDetailView: React.FC<{
         </div>
       )}
 
+      {/* No incluye — experiencias */}
+      {isExperience && (quote.not_included || []).some(n => n.description?.trim()) && (
+        <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>No incluye</p>
+            <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
+          </div>
+          {(quote.not_included || []).filter(n => n.description?.trim()).map((n, i) => (
+            <div key={i} style={{ borderBottom: '1px solid #ede8df', paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+              <p style={{ fontSize: '13px', color: '#1a1a1a', margin: 0 }}>✗ {n.description}</p>
+              {(n.price || 0) > 0 && <p style={{ fontSize: '12px', color: '#777', margin: 0, whiteSpace: 'nowrap' }}>Aprox. {fmtARS(n.price!)}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Desglose de totales — solo pantalla */}
       <div className="screen-only" style={{ marginTop: '16px', borderTop: '2px solid #4a1c2d', paddingTop: '14px' }}>
         {totalTransfersBase > 0 && (<>
@@ -2144,6 +2160,61 @@ const QuoteForm: React.FC<{
                 </div>
               )}
             </div>
+
+            {/* No incluye (solo experiencias): informativo, no suma al precio */}
+            {isExperience && (
+            <div className="bg-white rounded-2xl border border-marga-creamDark p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">No incluye</h3>
+                  <p className="text-xs text-marga-dark/40 mt-0.5">Solo informativo — no suma al precio</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, not_included: [...(f.not_included || []), { description: '' }] }))}
+                  className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus size={14} /> Agregar no incluido
+                </button>
+              </div>
+              {(form.not_included || []).length === 0 && (
+                <p className="text-sm text-marga-dark/30 text-center py-4">Ej: cena en el restaurante, entradas, propinas...</p>
+              )}
+              {(form.not_included || []).map((item, i) => {
+                const update = (patch: Partial<typeof item>) =>
+                  setForm(f => ({ ...f, not_included: (f.not_included || []).map((x, j) => j === i ? { ...x, ...patch } : x) }));
+                return (
+                  <div key={i} className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={e => update({ description: e.target.value })}
+                      placeholder="Ej: Cena en el restaurante"
+                      className={inp + " flex-1 min-w-0"}
+                    />
+                    <div className="relative w-40 shrink-0">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-marga-dark/40 text-sm">$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={item.price || ''}
+                        onChange={e => update({ price: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        placeholder="Precio ref. (opc.)"
+                        className={inp + " pl-7 text-right"}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, not_included: (f.not_included || []).filter((_, j) => j !== i) }))}
+                      className="p-1 text-marga-dark/30 hover:text-red-500 transition-colors shrink-0"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            )}
 
             {/* Comisión */}
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
