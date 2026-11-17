@@ -97,6 +97,20 @@ const addDays = (iso: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+// Las experiencias no tienen fechas reales: "Día N" se guarda como EXP_DAY_BASE + (N - 1) días,
+// así las noches de hotel y el orden siguen funcionando con la misma lógica de fechas.
+const EXP_DAY_BASE = '2000-01-01';
+const MAX_EXP_DAYS = 30;
+const expDayToIso = (n: number) => addDays(EXP_DAY_BASE, n - 1);
+const isoToExpDay = (iso?: string) => {
+  if (!iso) return 1;
+  const n = Math.round((new Date(iso.slice(0, 10) + 'T00:00:00').getTime() - new Date(EXP_DAY_BASE + 'T00:00:00').getTime()) / 86400000) + 1;
+  return n >= 1 && n <= MAX_EXP_DAYS ? n : 1; // fechas reales de experiencias viejas → Día 1
+};
+// Cantidad de días de una experiencia = el último día que tiene algo cargado
+const experienceDays = (q: Pick<FullQuote, 'transfers' | 'services'>) =>
+  Math.max(1, ...(q.transfers || []).map(t => isoToExpDay(t.day)), ...(q.services || []).map(s => isoToExpDay(s.day)));
+
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: 'Borrador',
   sent: 'Enviada',
@@ -251,7 +265,8 @@ const TransferRow: React.FC<{
   onChange: (index: number, updated: QuoteTransfer) => void;
   onRemove: (index: number) => void;
   isExperience?: boolean;
-}> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove, isExperience }) => {
+  numDays?: number;
+}> = ({ transfer, index, routes, settings, catalogData, onChange, onRemove, isExperience, numDays = 1 }) => {
 
   const [mode, setMode] = useState<TransferMode>('ruta');
   const [showMap, setShowMap] = useState(false);
@@ -393,6 +408,14 @@ const TransferRow: React.FC<{
             <input type="time" value={transfer.hour || ''} onChange={e => onChange(index, { ...transfer, hour: e.target.value })} className={inp} />
           </div>
           </>}
+          {isExperience && numDays > 1 && (
+            <div>
+              <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Día</label>
+              <select value={isoToExpDay(transfer.day)} onChange={e => onChange(index, { ...transfer, day: expDayToIso(Number(e.target.value)) })} className={sel}>
+                {Array.from({ length: numDays }, (_, i) => <option key={i} value={i + 1}>Día {i + 1}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Duración (hs)</label>
             <input type="number" min={0} step={0.5} value={transfer.duration_hours || ''} onChange={e => handleDurationChange(parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
@@ -679,7 +702,8 @@ const ServiceRow: React.FC<{
   onRemove: (index: number) => void;
   onCatalogRefresh: () => void;
   isExperience?: boolean;
-}> = ({ service, index, settings, catalogData, onChange, onRemove, onCatalogRefresh, isExperience }) => {
+  numDays?: number;
+}> = ({ service, index, settings, catalogData, onChange, onRemove, onCatalogRefresh, isExperience, numDays = 1 }) => {
 
   const [showAddNew, setShowAddNew] = React.useState(false);
   const [newName, setNewName] = React.useState('');
@@ -739,8 +763,13 @@ const ServiceRow: React.FC<{
 
   // En experiencias no hay fechas: el hotel se carga por cantidad de noches
   const handleNightsChange = (n: number) => {
-    const day = service.day || new Date().toISOString().slice(0, 10);
+    const day = service.day || expDayToIso(1);
     onChange(index, { ...service, day, checkout_day: addDays(day, n), final_cost_usd: service.unit_price_usd * n });
+  };
+
+  const handleExpDayChange = (dayNum: number) => {
+    const day = expDayToIso(dayNum);
+    onChange(index, { ...service, day, checkout_day: isHotel ? addDays(day, nights) : service.checkout_day });
   };
 
   const handleAddNew = async () => {
@@ -777,14 +806,24 @@ const ServiceRow: React.FC<{
       </button>
 
       {/* Fila 1: fechas + tipo */}
-      <div className={`grid gap-3 mb-3 ${isHotel && !isExperience ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
+      <div className={`grid gap-3 mb-3 ${(isHotel && !isExperience) || (isExperience && isHotel && numDays > 1) ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
         {isExperience ? (
-          isHotel && (
-            <div>
-              <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Noches</label>
-              <input type="number" min={0} value={nights || ''} onChange={e => handleNightsChange(parseInt(e.target.value) || 0)} className={inp} placeholder="0" />
-            </div>
-          )
+          <>
+            {numDays > 1 && (
+              <div>
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">{isHotel ? 'Día de llegada' : 'Día'}</label>
+                <select value={isoToExpDay(service.day)} onChange={e => handleExpDayChange(Number(e.target.value))} className={sel}>
+                  {Array.from({ length: numDays }, (_, i) => <option key={i} value={i + 1}>Día {i + 1}</option>)}
+                </select>
+              </div>
+            )}
+            {isHotel && (
+              <div>
+                <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Noches</label>
+                <input type="number" min={0} value={nights || ''} onChange={e => handleNightsChange(parseInt(e.target.value) || 0)} className={inp} placeholder="0" />
+              </div>
+            )}
+          </>
         ) : isHotel ? (
           <>
             <div>
@@ -1199,11 +1238,15 @@ const QuoteDetailView: React.FC<{
 
   const validityFormatted = quote.validity_date ? fmtDate(quote.validity_date) : null;
 
-  // Las experiencias no tienen fechas: todo va en un único bloque sin encabezado de día
-  const allDays = isExperience ? [''] : Array.from(new Set([
+  const allDays = Array.from(new Set([
     ...transfers.map(t => t.day),
     ...nonHotelServices.map(s => s.day),
   ])).sort();
+  // Experiencias: se agrupa por "Día N"; con un solo día no hace falta encabezado
+  const expDays = isExperience ? experienceDays(quote) : 1;
+  const dayGroups = isExperience
+    ? Array.from(new Set([...transfers.map(t => isoToExpDay(t.day)), ...nonHotelServices.map(s => isoToExpDay(s.day))])).sort((a, b) => a - b).map(String)
+    : allDays;
 
   const thStyle: React.CSSProperties = { padding: '3px 6px', textAlign: 'left', fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
   const thRight: React.CSSProperties = { ...thStyle, textAlign: 'right', width: '90px' };
@@ -1238,6 +1281,7 @@ const QuoteDetailView: React.FC<{
         <div style={{ marginBottom: '24px', borderLeft: '3px solid #4a1c2d', paddingLeft: '14px' }}>
           <p style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 4px 0' }}>{quote.name}</p>
           {quote.pax && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>Pax mínimo:</strong> {quote.pax}</p>}
+          {expDays > 1 && <p style={{ fontSize: '13px', color: '#555', margin: '2px 0' }}><strong>Duración:</strong> {expDays} días</p>}
           {quote.description && <p style={{ fontSize: '13px', color: '#777', marginTop: '6px', whiteSpace: 'pre-line' }}>{quote.description}</p>}
           {(quote.features || []).length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
@@ -1260,14 +1304,14 @@ const QuoteDetailView: React.FC<{
       </div>}
 
       {/* Itinerario por día (excluye hoteles) */}
-      {allDays.map(day => {
-        const dayTransfers = isExperience ? transfers : transfers.filter(t => t.day === day);
-        const dayServices = isExperience ? nonHotelServices : nonHotelServices.filter(s => s.day === day);
+      {dayGroups.map(day => {
+        const dayTransfers = isExperience ? transfers.filter(t => String(isoToExpDay(t.day)) === day) : transfers.filter(t => t.day === day);
+        const dayServices = isExperience ? nonHotelServices.filter(s => String(isoToExpDay(s.day)) === day) : nonHotelServices.filter(s => s.day === day);
         if (dayTransfers.length === 0 && dayServices.length === 0) return null;
         return (
           <div key={day} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
-            {!isExperience && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{fmtDate(day)}</p>
+            {(!isExperience || expDays > 1) && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: '#4a1c2d', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{isExperience ? `Día ${day}` : fmtDate(day)}</p>
               <div style={{ flex: 1, height: '1.5px', background: '#4a1c2d', opacity: 0.3 }} />
             </div>}
 
@@ -1344,7 +1388,10 @@ const QuoteDetailView: React.FC<{
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>{h.service_name}</p>
                     <p style={{ fontSize: '12px', color: '#666', margin: '1px 0' }}>
-                      {isExperience ? (nights !== null && <><strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>) : <>
+                      {isExperience ? <>
+                        {expDays > 1 && <>Llegada: <strong>Día {isoToExpDay(h.day)}</strong> &nbsp;·&nbsp; </>}
+                        {nights !== null && <><strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
+                      </> : <>
                       Check-in: <strong>{fmtDate(h.day)}</strong>
                       {h.checkout_day && <> &nbsp;·&nbsp; Check-out: <strong>{fmtDate(h.checkout_day)}</strong></>}
                       {nights !== null && <> &nbsp;·&nbsp; <strong>{nights}</strong> {nights === 1 ? 'noche' : 'noches'}</>}
@@ -1616,6 +1663,8 @@ const QuoteForm: React.FC<{
   const [gananciaServicio, setGananciaServicio] = useState<number>(initial?.ganancia_servicio || 0);
   const [comision, setComision] = useState<number>(initial?.comision || 0);
   const [gananciaGeneral, setGananciaGeneral] = useState<number>(initial?.ganancia_general || 0);
+  const [numDays, setNumDays] = useState<number>(() => (isExperience && initial ? experienceDays(initial) : 1));
+  const minDays = isExperience ? experienceDays(form) : 1;
   const [validityDate, setValidityDate] = useState<string>(initial?.validity_date || '');
 
   const filteredClients = clients.filter(c =>
@@ -1850,6 +1899,19 @@ const QuoteForm: React.FC<{
               </div>
               {isExperience && (
                 <div>
+                  <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Cantidad de días</label>
+                  <input
+                    type="number"
+                    min={minDays}
+                    max={MAX_EXP_DAYS}
+                    value={numDays}
+                    onChange={e => setNumDays(Math.min(MAX_EXP_DAYS, Math.max(minDays, parseInt(e.target.value) || 1)))}
+                    className={inp}
+                  />
+                </div>
+              )}
+              {isExperience && (
+                <div>
                   <label className="block text-xs font-semibold text-marga-dark/50 mb-1">Última modificación</label>
                   <p className="px-1 py-2.5 text-sm text-marga-dark/60">{form.updated_at ? fmtDate(form.updated_at.slice(0, 10)) : 'Se completa al guardar'}</p>
                 </div>
@@ -1884,7 +1946,7 @@ const QuoteForm: React.FC<{
                     </button>
                     <button
                       type="button"
-                      onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, { ...emptyTransfer(), pax: f.pax || 1 }] }))}
+                      onClick={() => setForm(f => ({ ...f, transfers: [...f.transfers, { ...emptyTransfer(), pax: f.pax || 1, ...(isExperience ? { day: expDayToIso(numDays) } : {}) }] }))}
                       className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       <Plus size={14} /> Agregar transfer
@@ -1924,6 +1986,7 @@ const QuoteForm: React.FC<{
                 )}
                 {form.transfers.map((t, i) => (
                   <TransferRow
+                    numDays={numDays}
                     key={i}
                     transfer={t}
                     index={i}
@@ -1977,7 +2040,7 @@ const QuoteForm: React.FC<{
                   <h3 className="text-sm font-bold text-marga-wine uppercase tracking-wider">Servicios</h3>
                   <button
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, services: [...f.services, { ...emptyService(), pax: f.pax || 1 }] }))}
+                    onClick={() => setForm(f => ({ ...f, services: [...f.services, { ...emptyService(), pax: f.pax || 1, ...(isExperience ? { day: expDayToIso(numDays) } : {}) }] }))}
                     className="flex items-center gap-1.5 text-xs font-bold text-marga-wine border border-marga-wine/30 hover:bg-marga-wine/5 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <Plus size={14} /> Agregar servicio
@@ -1988,6 +2051,7 @@ const QuoteForm: React.FC<{
                 )}
                 {form.services.map((s, i) => (
                   <ServiceRow
+                    numDays={numDays}
                     key={i}
                     service={s}
                     index={i}
