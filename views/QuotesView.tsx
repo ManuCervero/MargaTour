@@ -1664,6 +1664,8 @@ const QuoteForm: React.FC<{
   const [comision, setComision] = useState<number>(initial?.comision || 0);
   const [gananciaGeneral, setGananciaGeneral] = useState<number>(initial?.ganancia_general || 0);
   const [numDays, setNumDays] = useState<number>(() => (isExperience && initial ? experienceDays(initial) : 1));
+  // Texto del input aparte del valor, para poder borrarlo y escribir otro número; se valida al salir del campo
+  const [numDaysInput, setNumDaysInput] = useState<string>(String(numDays));
   const minDays = isExperience ? experienceDays(form) : 1;
   const [validityDate, setValidityDate] = useState<string>(initial?.validity_date || '');
 
@@ -1904,8 +1906,17 @@ const QuoteForm: React.FC<{
                     type="number"
                     min={minDays}
                     max={MAX_EXP_DAYS}
-                    value={numDays}
-                    onChange={e => setNumDays(Math.min(MAX_EXP_DAYS, Math.max(minDays, parseInt(e.target.value) || 1)))}
+                    value={numDaysInput}
+                    onChange={e => {
+                      setNumDaysInput(e.target.value);
+                      const n = parseInt(e.target.value);
+                      if (n >= minDays && n <= MAX_EXP_DAYS) setNumDays(n);
+                    }}
+                    onBlur={() => {
+                      const n = Math.min(MAX_EXP_DAYS, Math.max(minDays, parseInt(numDaysInput) || minDays));
+                      setNumDays(n);
+                      setNumDaysInput(String(n));
+                    }}
                     className={inp}
                   />
                 </div>
