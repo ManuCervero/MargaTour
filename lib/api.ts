@@ -113,7 +113,7 @@ export const api = {
   calendar: {
     list: (date_from: string, date_to: string) =>
       request(`/api/calendar?date_from=${date_from}&date_to=${date_to}`),
-    assign: (items: { quote_id: string; transfer_key: string; origin?: string; destination?: string; slots: unknown[] }[]) =>
+    assign: (items: { quote_id: string; transfer_key: string; origin?: string; destination?: string; hour?: string; duration_hours?: number; slots: unknown[] }[]) =>
       request('/api/calendar/assignments', { method: 'PUT', body: JSON.stringify({ items }) }),
   },
   thirdParties: {

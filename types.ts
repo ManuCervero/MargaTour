@@ -487,10 +487,12 @@ export interface CalendarEvent {
   transfer_key: string;
   day: string;
   hour?: string | null;
+  quote_hour?: string | null;
   origin: string;
   destination: string;
   pax: number;
   duration_hours: number;
+  quote_duration_hours?: number;
   is_full_day: boolean;
   is_round_trip: boolean;
   distance_km: number;

@@ -64,6 +64,16 @@ export async function ensureCalendarSchema(db: D1Database) {
   )`).run();
   // third_party_id: el transfer lo hace un tercero (pone vehículo y chofer).
   // origin/destination: copia legible para el historial de trabajos de cada tercero.
+  // Hora y duración que se cargan desde el calendario. Van aparte de quote_transfers
+  // porque la cotización borra y recrea sus transfers cada vez que se guarda.
+  await db.prepare(`CREATE TABLE IF NOT EXISTS transfer_schedule (
+    quote_id TEXT NOT NULL,
+    transfer_key TEXT NOT NULL,
+    hour TEXT,
+    duration_hours REAL,
+    updated_at TEXT,
+    PRIMARY KEY (quote_id, transfer_key)
+  )`).run();
   for (const sql of [
     'ALTER TABLE transfer_assignments ADD COLUMN third_party_id TEXT',
     'ALTER TABLE transfer_assignments ADD COLUMN origin TEXT',
@@ -186,6 +196,11 @@ export function calendarRoutes(app: Hono<Env>) {
     ).bind(...ids).all<any>();
 
     const quoteById = new Map(quotes.map(q => [q.id, q]));
+    const { results: schedules } = await c.env.DB.prepare(
+      `SELECT * FROM transfer_schedule WHERE quote_id IN (${marks})`
+    ).bind(...ids).all<any>();
+    const scheduleByKey = new Map(schedules.map(sc => [`${sc.quote_id}::${sc.transfer_key}`, sc]));
+
     const assignByKey = new Map<string, any[]>();
     for (const a of assignments) {
       const k = `${a.quote_id}::${a.transfer_key}`;
@@ -203,6 +218,7 @@ export function calendarRoutes(app: Hono<Env>) {
       if (!day || day < date_from || day > date_to) continue;
       const q = quoteById.get(t.quote_id);
       const transferKey = `${day}|${norm(t.origin)}|${norm(t.destination)}|${n}`;
+      const sched = scheduleByKey.get(`${t.quote_id}::${transferKey}`);
       events.push({
         id: `${t.quote_id}::${transferKey}`,
         quote_id: t.quote_id,
@@ -213,11 +229,13 @@ export function calendarRoutes(app: Hono<Env>) {
         quote_notes: q?.notes || null,
         transfer_key: transferKey,
         day,
-        hour: t.hour || null,
+        hour: sched?.hour || t.hour || null,
+        quote_hour: t.hour || null,
         origin: t.origin || '',
         destination: t.destination || '',
         pax: t.pax || q?.pax || 1,
-        duration_hours: t.duration_hours || 0,
+        duration_hours: sched?.duration_hours != null ? sched.duration_hours : t.duration_hours || 0,
+        quote_duration_hours: t.duration_hours || 0,
         is_full_day: !!t.is_full_day,
         is_round_trip: !!t.is_round_trip,
         distance_km: t.distance_km || 0,
@@ -250,6 +268,14 @@ export function calendarRoutes(app: Hono<Env>) {
       const transferKey = String(item.transfer_key || '');
       if (!quoteId || !transferKey) return c.json({ error: 'Faltan datos del transfer' }, 400);
       const slots: any[] = Array.isArray(item.slots) ? item.slots : [];
+      if ('hour' in item || 'duration_hours' in item) {
+        const hour = /^\d{1,2}:\d{2}$/.test(String(item.hour || '')) ? String(item.hour).padStart(5, '0') : null;
+        const dur = Number(item.duration_hours);
+        stmts.push(c.env.DB.prepare(`
+          INSERT INTO transfer_schedule (quote_id, transfer_key, hour, duration_hours, updated_at) VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT (quote_id, transfer_key) DO UPDATE SET hour = excluded.hour, duration_hours = excluded.duration_hours, updated_at = excluded.updated_at
+        `).bind(quoteId, transferKey, hour, Number.isFinite(dur) && dur > 0 ? dur : null, now));
+      }
       stmts.push(c.env.DB.prepare('DELETE FROM transfer_assignments WHERE quote_id = ? AND transfer_key = ?').bind(quoteId, transferKey));
       for (const s of slots) {
         const thirdPartyId = s.third_party_id || null;

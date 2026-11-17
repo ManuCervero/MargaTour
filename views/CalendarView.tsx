@@ -88,28 +88,35 @@ function timeRange(ev: CalendarEvent): [number, number] | null {
     return [start, start + hours * 60];
 }
 
-// Dos transfers del mismo día se pisan si los horarios se cruzan o si a alguno le falta la hora
-function overlaps(a: CalendarEvent, b: CalendarEvent) {
-    if (a.day !== b.day) return false;
+// Si dos transfers del mismo día se pisan: 'yes' / 'no' según hora + duración,
+// 'unknown' si a alguno le falta la hora (no se puede saber).
+function overlaps(a: CalendarEvent, b: CalendarEvent): 'yes' | 'no' | 'unknown' {
+    if (a.day !== b.day) return 'no';
     const ra = timeRange(a), rb = timeRange(b);
-    if (!ra || !rb) return true;
-    return ra[0] < rb[1] && rb[0] < ra[1];
+    if (!ra || !rb) return 'unknown';
+    return ra[0] < rb[1] && rb[0] < ra[1] ? 'yes' : 'no';
 }
 
-interface Clash { kind: 'vehicle' | 'driver'; id: string; other: CalendarEvent }
+const fmtMinutes = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(2, '0')}`;
+
+// certain = los horarios se cruzan seguro; si no, falta la hora de alguno para verificar
+interface Clash { kind: 'vehicle' | 'driver'; id: string; other: CalendarEvent; certain: boolean }
 
 function findClashes(ev: CalendarEvent, slots: CalendarAssignment[], all: CalendarEvent[]): Clash[] {
     const out: Clash[] = [];
     const seenV = new Set<string>(), seenD = new Set<string>();
     for (const s of slots) {
-        if (s.vehicle_id) { if (seenV.has(s.vehicle_id)) out.push({ kind: 'vehicle', id: s.vehicle_id, other: ev }); seenV.add(s.vehicle_id); }
-        if (s.driver_id) { if (seenD.has(s.driver_id)) out.push({ kind: 'driver', id: s.driver_id, other: ev }); seenD.add(s.driver_id); }
+        if (s.vehicle_id) { if (seenV.has(s.vehicle_id)) out.push({ kind: 'vehicle', id: s.vehicle_id, other: ev, certain: true }); seenV.add(s.vehicle_id); }
+        if (s.driver_id) { if (seenD.has(s.driver_id)) out.push({ kind: 'driver', id: s.driver_id, other: ev, certain: true }); seenD.add(s.driver_id); }
     }
     for (const other of all) {
-        if (other.id === ev.id || !overlaps(ev, other)) continue;
+        if (other.id === ev.id) continue;
+        const o = overlaps(ev, other);
+        if (o === 'no') continue;
+        const certain = o === 'yes';
         for (const s of slots) {
-            if (s.vehicle_id && other.assignments.some(a => a.vehicle_id === s.vehicle_id)) out.push({ kind: 'vehicle', id: s.vehicle_id, other });
-            if (s.driver_id && other.assignments.some(a => a.driver_id === s.driver_id)) out.push({ kind: 'driver', id: s.driver_id, other });
+            if (s.vehicle_id && other.assignments.some(a => a.vehicle_id === s.vehicle_id)) out.push({ kind: 'vehicle', id: s.vehicle_id, other, certain });
+            if (s.driver_id && other.assignments.some(a => a.driver_id === s.driver_id)) out.push({ kind: 'driver', id: s.driver_id, other, certain });
         }
     }
     return out;
@@ -282,7 +289,7 @@ const MonthCalendar: React.FC<{
 
     const clashIds = useMemo(() => {
         const ids = new Set<string>();
-        for (const ev of events) if (findClashes(ev, ev.assignments, events).length) ids.add(ev.id);
+        for (const ev of events) if (findClashes(ev, ev.assignments, events).some(c => c.certain)) ids.add(ev.id);
         return ids;
     }, [events]);
 
@@ -484,6 +491,7 @@ const MonthCalendar: React.FC<{
 // ── Asignar una cotización completa, día por día ──────────────────────────────
 
 type SlotMode = 'propio' | 'tercero';
+interface TimeState { hour: string; duration: string }
 interface SlotState { slot: number; mode: SlotMode; vehicle_id: string; driver_id: string; third_party_id: string; external_provider: string }
 
 const toAssignments = (slots: SlotState[]): CalendarAssignment[] =>
@@ -516,6 +524,8 @@ const QuoteAssignModal: React.FC<{
 }> = ({ group, focusDay, allEvents, fleet, drivers, thirdParties, cat, onCatalogsChanged, onClose, onSaved }) => {
     const [slotsByEvent, setSlotsByEvent] = useState<Record<string, SlotState[]>>(() =>
         Object.fromEntries(group.events.map(ev => [ev.id, initialSlots(ev)])));
+    const [timesByEvent, setTimesByEvent] = useState<Record<string, TimeState>>(() =>
+        Object.fromEntries(group.events.map(ev => [ev.id, { hour: ev.hour ? ev.hour.slice(0, 5) : '', duration: ev.duration_hours ? String(ev.duration_hours) : '' }])));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -524,8 +534,10 @@ const QuoteAssignModal: React.FC<{
     useEffect(() => { dayRefs.current[focusDay]?.scrollIntoView({ block: 'start' }); }, []);
 
     // Las superposiciones se calculan con lo que se está editando, no con lo guardado
-    const effectiveAll = useMemo(() => allEvents.map(e =>
-        slotsByEvent[e.id] ? { ...e, assignments: toAssignments(slotsByEvent[e.id]) } : e), [allEvents, slotsByEvent]);
+    const effectiveAll = useMemo(() => allEvents.map(e => (slotsByEvent[e.id]
+        ? { ...e, assignments: toAssignments(slotsByEvent[e.id]), hour: timesByEvent[e.id].hour || null, duration_hours: Number(timesByEvent[e.id].duration) || 0 }
+        : e)), [allEvents, slotsByEvent, timesByEvent]);
+    const effectiveById = useMemo(() => new Map(effectiveAll.map(e => [e.id, e])), [effectiveAll]);
 
     const update = (evId: string, i: number, patch: Partial<SlotState>) =>
         setSlotsByEvent(prev => ({ ...prev, [evId]: prev[evId].map((s, j) => (j === i ? { ...s, ...patch } : s)) }));
@@ -546,6 +558,7 @@ const QuoteAssignModal: React.FC<{
         try {
             await api.calendar.assign(group.events.map(ev => ({
                 quote_id: ev.quote_id, transfer_key: ev.transfer_key, origin: ev.origin, destination: ev.destination,
+                hour: timesByEvent[ev.id].hour, duration_hours: Number(timesByEvent[ev.id].duration) || 0,
                 slots: toAssignments(slotsByEvent[ev.id]),
             })));
             onSaved();
@@ -562,9 +575,13 @@ const QuoteAssignModal: React.FC<{
             .sort((a, b) => Number(b.vehicle_type === type) - Number(a.vehicle_type === type) || a.plate.localeCompare(b.plate));
     const driverOptions = (current: string) => drivers.filter(d => d.is_active !== 0 || d.id === current);
 
-    const clashText = (ev: CalendarEvent, c: Clash) =>
-        c.other.id === ev.id ? 'está elegido dos veces en este transfer'
-            : `ya tiene ${c.other.hour ? `a las ${c.other.hour.slice(0, 5)} ` : 'ese día '}${c.other.origin} → ${c.other.destination} (${c.other.client_name})`;
+    const clashText = (ev: CalendarEvent, c: Clash) => {
+        if (c.other.id === ev.id) return 'está elegido dos veces en este transfer';
+        const r = timeRange(c.other);
+        const when = r ? `de ${fmtMinutes(r[0])} a ${fmtMinutes(r[1])}` : 'ese día (sin hora)';
+        const what = `${c.other.origin} → ${c.other.destination} (${c.other.client_name})`;
+        return c.certain ? `ya tiene ${when} ${what}` : `también va ${when} en ${what}. Cargá la hora de los dos transfers para verificar que no se pisen`;
+    };
 
     const dayList = daysBetween(group.start, group.end);
 
@@ -598,10 +615,12 @@ const QuoteAssignModal: React.FC<{
                                     {evs.map(ev => (
                                         <TransferCard
                                             key={ev.id}
-                                            ev={ev}
+                                            ev={effectiveById.get(ev.id) || ev}
+                                            time={timesByEvent[ev.id]}
+                                            onTimeChange={patch => setTimesByEvent(prev => ({ ...prev, [ev.id]: { ...prev[ev.id], ...patch } }))}
                                             slots={slotsByEvent[ev.id]}
                                             canCopy={group.events.length > 1}
-                                            clashes={findClashes(ev, toAssignments(slotsByEvent[ev.id]), effectiveAll)}
+                                            clashes={findClashes(effectiveById.get(ev.id) || ev, toAssignments(slotsByEvent[ev.id]), effectiveAll)}
                                             clashText={c => clashText(ev, c)}
                                             cat={cat}
                                             thirdParties={thirdParties}
@@ -632,6 +651,8 @@ const QuoteAssignModal: React.FC<{
 
 const TransferCard: React.FC<{
     ev: CalendarEvent;
+    time: TimeState;
+    onTimeChange: (patch: Partial<TimeState>) => void;
     slots: SlotState[];
     canCopy: boolean;
     clashes: Clash[];
@@ -643,7 +664,7 @@ const TransferCard: React.FC<{
     onUpdate: (i: number, patch: Partial<SlotState>) => void;
     onCopy: () => void;
     onCatalogsChanged: () => Promise<unknown>;
-}> = ({ ev, slots, canCopy, clashes, clashText, cat, thirdParties, vehicleOptions, driverOptions, onUpdate, onCopy, onCatalogsChanged }) => {
+}> = ({ ev, time, onTimeChange, slots, canCopy, clashes, clashText, cat, thirdParties, vehicleOptions, driverOptions, onUpdate, onCopy, onCatalogsChanged }) => {
     const own = ev.vehicles.map((v, i) => ({ v, s: slots[i] })).filter(x => x.s.mode === 'propio');
     const assignedCapacity = own.reduce((sum, x) => sum + (cat.fleetById.get(x.s.vehicle_id)?.capacity || 0), 0);
     const capacityShort = own.length === slots.length && own.every(x => x.s.vehicle_id) && assignedCapacity > 0 && assignedCapacity < ev.pax;
@@ -652,14 +673,26 @@ const TransferCard: React.FC<{
         <div className="border border-marga-creamDark rounded-xl overflow-hidden">
             <div className="bg-marga-cream/50 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 <span className="font-bold text-marga-dark">{ev.origin} → {ev.destination}</span>
-                <span className="flex items-center gap-1 text-gray-500"><Clock size={13} />{ev.hour ? ev.hour.slice(0, 5) : 'Sin hora'}</span>
                 <span className="flex items-center gap-1 text-gray-500"><Users size={13} />{ev.pax} pax</span>
-                <span className="text-gray-500">{ev.is_full_day ? 'Día completo' : ev.duration_hours ? `${ev.duration_hours} h` : 'Traslado'}</span>
+                {ev.is_full_day && <span className="text-gray-500">Día completo</span>}
                 {canCopy && (
                     <button onClick={onCopy} className="ml-auto text-xs font-bold text-marga-wine hover:underline flex items-center gap-1" title="Usar esta misma asignación en los demás transfers de la cotización">
                         <Copy size={12} />Copiar a todos los días
                     </button>
                 )}
+            </div>
+            <div className="px-4 pt-3 flex flex-wrap items-end gap-3">
+                <label className="block">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-1"><Clock size={12} />Hora de salida</span>
+                    <input type="time" className={`${inp} w-32 ${time.hour ? '' : 'border-amber-300 bg-amber-50'}`} value={time.hour} onChange={e => onTimeChange({ hour: e.target.value })} />
+                </label>
+                <label className="block">
+                    <span className="text-xs font-semibold text-gray-500">Duración (horas)</span>
+                    <input type="number" min="0" step="0.5" className={`${inp} w-28`} value={time.duration} onChange={e => onTimeChange({ duration: e.target.value })} placeholder={ev.is_full_day ? '9' : '2'} />
+                </label>
+                <p className="text-xs text-gray-500 pb-2.5">
+                    {(() => { const r = timeRange(ev); return r ? <>Ocupa de <b>{fmtMinutes(r[0])}</b> a <b>{fmtMinutes(r[1])}</b>{!time.duration && ' (duración estimada)'}</> : <span className="text-amber-700 font-semibold">Sin hora: no se puede verificar si se pisa con otro transfer.</span>; })()}
+                </p>
             </div>
             {ev.notes && <p className="px-4 pt-2 text-xs text-marga-dark/70"><span className="font-semibold">Notas:</span> {ev.notes}</p>}
 
@@ -727,8 +760,8 @@ const TransferCard: React.FC<{
                             {s.mode === 'propio' && chosen && chosen.vehicle_type && chosen.vehicle_type !== req.type && (
                                 <p className="mt-2 text-xs text-gray-500">Se pidió {VEHICLE_TYPE_LABELS[req.type].toLowerCase()} y elegiste {VEHICLE_TYPE_LABELS[chosen.vehicle_type].toLowerCase()}.</p>
                             )}
-                            {vClash.map((c, k) => <Warn key={`v${k}`}>{vehicleName(cat.fleetById.get(c.id))} {clashText(c)}.</Warn>)}
-                            {dClash.map((c, k) => <Warn key={`d${k}`}>{driverName(cat.driverById.get(c.id))} {clashText(c)}.</Warn>)}
+                            {vClash.map((c, k) => <Warn key={`v${k}`} soft={!c.certain}>{vehicleName(cat.fleetById.get(c.id))} {clashText(c)}.</Warn>)}
+                            {dClash.map((c, k) => <Warn key={`d${k}`} soft={!c.certain}>{driverName(cat.driverById.get(c.id))} {clashText(c)}.</Warn>)}
                         </div>
                     );
                 })}
@@ -790,8 +823,8 @@ const ThirdPartyPicker: React.FC<{
     );
 };
 
-const Warn: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <p className="mt-2 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-start gap-1.5">
+const Warn: React.FC<{ children: React.ReactNode; soft?: boolean }> = ({ children, soft }) => (
+    <p className={`mt-2 text-xs font-semibold rounded-lg px-3 py-2 flex items-start gap-1.5 border ${soft ? 'text-amber-800 bg-amber-50 border-amber-200' : 'text-red-700 bg-red-50 border-red-200'}`}>
         <AlertTriangle size={13} className="shrink-0 mt-px" /><span>{children}</span>
     </p>
 );

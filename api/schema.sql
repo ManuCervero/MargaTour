@@ -400,6 +400,16 @@ CREATE TABLE IF NOT EXISTS transfer_assignments (
   updated_at TEXT
 );
 
+-- Hora y duración cargadas desde el calendario (pisan las de la cotización)
+CREATE TABLE IF NOT EXISTS transfer_schedule (
+  quote_id TEXT NOT NULL,
+  transfer_key TEXT NOT NULL,
+  hour TEXT,
+  duration_hours REAL,
+  updated_at TEXT,
+  PRIMARY KEY (quote_id, transfer_key)
+);
+
 -- Terceros contratados: ponen su propio vehículo y chofer
 CREATE TABLE IF NOT EXISTS third_parties (
   id TEXT PRIMARY KEY,
