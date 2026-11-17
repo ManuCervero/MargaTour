@@ -207,12 +207,13 @@ export const CalendarView: React.FC = () => {
 
     return (
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
-            <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+            {/* Las pestañas van en su propia fila para que no se muevan según el largo del texto de ayuda */}
+            <div className="mb-5 space-y-3">
                 <div>
                     <h2 className="text-2xl font-bold text-marga-wine font-display uppercase">Calendario</h2>
                     <p className="text-sm text-gray-500 mt-1">{TAB_HINTS[tab]}</p>
                 </div>
-                <div className="flex max-w-full overflow-x-auto bg-white border border-marga-creamDark rounded-xl p-1">
+                <div className="inline-flex max-w-full overflow-x-auto bg-white border border-marga-creamDark rounded-xl p-1">
                     {([['calendario', 'Calendario'], ['vehiculos', 'Vehículos'], ['conductores', 'Conductores'], ['terceros', 'Terceros']] as const).map(([value, label]) => (
                         <button
                             key={value}
