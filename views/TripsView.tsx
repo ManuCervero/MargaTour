@@ -233,6 +233,15 @@ const TripModal: React.FC<{ tripId: string; onClose: () => void; onChanged: () =
         try { await api.trips.resync(trip.id); await refresh(); } finally { setBusy(false); }
     };
 
+    const quoteDeleted = !!trip.quote_id && trip.quote_number == null;
+
+    const deleteTrip = async () => {
+        const extra = payments.length > 0 ? ` También se borran sus ${payments.length} cobros/pagos registrados.` : '';
+        if (!confirm(`¿Eliminar el viaje de ${trip.client_name || 'este cliente'} de Contable?${extra} No se puede deshacer.`)) return;
+        setBusy(true);
+        try { await api.income.delete(trip.id); onChanged(); onClose(); } finally { setBusy(false); }
+    };
+
     const startEdit = () => {
         setDraftCosts(costs.map(c => ({ ...c })));
         setDraftAmount(trip.amount_ars);
@@ -283,18 +292,28 @@ const TripModal: React.FC<{ tripId: string; onClose: () => void; onChanged: () =
                             {fmtDate(trip.date)} · {trip.reference || 'Sin cotización'}{trip.concept && trip.concept !== `Cotización ${trip.reference}` ? ` · ${trip.concept}` : ''}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-marga-dark"><X size={20} /></button>
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={deleteTrip} disabled={busy} className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-50" title="Eliminar viaje"><Trash2 size={18} /></button>
+                        <button onClick={onClose} className="p-1 text-gray-400 hover:text-marga-dark"><X size={20} /></button>
+                    </div>
                 </div>
 
                 <div className="p-6">
-                    {(!!trip.quote_changed || (trip.quote_status && trip.quote_status !== 'approved')) && (
+                    {(quoteDeleted || !!trip.quote_changed || (trip.quote_status && trip.quote_status !== 'approved')) && (
                         <div className="flex flex-wrap items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5">
                             <p className="text-sm text-amber-800 flex items-center gap-2">
                                 <AlertTriangle size={16} className="shrink-0" />
-                                {trip.quote_status && trip.quote_status !== 'approved'
+                                {quoteDeleted
+                                    ? 'La cotización de este viaje fue eliminada. Si el viaje no se hizo, podés eliminarlo.'
+                                    : trip.quote_status && trip.quote_status !== 'approved'
                                     ? 'La cotización ya no está aprobada, pero este viaje tiene movimientos registrados.'
                                     : 'La cotización cambió después de registrar movimientos o editar los costos.'}
                             </p>
+                            {(quoteDeleted || (trip.quote_status && trip.quote_status !== 'approved')) && (
+                                <button onClick={deleteTrip} disabled={busy} className="flex items-center gap-1.5 text-xs font-bold text-red-700 hover:underline disabled:opacity-50">
+                                    <Trash2 size={13} /> Eliminar viaje
+                                </button>
+                            )}
                             {trip.quote_status === 'approved' && (
                                 <button onClick={resync} disabled={busy} className="flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:underline disabled:opacity-50">
                                     <RefreshCw size={13} /> Actualizar desde la cotización
