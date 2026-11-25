@@ -4,7 +4,7 @@ import {
   Plus, Search, FileText, Edit2, Trash2, Printer, ChevronLeft,
   DollarSign, ArrowRight, X, Check, Clock, SendHorizontal,
   CalendarDays, Users, MapPin, Utensils, Bed, Wine, Compass, Navigation,
-  AlertCircle, RefreshCw, PenLine, Loader2, UserCheck
+  AlertCircle, RefreshCw, PenLine, Loader2, UserCheck, Copy
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { FullQuote, QuoteTransfer, QuoteViatico, QuoteService, QuoteExtraService, QuoteStatus, QuoteServiceType, Route, Client, QuoteVehicleType, QuoteVehicleEntry } from '../types';
@@ -2488,6 +2488,21 @@ export const QuotesView: React.FC<{ kind?: 'quote' | 'experience' }> = ({ kind =
     }
   };
 
+  // Duplicar: abre el formulario con una copia sin ids, así al guardar se crea una experiencia nueva
+  const handleDuplicateQuote = async (q: FullQuote) => {
+    let full: FullQuote = q;
+    try { full = await api.quotes.get(q.id!); } catch { /* usa la versión de la lista */ }
+    const { id: _id, quote_number: _n, created_at: _c, updated_at: _u, ...rest } = full;
+    setSelectedQuote({
+      ...rest,
+      name: full.name ? `${full.name} (copia)` : full.name,
+      transfers: (full.transfers || []).map(({ id: _tid, quote_id: _tq, ...t }) => t),
+      services: (full.services || []).map(({ id: _sid, quote_id: _sq, ...s }) => s),
+      extra_services: (full.extra_services || []).map(({ id: _eid, quote_id: _eq, ...e }) => e),
+    });
+    setMode('form');
+  };
+
   const handleViewQuote = async (q: FullQuote) => {
     try {
       const full = await api.quotes.get(q.id!);
@@ -2776,6 +2791,15 @@ export const QuotesView: React.FC<{ kind?: 'quote' | 'experience' }> = ({ kind =
                       >
                         <Edit2 size={15} />
                       </button>
+                      {isExperience && (
+                      <button
+                        onClick={() => handleDuplicateQuote(q)}
+                        title="Duplicar"
+                        className="p-1.5 text-marga-dark/30 hover:text-marga-wine hover:bg-marga-wine/5 rounded-lg transition-colors"
+                      >
+                        <Copy size={15} />
+                      </button>
+                      )}
                       {!isExperience && (
                       <button
                         onClick={() => setShowStatusModal(q)}
